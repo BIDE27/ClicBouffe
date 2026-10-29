@@ -5,14 +5,16 @@ import '../../../../core/constants/app_colors.dart';
 class DishPreviewDialog extends StatelessWidget {
   final String name;
   final String price;
-  final IconData icon;
+  final String? image;
+  final IconData? icon;
   final VoidCallback onAdd;
 
   const DishPreviewDialog({
     super.key,
     required this.name,
     required this.price,
-    required this.icon,
+    this.image,
+    this.icon,
     required this.onAdd,
   });
 
@@ -20,7 +22,8 @@ class DishPreviewDialog extends StatelessWidget {
     required BuildContext context,
     required String name,
     required String price,
-    required IconData icon,
+    String? image,
+    IconData? icon,
     required VoidCallback onAdd,
   }) {
     return showDialog(
@@ -28,6 +31,7 @@ class DishPreviewDialog extends StatelessWidget {
       builder: (_) => DishPreviewDialog(
         name: name,
         price: price,
+        image: image,
         icon: icon,
         onAdd: onAdd,
       ),
@@ -48,10 +52,24 @@ class DishPreviewDialog extends StatelessWidget {
           Stack(
             children: [
               Container(
-                height: 180,
+                height: 190,
                 width: double.infinity,
-                color: AppColors.primaryLight,
-                child: Icon(icon, size: 80, color: AppColors.primary),
+                color: Colors.white,
+                child: image != null
+                    ? Image.asset(
+                        image!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => Icon(
+                          icon ?? Icons.fastfood,
+                          size: 70,
+                          color: AppColors.primary,
+                        ),
+                      )
+                    : Icon(
+                        icon ?? Icons.fastfood,
+                        size: 70,
+                        color: AppColors.primary,
+                      ),
               ),
               // Bandeau transparent en haut avec Nom et Prix
               Positioned(
@@ -60,7 +78,7 @@ class DishPreviewDialog extends StatelessWidget {
                 right: 0,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  color: Colors.black.withValues(alpha: 0.5),
+                  color: Colors.black.withValues(alpha: 0.65),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [

@@ -10,6 +10,7 @@ class FreeFoodDish {
   final String name;
   final int originalPrice;
   final bool isFree;
+  final String? image;
   final IconData icon;
 
   const FreeFoodDish({
@@ -17,6 +18,7 @@ class FreeFoodDish {
     required this.name,
     required this.originalPrice,
     required this.isFree,
+    this.image,
     required this.icon,
   });
 }
@@ -36,6 +38,7 @@ class _FreeFoodScreenState extends State<FreeFoodScreen> {
       name: 'Pâte noire',
       originalPrice: 200,
       isFree: true,
+      image: 'assets/images/dish_pate_noire.png',
       icon: Icons.rice_bowl,
     ),
     FreeFoodDish(
@@ -43,6 +46,7 @@ class _FreeFoodScreenState extends State<FreeFoodScreen> {
       name: 'Tapioca chaud',
       originalPrice: 100,
       isFree: true,
+      image: 'assets/images/dish_tapioca.png',
       icon: Icons.breakfast_dining,
     ),
     FreeFoodDish(
@@ -50,6 +54,7 @@ class _FreeFoodScreenState extends State<FreeFoodScreen> {
       name: 'Gari au lait',
       originalPrice: 200,
       isFree: true,
+      image: 'assets/images/dish_gari.png',
       icon: Icons.local_drink,
     ),
     FreeFoodDish(
@@ -57,6 +62,7 @@ class _FreeFoodScreenState extends State<FreeFoodScreen> {
       name: 'Pâte rouge',
       originalPrice: 200,
       isFree: true,
+      image: 'assets/images/dish_pate_rouge.png',
       icon: Icons.dinner_dining,
     ),
     FreeFoodDish(
@@ -64,6 +70,7 @@ class _FreeFoodScreenState extends State<FreeFoodScreen> {
       name: 'Riz au gras',
       originalPrice: 1000,
       isFree: false,
+      image: 'assets/images/dish_pate_rouge.png',
       icon: Icons.set_meal,
     ),
     FreeFoodDish(
@@ -71,6 +78,7 @@ class _FreeFoodScreenState extends State<FreeFoodScreen> {
       name: 'Amberger',
       originalPrice: 5000,
       isFree: false,
+      image: 'assets/images/amberger_banner.png',
       icon: Icons.lunch_dining,
     ),
     FreeFoodDish(
@@ -78,6 +86,7 @@ class _FreeFoodScreenState extends State<FreeFoodScreen> {
       name: 'Pâte blanche',
       originalPrice: 200,
       isFree: true,
+      image: 'assets/images/dish_pate_blanche.png',
       icon: Icons.rice_bowl_outlined,
     ),
     FreeFoodDish(
@@ -85,6 +94,7 @@ class _FreeFoodScreenState extends State<FreeFoodScreen> {
       name: 'Chawarma',
       originalPrice: 1000,
       isFree: false,
+      image: 'assets/images/dish_chawarma.png',
       icon: Icons.fastfood,
     ),
   ];
@@ -210,6 +220,7 @@ class _FreeFoodScreenState extends State<FreeFoodScreen> {
                           context: context,
                           name: dish.name,
                           price: '${dish.originalPrice} F CFA',
+                          image: dish.image,
                           icon: dish.icon,
                           onAdd: () {
                             if (!isSelected) _toggleDish(dish);
@@ -222,7 +233,7 @@ class _FreeFoodScreenState extends State<FreeFoodScreen> {
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: isSelected ? AppColors.primary : AppColors.border,
-                            width: isSelected ? 2 : 1,
+                            width: isSelected ? 2.5 : 1,
                           ),
                           boxShadow: [
                             BoxShadow(
@@ -243,24 +254,37 @@ class _FreeFoodScreenState extends State<FreeFoodScreen> {
                                   'Gratuit',
                                   style: TextStyle(
                                     fontSize: 11,
+                                    fontWeight: FontWeight.w600,
                                     color: Colors.grey.shade600,
                                   ),
                                 ),
-                              ),
+                              )
+                            else
+                              const SizedBox(height: 20),
 
-                            // Image du plat
+                            // Image réelle du plat
                             Expanded(
                               child: Container(
-                                margin: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryLight,
+                                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: const BoxDecoration(
                                   shape: BoxShape.circle,
                                 ),
-                                child: Icon(
-                                  dish.icon,
-                                  size: 48,
-                                  color: AppColors.primary,
-                                ),
+                                clipBehavior: Clip.antiAlias,
+                                child: dish.image != null
+                                    ? Image.asset(
+                                        dish.image!,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, _, _) => Icon(
+                                          dish.icon,
+                                          size: 48,
+                                          color: AppColors.primary,
+                                        ),
+                                      )
+                                    : Icon(
+                                        dish.icon,
+                                        size: 48,
+                                        color: AppColors.primary,
+                                      ),
                               ),
                             ),
 
@@ -270,8 +294,8 @@ class _FreeFoodScreenState extends State<FreeFoodScreen> {
                               decoration: BoxDecoration(
                                 color: isSelected ? AppColors.primary : Colors.white,
                                 borderRadius: const BorderRadius.only(
-                                  bottomLeft: Radius.circular(14),
-                                  bottomRight: Radius.circular(14),
+                                  bottomLeft: Radius.circular(13),
+                                  bottomRight: Radius.circular(13),
                                 ),
                               ),
                               child: Column(
