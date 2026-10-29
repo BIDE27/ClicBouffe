@@ -2,7 +2,20 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../home/presentation/home_screen.dart';
 
-/// Écran d'onboarding en 3 étapes (conforme aux maquettes 151155, 151227 et 151522.jpg)
+/// Modèle pour chaque étape de l'onboarding
+class OnboardingStep {
+  final String imagePath;
+  final String title;
+  final String description;
+
+  const OnboardingStep({
+    required this.imagePath,
+    required this.title,
+    required this.description,
+  });
+}
+
+/// Écrans 2, 3, 4 : Onboarding en 3 étapes (conforme aux captures 151155, 151227 et 151522.jpg)
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -12,35 +25,45 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
-  int _currentPage = 0;
+  int _currentIndex = 0;
 
-  final List<OnboardingItem> _pages = const [
-    OnboardingItem(
+  final List<OnboardingStep> _steps = const [
+    OnboardingStep(
+      imagePath: 'assets/images/onboarding_1.png',
       title: 'Des plats familiers',
       description:
           'Composez à votre convenance des plats que vous avez l\'habitude de manger chez vous et qui ne sont pas forcément accessibles dans les restaurants.',
-      icon: Icons.soup_kitchen_outlined,
     ),
-    OnboardingItem(
+    OnboardingStep(
+      imagePath: 'assets/images/onboarding_2.png',
       title: 'Des plats courants',
       description:
           'Des plats plus ou moins bourgeois que vous trouvez souvent dans les restaurants ou que vous cuisinez à la maison.',
-      icon: Icons.lunch_dining_outlined,
     ),
-    OnboardingItem(
+    OnboardingStep(
+      imagePath: 'assets/images/onboarding_3.png',
       title: 'Des plats soutenus\net exotiques',
       description:
           'Des plats bourgeois que vous et votre famille mangez pour votre plaisir.',
-      icon: Icons.fastfood_outlined,
     ),
   ];
 
-  void _finishOnboarding() {
+  void _finish() {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => const HomeScreen(),
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 300),
+        pageBuilder: (_, animation, _) => FadeTransition(
+          opacity: animation,
+          child: const HomeScreen(),
+        ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   @override
@@ -50,52 +73,51 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       body: SafeArea(
         child: Column(
           children: [
+            // Contenu paginé (Image + Titre + Description)
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
-                itemCount: _pages.length,
+                itemCount: _steps.length,
                 onPageChanged: (index) {
-                  setState(() => _currentPage = index);
+                  setState(() => _currentIndex = index);
                 },
                 itemBuilder: (context, index) {
-                  final item = _pages[index];
+                  final step = _steps[index];
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28),
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Illustration / icône représentative
-                        Container(
-                          width: 200,
+                        // Illustration des 3 plats en triangle
+                        Image.asset(
+                          step.imagePath,
                           height: 200,
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryLight,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            item.icon,
-                            size: 100,
-                            color: AppColors.primary,
-                          ),
+                          fit: BoxFit.contain,
                         ),
-                        const SizedBox(height: 48),
+                        const SizedBox(height: 36),
+
+                        // Titre du slide
                         Text(
-                          item.title,
+                          step.title,
                           textAlign: TextAlign.center,
                           style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.black,
+                            letterSpacing: -0.3,
                           ),
                         ),
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 16),
+
+                        // Description
                         Text(
-                          item.description,
+                          step.description,
                           textAlign: TextAlign.center,
                           style: const TextStyle(
-                            fontSize: 15,
-                            color: AppColors.textSecondary,
-                            height: 1.5,
+                            fontSize: 13.5,
+                            color: Color(0xFF222222),
+                            height: 1.45,
+                            fontWeight: FontWeight.w400,
                           ),
                         ),
                       ],
@@ -105,73 +127,110 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ),
 
-            // Indicateurs de pagination (dots)
+            // Indicateurs de pagination (3 cercles comme sur la maquette)
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
-                _pages.length,
-                (index) => AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: _currentPage == index ? 20 : 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: _currentPage == index
-                        ? AppColors.primary
-                        : Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
+                _steps.length,
+                (index) {
+                  final isCurrent = _currentIndex == index;
+                  return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 6),
+                    width: 9,
+                    height: 9,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isCurrent ? AppColors.primary : Colors.transparent,
+                      border: Border.all(
+                        color: isCurrent ? AppColors.primary : Colors.black87,
+                        width: 1.2,
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 36),
 
-            // Boutons de navigation (SAUTER / COMMENCER / FLÈCHES)
+            // Barre inférieure de navigation : [<]  [ SAUTER / COMMENCER ]  [>]
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  if (_currentPage > 0)
-                    IconButton(
-                      onPressed: () {
-                        _pageController.previousPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                        );
-                      },
-                      icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-                    )
-                  else
-                    const SizedBox(width: 48),
-
-                  // Bouton central : SAUTER ou COMMENCER
-                  if (_currentPage == _pages.length - 1)
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _finishOnboarding,
-                        child: const Text('COMMENCER'),
-                      ),
-                    )
-                  else
-                    ElevatedButton(
-                      onPressed: _finishOnboarding,
-                      child: const Text('SAUTER'),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              child: SizedBox(
+                height: 48,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Flèche gauche (<)
+                    SizedBox(
+                      width: 48,
+                      child: _currentIndex > 0
+                          ? IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: const Icon(
+                                Icons.chevron_left,
+                                size: 38,
+                                color: Colors.black,
+                              ),
+                              onPressed: () {
+                                _pageController.previousPage(
+                                  duration: const Duration(milliseconds: 250),
+                                  curve: Curves.easeInOut,
+                                );
+                              },
+                            )
+                          : const SizedBox.shrink(),
                     ),
 
-                  if (_currentPage < _pages.length - 1)
-                    IconButton(
+                    // Bouton central : SAUTER ou COMMENCER
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 12),
+                      ),
                       onPressed: () {
-                        _pageController.nextPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                        );
+                        if (_currentIndex == _steps.length - 1) {
+                          _finish();
+                        } else {
+                          _finish();
+                        }
                       },
-                      icon: const Icon(Icons.arrow_forward_ios, size: 20),
-                    )
-                  else
-                    const SizedBox(width: 48),
-                ],
+                      child: Text(
+                        _currentIndex == _steps.length - 1 ? 'COMMENCER' : 'SAUTER',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+
+                    // Flèche droite (>)
+                    SizedBox(
+                      width: 48,
+                      child: _currentIndex < _steps.length - 1
+                          ? IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: const Icon(
+                                Icons.chevron_right,
+                                size: 38,
+                                color: Colors.black,
+                              ),
+                              onPressed: () {
+                                _pageController.nextPage(
+                                  duration: const Duration(milliseconds: 250),
+                                  curve: Curves.easeInOut,
+                                );
+                              },
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -179,16 +238,4 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ),
     );
   }
-}
-
-class OnboardingItem {
-  final String title;
-  final String description;
-  final IconData icon;
-
-  const OnboardingItem({
-    required this.title,
-    required this.description,
-    required this.icon,
-  });
 }

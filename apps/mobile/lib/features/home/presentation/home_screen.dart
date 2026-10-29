@@ -4,7 +4,7 @@ import '../../compose_dish/presentation/compose_dish_screen.dart';
 import '../../free_food/presentation/free_food_screen.dart';
 import 'widgets/free_food_dialog.dart';
 
-/// Écran d'accueil principal (conforme à la maquette 151615.jpg)
+/// Écran 5 : Accueil principal (conforme au pixel près à la capture 151615.jpg)
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -15,45 +15,46 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentNavIndex = 0;
 
-  final List<Map<String, dynamic>> _popularDishes = [
+  // Liste des plats de la grille inférieure (2 lignes x 3 colonnes)
+  final List<Map<String, String>> _interestDishes = const [
     {
       'name': 'Pâte noire',
       'price': '2 000 FCFA',
-      'icon': Icons.rice_bowl,
+      'image': 'assets/images/dish_pate_noire.png',
     },
     {
       'name': 'Tapioca chaud',
       'price': '100 FCFA',
-      'icon': Icons.breakfast_dining,
+      'image': 'assets/images/dish_tapioca.png',
     },
     {
       'name': 'Chawarma',
       'price': '1 000 FCFA',
-      'icon': Icons.fastfood,
+      'image': 'assets/images/dish_chawarma.png',
     },
     {
       'name': 'Pâte blanche',
       'price': '200 FCFA',
-      'icon': Icons.rice_bowl_outlined,
+      'image': 'assets/images/dish_pate_blanche.png',
     },
     {
       'name': 'Gari au lait',
       'price': '200 FCFA',
-      'icon': Icons.local_drink,
+      'image': 'assets/images/dish_gari.png',
     },
     {
       'name': 'Pâte rouge',
       'price': '1 000 FCFA',
-      'icon': Icons.dinner_dining,
+      'image': 'assets/images/dish_pate_rouge.png',
     },
   ];
 
   @override
   void initState() {
     super.initState();
-    // Affiche automatiquement l'offre de bienvenue après 1 seconde
+    // Affichage de la modale de bienvenue cadeau selon le flow
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 800), () {
+      Future.delayed(const Duration(milliseconds: 900), () {
         if (mounted) {
           FreeFoodDialog.show(context);
         }
@@ -65,249 +66,313 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      // 1. APP BAR
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        titleSpacing: 16,
         title: const Text(
           'ClicBouffe',
           style: TextStyle(
             color: AppColors.primary,
             fontSize: 22,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.2,
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_none, color: Colors.black87),
+            icon: const Icon(Icons.notifications_none_outlined, color: Colors.black87, size: 24),
             onPressed: () {},
           ),
           IconButton(
-            icon: const Icon(Icons.search, color: Colors.black87),
+            icon: const Icon(Icons.search, color: Colors.black87, size: 24),
             onPressed: () {},
           ),
           IconButton(
-            icon: const Icon(Icons.menu, color: Colors.black87),
+            icon: const Icon(Icons.menu, color: Colors.black87, size: 24),
             onPressed: () {},
           ),
         ],
-        elevation: 0,
       ),
+
+      // 2. CORPS DE LA PAGE
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Carrousel / Mise en avant (Amberger 5000 FCFA)
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              height: 170,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.border),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
+            const SizedBox(height: 8),
+
+            // CARROUSEL SUPÉRIEUR (Plats en vedette : Spaghetti - Amberger - Poisson)
+            SizedBox(
+              height: 155,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
-                  Expanded(
+                  // Carte gauche partielle (Spaghetti)
+                  _buildPartialCard(
                     child: Container(
+                      width: 50,
                       decoration: BoxDecoration(
-                        color: AppColors.primaryLight,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(20),
-                          topRight: Radius.circular(20),
-                        ),
+                        color: Colors.amber.shade50,
+                        borderRadius: BorderRadius.circular(14),
                       ),
                       child: const Center(
-                        child: Icon(
-                          Icons.lunch_dining,
-                          size: 70,
-                          color: AppColors.primary,
-                        ),
+                        child: Icon(Icons.dinner_dining, color: Colors.orange, size: 30),
                       ),
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                  const SizedBox(width: 12),
+
+                  // Carte centrale principale : Amberger (5 000 FCFA)
+                  Container(
+                    width: 200,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: Colors.grey.shade200),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.06),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    clipBehavior: Clip.antiAlias,
                     child: Column(
-                      children: const [
-                        Text(
-                          'Amberger',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
+                      children: [
+                        // Image du Amberger
+                        Expanded(
+                          child: Container(
+                            width: double.infinity,
+                            color: Colors.black,
+                            child: Image.asset(
+                              'assets/images/amberger_banner.png',
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
-                        SizedBox(height: 2),
-                        Text(
-                          '5 000 FCFA',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textSecondary,
+                        // Détails (Nom & Prix)
+                        Container(
+                          width: double.infinity,
+                          color: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Column(
+                            children: const [
+                              Text(
+                                'Amberger',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              SizedBox(height: 1),
+                              Text(
+                                '5 000 FCFA',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                   ),
-                ],
-              ),
-            ),
+                  const SizedBox(width: 12),
 
-            // Bannière Promo Cadeau de bienvenue
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.primaryLight,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.celebration, color: AppColors.primary),
-                  const SizedBox(width: 10),
-                  const Expanded(
-                    child: Text(
-                      'Profitez d\'un plat 100% gratuit en bienvenue !',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primaryDark,
+                  // Carte droite partielle (Poisson grillé)
+                  _buildPartialCard(
+                    child: Container(
+                      width: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.teal.shade50,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Center(
+                        child: Icon(Icons.set_meal, color: Colors.teal, size: 30),
                       ),
                     ),
                   ),
-                  TextButton(
-                    onPressed: () {
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // TITRE DE SECTION
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                'Plats pouvant vous intéresser',
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF222222),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // GRILLE DES PLATS (2 lignes x 3 colonnes)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _interestDishes.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                  childAspectRatio: 0.85,
+                ),
+                itemBuilder: (context, index) {
+                  final dish = _interestDishes[index];
+                  return InkWell(
+                    onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => const FreeFoodScreen(),
                         ),
                       );
                     },
-                    child: const Text('Voir'),
-                  ),
-                ],
-              ),
-            ),
-
-            // Titre de section "Plats pouvant vous intéresser"
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: Text(
-                'Plats pouvant vous intéresser',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ),
-
-            // Grille des plats
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemCount: _popularDishes.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 14,
-                childAspectRatio: 0.75,
-              ),
-              itemBuilder: (context, index) {
-                final dish = _popularDishes[index];
-                return Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: AppColors.border),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          margin: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryLight,
-                            shape: BoxShape.circle,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.grey.shade200),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.03),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
                           ),
-                          child: Icon(
-                            dish['icon'] as IconData,
-                            size: 32,
-                            color: AppColors.primary,
-                          ),
-                        ),
+                        ],
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8, left: 4, right: 4),
-                        child: Column(
-                          children: [
-                            Text(
-                              dish['name'] as String,
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Image du plat
+                          Expanded(
+                            child: Container(
+                              color: Colors.grey.shade50,
+                              child: Image.asset(
+                                dish['image']!,
+                                fit: BoxFit.contain,
                               ),
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              dish['price'] as String,
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textSecondary,
-                              ),
+                          ),
+                          // Libellé et prix
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                            child: Column(
+                              children: [
+                                Text(
+                                  dish['name']!,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                const SizedBox(height: 1),
+                                Text(
+                                  dish['price']!,
+                                  style: const TextStyle(
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                );
-              },
+                    ),
+                  );
+                },
+              ),
             ),
-            const SizedBox(height: 80),
+
+            const SizedBox(height: 90), // Espace pour la barre de navigation
           ],
         ),
       ),
 
-      // Bouton central flottant : "Composer plat" (au-dessus de la barre de navigation)
+      // 3. BOUTON FLOTTANT CENTRAL : (+) "Composer plat"
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.primary,
-        elevation: 4,
-        shape: const CircleBorder(),
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => const ComposeDishScreen(),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.4),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          );
-        },
-        child: const Icon(Icons.add, size: 30, color: Colors.white),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const ComposeDishScreen(),
+                    ),
+                  );
+                },
+                child: const Center(
+                  child: Icon(Icons.add, color: Colors.white, size: 32),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 2),
+          const Text(
+            'Composer plat',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 4),
+        ],
       ),
 
-      // Barre de navigation inférieure (Accueil, Explorer, Espace central, Plus tard, Abonnements)
-      bottomNavigationBar: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 8,
-        color: Colors.white,
+      // 4. BARRE DE NAVIGATION INFÉRIEURE
+      bottomNavigationBar: Container(
+        height: 60,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: Colors.grey.shade200, width: 1)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
@@ -315,23 +380,27 @@ class _HomeScreenState extends State<HomeScreen> {
               index: 0,
               icon: Icons.home,
               label: 'Accueil',
+              isActive: _currentNavIndex == 0,
             ),
             _buildNavItem(
               index: 1,
-              icon: Icons.explore_outlined,
+              icon: Icons.smart_display_outlined,
               label: 'Explorer',
+              isActive: _currentNavIndex == 1,
             ),
-            // Espace pour le bouton central (+)
-            const SizedBox(width: 48),
+            // Espace réservé pour le bouton central flottant (+)
+            const SizedBox(width: 70),
             _buildNavItem(
               index: 2,
-              icon: Icons.access_time,
+              icon: Icons.access_time_outlined,
               label: 'Plus tard',
+              isActive: _currentNavIndex == 2,
             ),
             _buildNavItem(
               index: 3,
               icon: Icons.calendar_today_outlined,
               label: 'Abonnements',
+              isActive: _currentNavIndex == 3,
             ),
           ],
         ),
@@ -339,32 +408,42 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildPartialCard({required Widget child}) {
+    return Opacity(
+      opacity: 0.6,
+      child: child,
+    );
+  }
+
   Widget _buildNavItem({
     required int index,
     required IconData icon,
     required String label,
+    required bool isActive,
   }) {
-    final isSelected = _currentNavIndex == index;
     return InkWell(
       onTap: () => setState(() => _currentNavIndex = index),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 22,
-            color: isSelected ? AppColors.primary : Colors.grey.shade500,
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              color: isSelected ? AppColors.primary : Colors.grey.shade600,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 22,
+              color: isActive ? AppColors.primary : Colors.black87,
             ),
-          ),
-        ],
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 9.5,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                color: isActive ? AppColors.primary : Colors.black87,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

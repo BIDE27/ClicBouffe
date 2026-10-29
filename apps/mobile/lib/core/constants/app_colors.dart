@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 
-/// Palette de couleurs officielle de ClicBouffe extraite des maquettes.
+/// Palette de couleurs officielle de ClicBouffe extraite au pixel près des maquettes.
 class AppColors {
   AppColors._();
 
-  /// Bleu primaire vif (Splash, boutons d'action, accents)
-  static const Color primary = Color(0xFF00A7E1);
+  /// Bleu primaire officiel ClicBouffe (#00AFF2 / RGB 0, 175, 242)
+  static const Color primary = Color(0xFF00AFF2);
 
   /// Nuance primaire plus foncée pour le texte ou le focus
-  static const Color primaryDark = Color(0xFF0084B4);
+  static const Color primaryDark = Color(0xFF008CC2);
 
   /// Nuance primaire très claire pour les fonds d'étiquettes
-  static const Color primaryLight = Color(0xFFE5F6FD);
+  static const Color primaryLight = Color(0xFFE5F7FE);
 
   /// Couleur de fond principale de l'application
   static const Color background = Color(0xFFF9FAFB);
