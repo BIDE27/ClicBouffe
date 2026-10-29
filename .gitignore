@@ -2,6 +2,8 @@
 .env
 .env*.local
 *.env
+.secrets.local
+*.secrets
 *.key
 *.pem
 *.keystore
