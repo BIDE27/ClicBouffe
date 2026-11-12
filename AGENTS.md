@@ -1,122 +1,128 @@
-# 🛡️ CLICBOUFFE — RÈGLES DE DÉVELOPPEMENT, D'ARCHITECTURE ET DE SÉCURITÉ (AGENTS.md)
+# 🛡️ CLICBOUFFE — CHARTE TECHNIQUE, ARCHITECTURE ET RÈGLES DE SÉCURITÉ (AGENTS.md)
 
-Ce document constitue la **charte technique et éthique obligatoire** pour tout agent d'ingénierie logicielle et tout développeur intervenant sur le projet **ClicBouffe**. 
-Chaque ligne de code écrite doit respecter scrupuleusement ces directives sans dérogation.
-
----
-
-## 1. 🏛️ PHILOSOPHIE & STANDARDS D'INGÉNIERIE
-
-1. **Priorité absolue à la Sécurité & à la Robustesse** : Aucun compromis sur la sécurité au profit de la rapidité. Tout système déployé doit être résilient face aux attaques et aux pannes réseau.
-2. **Technologies Modernes & À Jour** : Utiliser exclusivement les dernières versions stables et recommandées des frameworks et bibliothèques (Flutter 3.x+, Next.js 15+ App Router, TypeScript strict, PostgreSQL 16+).
-3. **Clean Architecture & Séparation des Responsabilités (SoC)** :
-   * Chaque composant a une responsabilité unique (SOLID).
-   * Isolation stricte entre la couche de présentation (UI), la logique métier (Domain/Use Cases) et l'accès aux données (Data/Repository).
-4. **Typage Strict & Zéro Dette Technique** :
-   * TypeScript configuré en `strict: true`, interdiction absolue du type `any` non justifié.
-   * Dart avec null-safety stricte, analyse statique sans aucun avertissement (`lint: flutter_lints`).
-5. **Code Auto-Documenté & Lisible** : Nommage explicite en anglais ou français cohérent, commentaires réservés à la logique métier complexe.
+Ce document constitue la **charte technique, éthique et opérationnelle obligatoire** pour tout agent d'ingénierie logicielle et tout développeur intervenant sur le projet **ClicBouffe**. 
+Chaque ligne de code écrite et chaque décision d'architecture doivent respecter scrupuleusement ces directives sans dérogation.
 
 ---
 
-## 2. 🔐 SÉCURITÉ MAXIMALE (ZERO-TRUST & OWASP)
+## 1. 🏛️ PHILOSOPHIE, OBJECTIFS & STACK TECHNIQUE UNIFIÉE
+
+1. **Stack Technique Centrale** :
+   * **Framework Unique** : Next.js 16+ (App Router), React 19, TypeScript strict (`strict: true`).
+   * **Mobile Natif via Capacitor** : Capacitor 7+ pour l'encapsulation mobile (iOS / Android) à destination des App Stores.
+   * **Styling & Composants** : Tailwind CSS v4 + `shadcn/ui` + `vaul` (tiroirs natifs) + `framer-motion` (animations fluides 60/120 FPS).
+   * **Base de données & Backend** : PostgreSQL 16+ hébergé sur Supabase, Row-Level Security (RLS) active, Supabase Edge Functions (Deno/TypeScript) pour la logique critique.
+   * **Archive Mobile** : Le dossier `apps/mobile` (Flutter) est conservé comme référence d'archive historique.
+2. **Double Rendu (Responsive Web Desktop + Mobile-First & In-App Capacitor)** :
+   * **Sur Desktop / Grands écrans** : Expérience marketplace e-commerce moderne, aérée et pleine largeur (standard Uber Eats / Deliveroo Web) avec gestion de panier latérale et espace restaurateur KDS.
+   * **Sur Smartphone & dans Capacitor** : Expérience mobile-first compacte, identique au pixel près aux maquettes de référence (TopBar fixe, Bottom TabBar avec bouton central `+ Composer`, tiroirs bottom-sheet coulissants).
+3. **Double Mode de Build (SEO vs Capacitor)** :
+   * **Production Web (Vercel)** : Build SSR/PPR standard pour un référencement naturel (**SEO**) maximal sur les restaurants, plats et quartiers.
+   * **Production Mobile (Capacitor)** : Build d'export statique dédié (`output: 'export'`) embarqué directement dans l'APK/IPA pour un démarrage instantané en 0 ms sans dépendance initiale au réseau.
+4. **Zéro Dette Technique** :
+   * TypeScript strict sans aucun type `any` non justifié.
+   * Zéro avertissement au linter (`npm run lint`).
+   * Tests unitaires et d'intégration validés avant tout commit.
+
+---
+
+## 2. 📱 STANDARDS CAPACITOR & RENDU INDISCERNABLE DU NATIF (ANTI-WEBVIEW)
+
+Pour garantir que l'application encapsulée dans Capacitor soit **100 % indiscernable d'une application native** et passe sans encombre les validations Apple App Store et Google Play Store :
+
+1. **Règles CSS & Viewport Anti-Navigateur** :
+   * Gestion obligatoire des Safe Areas : `viewport-fit=cover` avec application stricte des paddings `env(safe-area-inset-top)` et `env(safe-area-inset-bottom)`.
+   * Suppression de l'effet rebond élastique du navigateur : `overscroll-behavior-y: none;`.
+   * Blocage des sélections intempestives : `user-select: none;` et `-webkit-touch-callout: none;` sur les boutons, cartes, menus et visuels.
+   * Suppression du surlignage tactile gris/bleu : `-webkit-tap-highlight-color: transparent;`.
+   * Hauteur dynamique moderne : Utilisation stricte de `100dvh` pour éviter les sauts lors de l'ouverture du clavier virtuel.
+   * Gestion du zoom tactile : `touch-action: manipulation;` pour interdire le zoom involontaire à deux doigts.
+2. **Plugins Natifs Capacitor Requis** :
+   * `@capacitor/haptics` : Retours haptiques (micro-vibrations) à chaque action clé (ajout au panier, clic sur ingrédient, validation de commande).
+   * `@capacitor/status-bar` & `@capacitor/splash-screen` : Splash screen natif au démarrage et barre de statut synchronisée aux couleurs officielles de la marque (`#00AFF2`).
+   * `@capacitor/app` : Interception systématique du **bouton Retour matériel Android** (fermeture de modale / tiroir avant fermeture de l'app).
+   * `@capacitor/network` : Écoute continue de l'état réseau avec affichage d'un bandeau discret et reprise transparente.
+   * `@capacitor/keyboard` : Redimensionnement fluide de la vue lors de la saisie d'adresses ou recherches.
+3. **Résilience Réseau & Mode Hors-Ligne (Afrique de l'Ouest / 3G-4G)** :
+   * Mise en cache locale persistante (via `@tanstack/react-query` persistant en IndexedDB / stockage local).
+   * Les menus, catégories et photos déjà consultés doivent s'afficher instantanément même hors-ligne. Aucun écran blanc n'est toléré.
+
+---
+
+## 3. 🔐 SÉCURITÉ MAXIMALE (ZERO-TRUST & OWASP)
 
 ### A. Supabase & Base de Données
 * **Row-Level Security (RLS) OBLIGATOIRE sur TOUTES les tables** :
   * Aucune table ne doit être créée sans `ALTER TABLE <nom> ENABLE ROW LEVEL SECURITY;`.
-  * Chaque table doit avoir des politiques (`POLICIES`) restrictives pour chaque action : `SELECT`, `INSERT`, `UPDATE`, `DELETE`.
-  * Un utilisateur / restaurateur ne peut accéder qu'aux données qui lui appartiennent strictement.
+  * Politiques (`POLICIES`) restrictives et explicites pour chaque opération (`SELECT`, `INSERT`, `UPDATE`, `DELETE`).
+  * Un client ne peut voir ou modifier que son propre panier et ses propres commandes. Un restaurateur ne peut modifier que ses propres plats et commandes assignées.
 * **Séparation étanche des Clés d'API** :
-  * La clé `anon` (publique) est la seule autorisée dans le code Flutter et le client Web Next.js.
-  * La clé `service_role` (secrète/admin) est **strictement interdite** dans le code client. Elle est réservée aux Supabase Edge Functions et aux Server Components / API Routes de Next.js.
+  * Clé `anon` (publique) : seule clé autorisée dans le code client Web et Capacitor.
+  * Clé `service_role` (secrète) : **strictement interdite** dans le bundle client. Réservée aux Supabase Edge Functions et aux Server Components / API Routes protégées.
 * **Transactions Atomiques (ACID)** :
-  * Toute opération touchant aux paiements, décrémentation des stocks ou validation de commande doit être exécutée dans une transaction PostgreSQL ou une procédure stockée (`SECURITY DEFINER`) pour éviter les attaques par concurrence (*race conditions*).
+  * La création de commande, le calcul des montants, la décrémentation des stocks et la validation des paiements doivent s'exécuter dans des transactions PostgreSQL ou procédures `SECURITY DEFINER`.
 * **Audit & Traçabilité** :
-  * Horodatage obligatoire (`created_at`, `updated_at`) avec triggers automatiques.
-  * Journalisation des actions financières et changements de statuts de commandes.
+  * Colonnes `created_at` et `updated_at` obligatoires avec triggers automatiques.
+  * Journalisation sécurisée de chaque événement de paiement et changement de statut de commande.
 
 ### B. Validation & Assainissement des Données (Input Sanitization)
-* **Zéro Confiance dans les Entrées Clients** : Toute donnée provenant du mobile ou du web doit être validée et assainie.
-* **Schémas de validation stricts** : Utilisation de **Zod** côté Next.js / TypeScript et de validateurs stricts côté Flutter.
-* **Prévention des Injections** : Interdiction formelle des requêtes SQL concaténées brutes. Toujours utiliser les requêtes paramétrées du SDK Supabase ou ORM.
+* Schémas de validation stricts avec **Zod** sur toutes les données entrantes (adresses, listes d'options, numéros de téléphone, paniers).
+* Prévention totale des injections : requêtes SQL paramétrées via le SDK Supabase, aucune concaténation brute.
 
 ### C. Gestion des Secrets & Variables d'Environnement
-* Ne **JAMAIS** commiter de fichier `.env`, de clés privées, de certificats SSL, de clés de signature Android (`keystore`) ou profils iOS dans Git.
-* Le fichier `.gitignore` doit être rigoureusement maintenu dès le premier commit.
-* Utilisation de gestionnaires de secrets sécurisés (Supabase Vault / Secrets, Vercel Environment Variables).
+* Interdiction absolue de commiter des fichiers `.env*`, des clés privées, des tokens Vercel/Supabase ou des certificats de signature d'application.
+* Le fichier `.gitignore` doit exclure systématiquement tout fichier sensible.
 
-### D. Stockage Sécurisé Côté Client
-* **Mobile (Flutter)** : Utilisation exclusive de `flutter_secure_storage` (Keychain sous iOS, EncryptedSharedPreferences sous Android) pour les tokens et données sensibles. Ne jamais stocker de tokens en clair dans `SharedPreferences`.
-* **Web (Next.js)** : Stockage des sessions dans des cookies `HttpOnly`, `Secure`, `SameSite=Lax/Strict`.
-
----
-
-## 3. 📱 STANDARDS FLUTTER (MOBILE CLIENT & LIVREUR)
-
-1. **Architecture Feature-First** :
-   ```
-   lib/
-   ├── core/           # Thème, constantes, utils, réseau, erreurs
-   ├── features/       # Modules indépendants (auth, home, cart, orders, profile...)
-   │   └── <feature>/
-   │       ├── data/           # Modèles DTO, datasources Supabase, repositories impl
-   │       ├── domain/         # Entités pures, use cases, interfaces repository
-   │       └── presentation/   # Écrans (views), widgets, state management
-   └── main.dart
-   ```
-2. **Gestion d'État** : Utilisation de **Riverpod** ou **BLoC**, prévisibles, réactifs et testables.
-3. **Résilience Réseau & Mode Hors-Ligne Dégradé** :
-   * L'application doit gérer avec élégance les coupures de connexion (connexions 3G/4G instables).
-   * Feedback visuel immédiat pour l'utilisateur en cas de perte réseau (pas d'écran blanc ni de crash).
-   * Cache local intelligent des menus et images.
-4. **Performance & Rendu Visuel** :
-   * Atteindre un rendu stable à 60/120 FPS.
-   * Optimisation des images : chargement lazy, placeholders lissés, format WebP.
-   * Respect fidèle des maquettes UI/UX (couleurs, espacements, ergonomie "Composer son plat").
+### D. Stockage des Tokens & Sessions
+* **Sur le Web** : Cookies de session `HttpOnly`, `Secure`, `SameSite=Lax`.
+* **Dans Capacitor** : Stockage sécurisé des tokens d'authentification via un adaptateur sécurisé pour éviter toute purge inopinée de la WebView.
 
 ---
 
-## 4. 🌐 STANDARDS NEXT.JS (PORTAIL RESTOS & SUPER-ADMIN)
+## 4. 🌍 SPÉCIFICITÉS MARCHÉ LOCAL & PAIEMENTS (FCFA / AFRIQUE)
 
-1. **Next.js App Router & Server-First** :
-   * Privilégier les **Server Components** par défaut pour la vitesse de chargement et le SEO.
-   * Utiliser `'use client'` uniquement pour les composants interactifs (formulaires, alertes sonores, cartes interactives).
-2. **Design System Professionnel** :
-   * Tailwind CSS avec **shadcn/ui** pour un rendu élégant, cohérent et accessible (a11y).
-   * Mode sombre/clair supporté.
-3. **Temps Réel en Cuisine** :
-   * Écoute en direct des nouvelles commandes via le SDK Supabase Realtime.
-   * Gestion de l'audio HTML5 avec reprise automatique pour les alertes de commandes en cuisine.
-
----
-
-## 5. 🌍 SPÉCIFICITÉS MARCHÉ LOCAL & PAIEMENT (FCFA / AFRIQUE)
-
-1. **Multi-Devise & Format Monétaire** :
-   * Formater rigoureusement les montants en **FCFA** (ex: `1 000 FCFA` avec espace insécable).
-   * Calcul précis des frais de livraison selon la grille (80 F, 130 F, 170 F, gratuit au-delà de 10 plats).
-2. **Passerelles de Paiement Sécurisées** :
-   * Intégration par Webhook cryptographiquement vérifié (signature HMAC / SHA256) pour FedaPay / KKiaPay / Paystack.
-   * Une commande n'est validée en base QUE lorsque le webhook signé confirme la transaction, jamais sur simple retour de l'application cliente.
+1. **Format Monétaire & Grille Tarifaire** :
+   * Tous les montants doivent être rigoureusement formatés en **FCFA** avec espace insécable (ex: `1 000 FCFA`).
+   * Calcul des frais de livraison selon la grille officielle :
+     * 1 à 2 plats : **80 FCFA**
+     * 3 à 5 plats : **130 FCFA**
+     * 6 à 10 plats : **170 FCFA**
+     * Plus de 10 plats : **Gratuit (0 FCFA)**
+2. **Passerelles de Paiement Sécurisées (FedaPay, KKiaPay, Paystack, Mobile Money)** :
+   * Validation uniquement via **Webhooks signés cryptographiquement (HMAC / SHA256)** reçus sur une Supabase Edge Function sécurisée.
+   * L'application cliente ne valide jamais elle-même une commande : elle attend la confirmation serveur émise par le webhook.
+   * Dans Capacitor, ouverture du paiement via `@capacitor/browser` (Chrome Custom Tabs / Safari View Controller) avec retour par Deep Link applicatif.
 
 ---
 
-## 6. 🚀 GIT, CI/CD & QUALITÉ DE LIVRAISON
+## 5. 👥 ÉQUIPE D'INGÉNIERIE MULTI-AGENTS & PROTOCOLE DE QUALITÉ
 
-1. **Convention de Commits (Conventional Commits en Français)** :
-   * **Langue obligatoire** : **Tous les messages de commit doivent être rédigés exclusivement en français**.
+Pour garantir un niveau de qualité logiciel d'excellence, chaque lot de travail est soumis à une collaboration structurée entre agents experts :
+
+1. **Agent 1 : Architecte & Développeur Principal (`builder`)** :
+   * Responsable de la conception, de l'implémentation du code TypeScript/React, des composants UI, de la configuration Capacitor et de l'intégration Supabase.
+2. **Agent 2 : Auditeur Sécurité & Zero-Trust (`security-auditor`)** :
+   * Inspecte les politiques RLS, l'isolation des clés API, la validation des schémas Zod, l'absence de fuite de données et la vérification des signatures de webhooks. Bloque toute livraison présentant une vulnérabilité.
+3. **Agent 3 : Ingénieur QA & Testeur Automatisé (`qa-tester`)** :
+   * Responsable des tests unitaires, des tests d'intégration, de la conformité TypeScript (`tsc --noEmit`), des audits du linter et des tests de robustesse (coupures réseau, montants invalides, flux de panier).
+4. **Agent 4 : Spécialiste UX & Finitions Natives (`native-reviewer`)** :
+   * Vérifie la fidélité pixel-perfect aux maquettes, le respect des safe areas, la réactivité tactile, les animations à 60/120 FPS et l'ergonomie mobile/desktop.
+
+---
+
+## 6. 🚀 GIT, CI/CD & CONVENTIONS DE COMMITS
+
+1. **Convention de Commits (en Français Obligatoire)** :
    * Format type : `<type>: <description impérative en français>`
-   * `feat: ...` : Nouvelle fonctionnalité (ex: `feat: ajout de l'écran d'accueil`)
-   * `fix: ...` : Correction de bug (ex: `fix: correction du calcul des frais de livraison`)
-   * `security: ...` : Sécurité (ex: `security: activation des politiques RLS sur les commandes`)
-   * `refactor: ...` : Refactorisation sans changement de comportement (ex: `refactor: réorganisation des repositories`)
-   * `chore: ...` : Maintenance, configuration, dépendances (ex: `chore: initialisation du projet Flutter`)
-2. **Revue de Sécurité Pré-Commit** :
-   * Vérifier qu'aucun identifiant, clé API secrète ou mot de passe n'est présent.
-   * Vérifier que les tests unitaires et l'analyse statique passent sans erreur.
-3. **Déploiement Continu** :
-   * Vercel pour le Web (Next.js) avec previews automatiques par branche.
-   * Supabase CLI pour les migrations de base de données versionnées dans le dépôt Git.
+   * `feat: ...` : Nouvelle fonctionnalité
+   * `fix: ...` : Correction de bug
+   * `security: ...` : Sécurité, RLS, protection des accès
+   * `refactor: ...` : Refactorisation sans modification de comportement
+   * `test: ...` : Ajout ou correction de tests
+   * `chore: ...` : Maintenance, dépendances, configuration Capacitor
+2. **Revue Pré-Commit Obligatoire** :
+   * Aucune clé secrète présente dans les fichiers trackés.
+   * Zéro erreur TypeScript et zéro avertissement linter.
 
 ---
 
