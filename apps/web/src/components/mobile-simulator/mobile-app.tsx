@@ -60,11 +60,20 @@ export default function MobileApp({
   const [recipient, setRecipient] = useState("Moi seul(e)");
   const [orderConfirmed, setOrderConfirmed] = useState(false);
 
-  useEffect(() => {
-    if (forcedScreen) {
-      setCurrentScreen(forcedScreen);
-    }
-  }, [forcedScreen]);
+  // Synchronisation du forcedScreen sans effet de cascade
+  const [prevForcedScreen, setPrevForcedScreen] = useState(forcedScreen);
+  if (forcedScreen && forcedScreen !== prevForcedScreen) {
+    setPrevForcedScreen(forcedScreen);
+    setCurrentScreen(forcedScreen);
+  }
+
+  const setScreen = React.useCallback(
+    (s: Screen) => {
+      setCurrentScreen(s);
+      if (onScreenChange) onScreenChange(s);
+    },
+    [onScreenChange]
+  );
 
   // Redirection automatique Splash vers Onboarding
   useEffect(() => {
@@ -74,12 +83,7 @@ export default function MobileApp({
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [currentScreen]);
-
-  const setScreen = (s: Screen) => {
-    setCurrentScreen(s);
-    if (onScreenChange) onScreenChange(s);
-  };
+  }, [currentScreen, setScreen]);
 
   const onboardingSteps = [
     {
@@ -111,7 +115,7 @@ export default function MobileApp({
   const composeTotal =
     composeBasePrice +
     composeProteins.reduce((acc, p) => acc + (p === "Poisson braisé" ? 1000 : 1200), 0) +
-    composeExtras.reduce((acc, e) => acc + 400, 0);
+    composeExtras.reduce((acc) => acc + 400, 0);
 
   return (
     <div className="w-full h-full bg-white select-none relative overflow-hidden flex flex-col text-slate-900 font-sans">
@@ -646,6 +650,36 @@ export default function MobileApp({
                     >
                       <span>{p.name}</span>
                       <span>+ {p.price} FCFA</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Suppléments */}
+            <div>
+              <p className="font-bold text-slate-900 mb-2">4. Suppléments (Optionnel)</p>
+              <div className="space-y-1.5">
+                {[
+                  { name: "Alloco", price: 400 },
+                  { name: "Piment noir maison", price: 200 },
+                  { name: "Oeuf dur", price: 200 },
+                ].map((extra) => {
+                  const has = composeExtras.includes(extra.name);
+                  return (
+                    <div
+                      key={extra.name}
+                      onClick={() => {
+                        setComposeExtras(
+                          has ? composeExtras.filter((x) => x !== extra.name) : [...composeExtras, extra.name]
+                        );
+                      }}
+                      className={`p-2.5 rounded-xl border flex justify-between items-center cursor-pointer ${
+                        has ? "border-[#00AFF2] bg-sky-50/50 text-[#00AFF2] font-bold" : "border-slate-200"
+                      }`}
+                    >
+                      <span>{extra.name}</span>
+                      <span>+ {extra.price} FCFA</span>
                     </div>
                   );
                 })}

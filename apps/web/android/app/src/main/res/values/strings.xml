@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ClicBouffe</string>
+    <string name="title_activity_main">ClicBouffe</string>
+    <string name="package_name">com.clicbouffe.app</string>
+    <string name="custom_url_scheme">com.clicbouffe.app</string>
+</resources>
