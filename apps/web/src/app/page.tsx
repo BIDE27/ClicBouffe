@@ -5,16 +5,12 @@ import Image from "next/image";
 import {
   ArrowLeft,
   Bell,
-  Calendar,
   Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   ChevronUp,
-  Clock,
-  Compass,
   Gift,
-  Home,
   Info,
   MapPin,
   Menu as MenuIcon,
@@ -28,6 +24,12 @@ import {
   X,
 } from "lucide-react";
 import { hapticFeedback } from "@/lib/native/haptics";
+import {
+  HomeNavIcon,
+  ExplorerNavIcon,
+  ClockNavIcon,
+  CalendarNavIcon,
+} from "@/components/navigation-icons";
 
 export type Screen =
   | "splash"
@@ -489,12 +491,9 @@ export default function ClicBouffePlatform() {
                   activeNavTab === "home" ? "text-[#00AFF2]" : "text-slate-600 hover:text-[#00AFF2]"
                 }`}
               >
-                <Home
-                  className={`w-5 h-5 stroke-[2] transition-all ${
-                    activeNavTab === "home"
-                      ? "fill-[#00AFF2] text-[#00AFF2]"
-                      : "fill-none text-slate-600"
-                  }`}
+                <HomeNavIcon
+                  active={activeNavTab === "home"}
+                  className="w-5 h-5 transition-transform active:scale-90"
                 />
                 <span
                   className={`text-[9px] transition-all ${
@@ -515,12 +514,9 @@ export default function ClicBouffePlatform() {
                   activeNavTab === "explorer" ? "text-[#00AFF2]" : "text-slate-600 hover:text-[#00AFF2]"
                 }`}
               >
-                <Compass
-                  className={`w-5 h-5 stroke-[2] transition-all ${
-                    activeNavTab === "explorer"
-                      ? "fill-[#00AFF2] text-[#00AFF2]"
-                      : "fill-none text-slate-600"
-                  }`}
+                <ExplorerNavIcon
+                  active={activeNavTab === "explorer"}
+                  className="w-5 h-5 transition-transform active:scale-90"
                 />
                 <span
                   className={`text-[9px] transition-all ${
@@ -555,12 +551,9 @@ export default function ClicBouffePlatform() {
                   activeNavTab === "plus_tard" ? "text-[#00AFF2]" : "text-slate-600 hover:text-[#00AFF2]"
                 }`}
               >
-                <Clock
-                  className={`w-5 h-5 stroke-[2] transition-all ${
-                    activeNavTab === "plus_tard"
-                      ? "fill-[#00AFF2] text-[#00AFF2]"
-                      : "fill-none text-slate-600"
-                  }`}
+                <ClockNavIcon
+                  active={activeNavTab === "plus_tard"}
+                  className="w-5 h-5 transition-transform active:scale-90"
                 />
                 <span
                   className={`text-[9px] transition-all ${
@@ -581,12 +574,9 @@ export default function ClicBouffePlatform() {
                   activeNavTab === "abonnements" ? "text-[#00AFF2]" : "text-slate-600 hover:text-[#00AFF2]"
                 }`}
               >
-                <Calendar
-                  className={`w-5 h-5 stroke-[2] transition-all ${
-                    activeNavTab === "abonnements"
-                      ? "fill-[#00AFF2] text-[#00AFF2]"
-                      : "fill-none text-slate-600"
-                  }`}
+                <CalendarNavIcon
+                  active={activeNavTab === "abonnements"}
+                  className="w-5 h-5 transition-transform active:scale-90"
                 />
                 <span
                   className={`text-[9px] transition-all ${
