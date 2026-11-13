@@ -199,16 +199,21 @@ export default function MobileApp({
           onClick={() => setScreen("onboarding")}
           className="w-full h-full bg-[#00AFF2] flex flex-col items-center justify-center p-6 cursor-pointer relative"
         >
-          {/* Logo vectoriel officiel extrait du PSD */}
-          <div className="relative w-48 h-48 flex items-center justify-center animate-fadeIn">
-            <Image
-              src="/images/logo_splash.png"
-              alt="ClicBouffe Logo"
-              width={180}
-              height={165}
-              priority
-              className="object-contain drop-shadow-md"
-            />
+          {/* Logo vectoriel officiel extrait du PSD avec son curseur central */}
+          <div className="flex flex-col items-center justify-center animate-fadeIn">
+            <div className="relative w-44 h-40 flex items-center justify-center">
+              <Image
+                src="/images/logo_splash.png"
+                alt="ClicBouffe Logo"
+                width={180}
+                height={165}
+                priority
+                className="object-contain drop-shadow-md"
+              />
+            </div>
+            <h1 className="text-white text-2xl font-extrabold tracking-tight mt-3 drop-shadow-sm font-sans">
+              ClicBouffe
+            </h1>
           </div>
 
           {/* Bouton discret passer */}

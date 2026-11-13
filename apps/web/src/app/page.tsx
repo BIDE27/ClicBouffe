@@ -186,16 +186,21 @@ export default function ClicBouffePlatform() {
           onClick={() => setScreen("onboarding")}
           className="fixed inset-0 z-50 bg-[#00AFF2] flex flex-col items-center justify-center p-6 cursor-pointer"
         >
-          {/* Logo vectoriel officiel extrait du fichier PSD */}
-          <div className="relative w-52 sm:w-64 h-52 sm:h-64 flex items-center justify-center animate-fadeIn">
-            <Image
-              src="/images/logo_splash.png"
-              alt="Logo ClicBouffe"
-              width={220}
-              height={200}
-              priority
-              className="object-contain drop-shadow-md"
-            />
+          {/* Logo vectoriel officiel extrait du fichier PSD avec son curseur central */}
+          <div className="flex flex-col items-center justify-center animate-fadeIn">
+            <div className="relative w-48 sm:w-60 h-44 sm:h-56 flex items-center justify-center">
+              <Image
+                src="/images/logo_splash.png"
+                alt="Logo ClicBouffe"
+                width={220}
+                height={200}
+                priority
+                className="object-contain drop-shadow-md"
+              />
+            </div>
+            <h1 className="text-white text-3xl sm:text-4xl font-extrabold tracking-tight mt-4 drop-shadow-sm font-sans">
+              ClicBouffe
+            </h1>
           </div>
 
           <button
