@@ -333,9 +333,22 @@ export default function ClicBouffePlatform() {
           <header className="p-4 border-b border-slate-100 bg-white/95 backdrop-blur-md sticky top-0 z-30 pt-safe">
             <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <h1 className="text-xl sm:text-2xl font-black text-[#00AFF2] tracking-tight">
-                  ClicBouffe
-                </h1>
+                <div
+                  onClick={() => setScreen("home")}
+                  className="flex items-center gap-1.5 cursor-pointer select-none"
+                >
+                  <Image
+                    src="/images/cursor_icon.png"
+                    alt="Logo ClicBouffe"
+                    width={24}
+                    height={24}
+                    priority
+                    className="w-5 h-5 sm:w-6 sm:h-6 object-contain"
+                  />
+                  <h1 className="text-xl sm:text-2xl font-black text-[#00AFF2] tracking-tight">
+                    ClicBouffe
+                  </h1>
+                </div>
                 <div className="hidden sm:flex items-center gap-1 text-xs text-slate-500 font-medium">
                   <MapPin className="w-3.5 h-3.5 text-[#00AFF2]" />
                   <span>{deliveryAddress}</span>

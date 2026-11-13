@@ -346,7 +346,20 @@ export default function MobileApp({
         <div className="w-full h-full bg-white flex flex-col justify-between overflow-y-auto">
           {/* Header TopBar */}
           <div className="p-4 flex items-center justify-between border-b border-slate-100 bg-white sticky top-0 z-10 pt-safe">
-            <h1 className="text-xl font-black text-[#00AFF2] tracking-tight">ClicBouffe</h1>
+            <div
+              onClick={() => setScreen("home")}
+              className="flex items-center gap-1.5 cursor-pointer select-none"
+            >
+              <Image
+                src="/images/cursor_icon.png"
+                alt="Logo ClicBouffe"
+                width={22}
+                height={22}
+                priority
+                className="w-5 h-5 object-contain"
+              />
+              <h1 className="text-xl font-black text-[#00AFF2] tracking-tight">ClicBouffe</h1>
+            </div>
             <div className="flex items-center gap-3 text-slate-800">
               <button
                 onClick={() => setShowFreeFoodModal(true)}
