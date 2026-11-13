@@ -79,6 +79,9 @@ export default function ClicBouffePlatform() {
   ]);
   const [showMoreDishes, setShowMoreDishes] = useState(false);
 
+  // Onglet actif de navigation basse
+  const [activeNavTab, setActiveNavTab] = useState<"home" | "explorer" | "plus_tard" | "abonnements">("home");
+
   // Paramètres de commande & Finalisation
   const [expandedStep, setExpandedStep] = useState<1 | 2 | 3>(1);
   const [deliveryAddress, setDeliveryAddress] = useState("Terrain Zico, Akpakpa");
@@ -476,19 +479,56 @@ export default function ClicBouffePlatform() {
           {/* Barre Navigation Basse Pixel-Perfect avec FAB (+) Composer plat */}
           <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200 h-16 flex items-center justify-around px-2 z-30 pb-safe">
             <div className="max-w-lg w-full mx-auto flex items-center justify-around">
+              {/* Accueil */}
               <button
-                onClick={() => setScreen("home")}
-                className="flex flex-col items-center gap-0.5 text-[#00AFF2]"
+                onClick={() => {
+                  setActiveNavTab("home");
+                  setScreen("home");
+                }}
+                className={`flex flex-col items-center gap-0.5 transition-colors ${
+                  activeNavTab === "home" ? "text-[#00AFF2]" : "text-slate-600 hover:text-[#00AFF2]"
+                }`}
               >
-                <Home className="w-5 h-5 stroke-[2]" />
-                <span className="text-[9px] font-bold">Accueil</span>
+                <Home
+                  className={`w-5 h-5 stroke-[2] transition-all ${
+                    activeNavTab === "home"
+                      ? "fill-[#00AFF2] text-[#00AFF2]"
+                      : "fill-none text-slate-600"
+                  }`}
+                />
+                <span
+                  className={`text-[9px] transition-all ${
+                    activeNavTab === "home" ? "font-bold text-[#00AFF2]" : "font-medium text-slate-600"
+                  }`}
+                >
+                  Accueil
+                </span>
               </button>
+
+              {/* Explorer */}
               <button
-                onClick={() => setScreen("free_food")}
-                className="flex flex-col items-center gap-0.5 text-slate-700 hover:text-[#00AFF2]"
+                onClick={() => {
+                  setActiveNavTab("explorer");
+                  setScreen("free_food");
+                }}
+                className={`flex flex-col items-center gap-0.5 transition-colors ${
+                  activeNavTab === "explorer" ? "text-[#00AFF2]" : "text-slate-600 hover:text-[#00AFF2]"
+                }`}
               >
-                <Compass className="w-5 h-5 stroke-[2]" />
-                <span className="text-[9px]">Explorer</span>
+                <Compass
+                  className={`w-5 h-5 stroke-[2] transition-all ${
+                    activeNavTab === "explorer"
+                      ? "fill-[#00AFF2] text-[#00AFF2]"
+                      : "fill-none text-slate-600"
+                  }`}
+                />
+                <span
+                  className={`text-[9px] transition-all ${
+                    activeNavTab === "explorer" ? "font-bold text-[#00AFF2]" : "font-medium text-slate-600"
+                  }`}
+                >
+                  Explorer
+                </span>
               </button>
 
               {/* Bouton central (+) Composer plat */}
@@ -505,19 +545,56 @@ export default function ClicBouffePlatform() {
                 <span className="text-[9px] font-bold text-black mt-1">Composer plat</span>
               </div>
 
+              {/* Plus tard */}
               <button
-                onClick={() => setShowDeliveryRatesModal(true)}
-                className="flex flex-col items-center gap-0.5 text-slate-700 hover:text-[#00AFF2]"
+                onClick={() => {
+                  setActiveNavTab("plus_tard");
+                  setShowDeliveryRatesModal(true);
+                }}
+                className={`flex flex-col items-center gap-0.5 transition-colors ${
+                  activeNavTab === "plus_tard" ? "text-[#00AFF2]" : "text-slate-600 hover:text-[#00AFF2]"
+                }`}
               >
-                <Clock className="w-5 h-5 stroke-[2]" />
-                <span className="text-[9px]">Plus tard</span>
+                <Clock
+                  className={`w-5 h-5 stroke-[2] transition-all ${
+                    activeNavTab === "plus_tard"
+                      ? "fill-[#00AFF2] text-[#00AFF2]"
+                      : "fill-none text-slate-600"
+                  }`}
+                />
+                <span
+                  className={`text-[9px] transition-all ${
+                    activeNavTab === "plus_tard" ? "font-bold text-[#00AFF2]" : "font-medium text-slate-600"
+                  }`}
+                >
+                  Plus tard
+                </span>
               </button>
+
+              {/* Abonnements */}
               <button
-                onClick={() => setScreen("checkout")}
-                className="flex flex-col items-center gap-0.5 text-slate-700 hover:text-[#00AFF2]"
+                onClick={() => {
+                  setActiveNavTab("abonnements");
+                  setScreen("checkout");
+                }}
+                className={`flex flex-col items-center gap-0.5 transition-colors ${
+                  activeNavTab === "abonnements" ? "text-[#00AFF2]" : "text-slate-600 hover:text-[#00AFF2]"
+                }`}
               >
-                <Calendar className="w-5 h-5 stroke-[2]" />
-                <span className="text-[9px]">Abonnements</span>
+                <Calendar
+                  className={`w-5 h-5 stroke-[2] transition-all ${
+                    activeNavTab === "abonnements"
+                      ? "fill-[#00AFF2] text-[#00AFF2]"
+                      : "fill-none text-slate-600"
+                  }`}
+                />
+                <span
+                  className={`text-[9px] transition-all ${
+                    activeNavTab === "abonnements" ? "font-bold text-[#00AFF2]" : "font-medium text-slate-600"
+                  }`}
+                >
+                  Abonnements
+                </span>
               </button>
             </div>
           </nav>
