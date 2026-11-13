@@ -16,8 +16,7 @@
   --color-foreground: var(--foreground);
   --color-primary: #00AFF2;
   --color-primary-hover: #0098d4;
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-google-sans), -apple-system, BlinkMacSystemFont, "Google Sans", "Product Sans", "Segoe UI", Roboto, sans-serif;
 }
 
 /* 🛡️ STANDARDS CAPACITOR & ANTI-WEBVIEW (AGENTS.md) */
@@ -25,7 +24,7 @@ html,
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-google-sans), -apple-system, BlinkMacSystemFont, "Google Sans", "Product Sans", "Segoe UI", Roboto, sans-serif;
   
   /* Hauteur dynamique moderne pour éviter les sauts lors de l'ouverture du clavier virtuel */
   min-height: 100dvh;
