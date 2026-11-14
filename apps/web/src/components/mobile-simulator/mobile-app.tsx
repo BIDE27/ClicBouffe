@@ -1,26 +1,20 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import {
   ArrowLeft,
   Bell,
   Check,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ChevronUp,
   Gift,
-  Info,
   MapPin,
   Menu as MenuIcon,
   Plus,
-  Search,
-  Send,
   Sparkles,
-  Users,
-  Utensils,
-  UtensilsCrossed,
+  Star,
+  Trash2,
   X,
 } from "lucide-react";
 import { hapticFeedback } from "@/lib/native/haptics";
@@ -30,11 +24,24 @@ import {
   ClockNavIcon,
   CalendarNavIcon,
 } from "@/components/navigation-icons";
+import {
+  REGIONAL_RESTAURANTS,
+  INITIAL_SCHEDULED_DISHES,
+  INITIAL_SUBSCRIPTIONS,
+  AVAILABLE_FORMULAS,
+  INITIAL_GRID_DISHES,
+  DishItem,
+  ScheduledDish,
+  MealSubscription,
+} from "@/lib/data/clicbouffe-data";
 
 export type Screen =
   | "splash"
   | "onboarding"
   | "home"
+  | "explorer"
+  | "plus_tard"
+  | "abonnements"
   | "free_food"
   | "compose_dish"
   | "checkout";
@@ -48,27 +55,6 @@ export interface MobileAppProps {
 export function formatFCFA(amount: number): string {
   return `${amount.toLocaleString("fr-FR").replace(/\s/g, "\u00A0")}\u00A0FCFA`;
 }
-
-interface DishItem {
-  id: string;
-  name: string;
-  price: string;
-  priceNum: number;
-  originalPrice?: number;
-  img: string;
-  isFree?: boolean;
-}
-
-const INITIAL_GRID_DISHES: DishItem[] = [
-  { id: "1", name: "Pâte noire", price: "2 000 FCFA", priceNum: 2000, originalPrice: 200, img: "/images/dish_pate_noire.png", isFree: true },
-  { id: "2", name: "Tapioca chaud", price: "100 FCFA", priceNum: 100, originalPrice: 100, img: "/images/dish_tapioca.png", isFree: true },
-  { id: "3", name: "Chawarma", price: "1 000 FCFA", priceNum: 1000, originalPrice: 1000, img: "/images/dish_chawarma.png", isFree: false },
-  { id: "4", name: "Pâte blanche", price: "200 FCFA", priceNum: 200, originalPrice: 200, img: "/images/dish_pate_blanche.png", isFree: true },
-  { id: "5", name: "Gari au lait", price: "200 FCFA", priceNum: 200, originalPrice: 200, img: "/images/dish_gari.png", isFree: true },
-  { id: "6", name: "Pâte rouge", price: "1 000 FCFA", priceNum: 1000, originalPrice: 200, img: "/images/dish_pate_rouge.png", isFree: true },
-  { id: "7", name: "Riz au gras", price: "1 000 FCFA", priceNum: 1000, originalPrice: 1000, img: "/images/onboarding_2.png", isFree: false },
-  { id: "8", name: "Amberger", price: "5 000 FCFA", priceNum: 5000, originalPrice: 5000, img: "/images/amberger_banner.png", isFree: false },
-];
 
 export default function MobileApp({
   forcedScreen,
@@ -89,76 +75,74 @@ export default function MobileApp({
   const [selectedDishes, setSelectedDishes] = useState<DishItem[]>([
     INITIAL_GRID_DISHES[0], // Pâte noire sélectionnée par défaut
   ]);
-  const [showMoreDishes, setShowMoreDishes] = useState(false);
 
-  // Onglet actif de navigation basse
+  // Onglet actif
   const [activeNavTab, setActiveNavTab] = useState<"home" | "explorer" | "plus_tard" | "abonnements">("home");
+  const currentTab = (currentScreen === "home" || currentScreen === "explorer" || currentScreen === "plus_tard" || currentScreen === "abonnements")
+    ? currentScreen
+    : activeNavTab;
 
-  // Accordéons finalisation
-  const [expandedStep, setExpandedStep] = useState<1 | 2 | 3>(1);
-  const [deliveryAddress, setDeliveryAddress] = useState("Terrain Zico");
-  const [recipient, setRecipient] = useState("Moi seul(e)");
+  // État Explorer
+  const [selectedExplorerCategory, setSelectedExplorerCategory] = useState<"all" | "local" | "maquis" | "chawarma" | "burger">("all");
+
+  // État Plus Tard (Plats programmés)
+  const [scheduledDishes, setScheduledDishes] = useState<ScheduledDish[]>(INITIAL_SCHEDULED_DISHES);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleDishChoice, setScheduleDishChoice] = useState<DishItem>(INITIAL_GRID_DISHES[0]);
+  const [scheduleDay, setScheduleDay] = useState("Aujourd'hui");
+  const [scheduleHour, setScheduleHour] = useState("19h30");
+
+  // État Abonnements
+  const [subscriptions, setSubscriptions] = useState<MealSubscription[]>(INITIAL_SUBSCRIPTIONS);
+  const [activeSubTab, setActiveSubTab] = useState<"active" | "discover">("active");
+
+  const deliveryAddress = "Terrain Zico, Akpakpa";
   const [orderConfirmed, setOrderConfirmed] = useState(false);
 
-  // Composer son plat
+  // État Composer son plat
   const [composeBase, setComposeBase] = useState("Pâte noire");
   const [composeBasePrice, setComposeBasePrice] = useState(500);
-  const [composeSauce, setComposeSauce] = useState("Sauce Gombo");
-  const [composeProteins, setComposeProteins] = useState<string[]>(["Poisson braisé"]);
-  const [composeExtras, setComposeExtras] = useState<string[]>([]);
 
-  const setScreen = React.useCallback(
-    (s: Screen) => {
-      hapticFeedback("light");
-      setInternalScreen(s);
-      if (onScreenChange) onScreenChange(s);
-    },
-    [onScreenChange]
-  );
-
-  // Redirection automatique Splash vers Onboarding
-  useEffect(() => {
-    if (currentScreen === "splash") {
-      const timer = setTimeout(() => {
-        setScreen("onboarding");
-      }, 2400);
-      return () => clearTimeout(timer);
+  // Synchronisation screen
+  const setScreen = (s: Screen) => {
+    hapticFeedback("light");
+    setInternalScreen(s);
+    if (s === "home" || s === "explorer" || s === "plus_tard" || s === "abonnements") {
+      setActiveNavTab(s);
     }
-  }, [currentScreen, setScreen]);
+    if (onScreenChange) {
+      onScreenChange(s);
+    }
+  };
 
-  // Onboarding screens configuration
+  // Étapes Onboarding
   const onboardingSteps = [
     {
       title: "Des plats familiers",
       desc: "Composez à votre convenance des plats que vous avez l'habitude de manger chez vous et qui ne sont pas forcément accessibles dans les restaurants.",
       img: "/images/onboarding_1.png",
-      items: ["Pâte noire traditionnelle", "Riz aux haricots", "Tapioca au lait crémeux"],
     },
     {
       title: "Des plats courants",
       desc: "Des plats plus ou moins bourgeois que vous trouvez souvent dans les restaurants ou que vous cuisinez à la maison.",
       img: "/images/onboarding_2.png",
-      items: ["Riz au gras poisson", "Pâte rouge poulet", "Sauce graine amala"],
     },
     {
       title: "Des plats soutenus\net exotiques",
       desc: "Des plats bourgeois que vous et votre famille mangez pour votre plaisir.",
       img: "/images/onboarding_3.png",
-      items: ["Amberger Gourmet", "Chawarma Royal", "Pizza au feu de bois"],
     },
   ];
 
-  // Calcul des totaux et des frais de livraison (grille officielle)
+  // Calcul des totaux et de la grille tarifaire officielle
   const cartItemsCount = selectedDishes.length;
   const cartSubtotal = selectedDishes.reduce((acc, dish) => {
-    // Si c'est le 1er plat gratuit, prix = 0, sinon prix normal
     if (dish.isFree && selectedDishes.findIndex((d) => d.id === dish.id) === 0) {
       return acc + 0;
     }
     return acc + dish.priceNum;
   }, 0);
 
-  // Grille officielle : 1-2 plats = 80 FCFA, 3-5 = 130 FCFA, 6-10 = 170 FCFA, >10 = 0 FCFA
   const deliveryFee =
     cartItemsCount === 0
       ? 0
@@ -172,394 +156,453 @@ export default function MobileApp({
 
   const cartTotal = cartSubtotal + deliveryFee;
 
-  // Toggle sélection d'un plat
+  const composeTotal = composeBasePrice + 500; // base + garniture par défaut
+
   const toggleSelectDish = (dish: DishItem) => {
     hapticFeedback("light");
-    setSelectedDishes((prev) => {
-      const exists = prev.some((d) => d.id === dish.id);
-      if (exists) {
-        // Garde au moins un plat ou vide
-        return prev.filter((d) => d.id !== dish.id);
-      } else {
-        return [...prev, dish];
-      }
-    });
+    const exists = selectedDishes.some((d) => d.id === dish.id);
+    if (exists) {
+      setSelectedDishes(selectedDishes.filter((d) => d.id !== dish.id));
+    } else {
+      setSelectedDishes([...selectedDishes, dish]);
+    }
   };
 
-  // Composer son plat total
-  const composeTotal =
-    composeBasePrice +
-    composeProteins.reduce((acc, p) => acc + (p === "Poisson braisé" ? 1000 : 1200), 0) +
-    composeExtras.reduce((acc) => acc + 400, 0);
+  const filteredRestaurants = REGIONAL_RESTAURANTS.filter((r) => {
+    if (selectedExplorerCategory !== "all" && r.categoryId !== selectedExplorerCategory) {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <div
-      className={`w-full h-full bg-white select-none relative overflow-hidden flex flex-col text-slate-900 font-sans ${className}`}
+      className={`relative w-full h-full bg-white flex flex-col font-sans select-none overflow-x-hidden ${className}`}
     >
-      {/* ============================================================== */}
-      {/* 1. ÉCRAN SPLASH SCREEN (Capture d’écran 2026-10-20 150947.jpg) */}
-      {/* ============================================================== */}
+      {/* 1. Splash */}
       {currentScreen === "splash" && (
         <div
           onClick={() => setScreen("onboarding")}
-          className="w-full h-full bg-[#00AFF2] flex flex-col items-center justify-center p-6 cursor-pointer relative"
+          className="w-full h-full bg-[#00AFF2] flex flex-col items-center justify-center p-6 cursor-pointer"
         >
-          {/* Logo vectoriel officiel extrait du PSD avec son curseur central */}
           <div className="flex flex-col items-center justify-center animate-fadeIn">
             <div className="relative w-44 h-40 flex items-center justify-center">
               <Image
                 src="/images/logo_splash.png"
-                alt="ClicBouffe Logo"
-                width={180}
-                height={165}
+                alt="Logo ClicBouffe"
+                width={190}
+                height={170}
                 priority
                 className="object-contain drop-shadow-md"
               />
             </div>
-            <h1 className="text-white text-2xl font-extrabold tracking-tight mt-3 drop-shadow-sm font-sans">
+            <h1 className="text-white text-3xl font-extrabold tracking-tight mt-3">
               ClicBouffe
             </h1>
           </div>
-
-          {/* Bouton discret passer */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setScreen("onboarding");
-            }}
-            className="absolute bottom-10 text-xs text-white/80 font-medium tracking-wide hover:text-white transition-opacity"
-          >
-            Passer l&apos;introduction &gt;
-          </button>
         </div>
       )}
 
-      {/* ============================================================== */}
-      {/* 2. ÉCRANS ONBOARDING (Captures 151155, 151227, 151522.jpg) */}
-      {/* ============================================================== */}
+      {/* 2. Onboarding */}
       {currentScreen === "onboarding" && (
-        <div className="w-full h-full bg-white flex flex-col justify-between p-6">
-          <div className="flex-1 flex flex-col items-center justify-center text-center pt-2">
-            {/* Section visuelle des 3 plats en triangle */}
-            <div className="relative w-72 h-52 mb-6 flex items-center justify-center">
-              {onboardingSteps[onboardingIndex].img ? (
-                <Image
-                  src={onboardingSteps[onboardingIndex].img}
-                  alt={onboardingSteps[onboardingIndex].title}
-                  fill
-                  className="object-contain"
-                  priority
-                />
-              ) : (
-                /* Placeholder stylisé si l'image est en cours de chargement */
-                <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 p-4">
-                  <UtensilsCrossed className="w-12 h-12 text-[#00AFF2] mb-2" />
-                  <span className="text-xs text-slate-500 font-semibold">
-                    Emplacement photo {onboardingIndex + 1}
-                  </span>
-                </div>
-              )}
+        <div className="w-full h-full bg-white flex flex-col items-center justify-between p-6">
+          <div className="flex-1 flex flex-col items-center justify-center text-center">
+            <div className="relative w-64 h-48 mb-6 flex items-center justify-center">
+              <Image
+                src={onboardingSteps[onboardingIndex].img}
+                alt={onboardingSteps[onboardingIndex].title}
+                fill
+                className="object-contain"
+                priority
+              />
             </div>
-
-            {/* Titre Pixel-Perfect */}
             <h2 className="text-2xl font-black text-black tracking-tight whitespace-pre-line leading-tight">
               {onboardingSteps[onboardingIndex].title}
             </h2>
-
-            {/* Description Pixel-Perfect */}
-            <p className="text-xs text-slate-700 mt-3 leading-relaxed max-w-xs px-2">
+            <p className="text-xs text-slate-700 leading-relaxed max-w-xs mt-3">
               {onboardingSteps[onboardingIndex].desc}
             </p>
-          </div>
-
-          {/* Pagination à 3 points & Barre de navigation basse */}
-          <div className="pb-4">
-            {/* Dots */}
-            <div className="flex items-center justify-center gap-3 mb-6">
+            <div className="flex items-center justify-center gap-2.5 my-6">
               {[0, 1, 2].map((idx) => (
-                <button
+                <span
                   key={idx}
-                  onClick={() => setOnboardingIndex(idx)}
-                  className={`w-2.5 h-2.5 rounded-full border transition-all ${
+                  className={`rounded-full ${
                     onboardingIndex === idx
-                      ? "bg-[#00AFF2] border-[#00AFF2] scale-110"
-                      : "bg-white border-slate-800"
+                      ? "w-2.5 h-2.5 bg-[#00AFF2]"
+                      : "w-2 h-2 border border-black bg-transparent"
                   }`}
-                  aria-label={`Étape ${idx + 1}`}
                 />
               ))}
             </div>
-
-            {/* Barre de navigation basse */}
-            <div className="flex items-center justify-between h-12 px-2">
-              {/* Flèche gauche */}
-              <div className="w-10 flex items-center">
-                {onboardingIndex > 0 ? (
-                  <button
-                    onClick={() => {
-                      hapticFeedback("light");
-                      setOnboardingIndex(onboardingIndex - 1);
-                    }}
-                    className="p-1 text-black hover:opacity-70 active:scale-95 transition-transform"
-                    aria-label="Précédent"
-                  >
-                    <ChevronLeft className="w-8 h-8 stroke-[2.5]" />
-                  </button>
-                ) : (
-                  <div className="w-8" />
-                )}
-              </div>
-
-              {/* Bouton central (SAUTER / COMMENCER) */}
-              <button
-                onClick={() => {
-                  hapticFeedback("medium");
-                  setScreen("home");
-                  setTimeout(() => setShowFreeFoodModal(true), 700);
-                }}
-                className="bg-[#00AFF2] hover:bg-[#009bd6] active:scale-95 text-white px-8 py-2.5 rounded-lg text-xs font-bold tracking-wider shadow-sm transition-all uppercase"
-              >
-                {onboardingIndex === 2 ? "COMMENCER" : "SAUTER"}
-              </button>
-
-              {/* Flèche droite */}
-              <div className="w-10 flex items-center justify-end">
-                {onboardingIndex < 2 ? (
-                  <button
-                    onClick={() => {
-                      hapticFeedback("light");
-                      setOnboardingIndex(onboardingIndex + 1);
-                    }}
-                    className="p-1 text-black hover:opacity-70 active:scale-95 transition-transform"
-                    aria-label="Suivant"
-                  >
-                    <ChevronRight className="w-8 h-8 stroke-[2.5]" />
-                  </button>
-                ) : (
-                  <div className="w-8" />
-                )}
-              </div>
-            </div>
+          </div>
+          <div className="w-full flex items-center justify-between px-2">
+            <button
+              onClick={() => onboardingIndex > 0 && setOnboardingIndex(onboardingIndex - 1)}
+              className={`p-1 text-black ${onboardingIndex > 0 ? "opacity-100" : "opacity-0"}`}
+            >
+              <ChevronLeft className="w-7 h-7 stroke-[2.5]" />
+            </button>
+            <button
+              onClick={() => setScreen("home")}
+              className="bg-[#00AFF2] text-white font-extrabold text-xs px-6 py-2 rounded-lg"
+            >
+              SAUTER
+            </button>
+            <button
+              onClick={() =>
+                onboardingIndex < 2 ? setOnboardingIndex(onboardingIndex + 1) : setScreen("home")
+              }
+              className="p-1 text-black"
+            >
+              <ChevronRight className="w-7 h-7 stroke-[2.5]" />
+            </button>
           </div>
         </div>
       )}
 
-      {/* ============================================================== */}
-      {/* 3. ÉCRAN ACCUEIL (Capture d’écran 2026-10-20 151615.jpg) */}
-      {/* ============================================================== */}
-      {currentScreen === "home" && (
+      {/* 3. Écrans Principaux avec Header & TabBar */}
+      {(currentScreen === "home" ||
+        currentScreen === "explorer" ||
+        currentScreen === "plus_tard" ||
+        currentScreen === "abonnements") && (
         <div className="w-full h-full bg-white flex flex-col justify-between overflow-y-auto">
-          {/* Header TopBar */}
-          <div className="p-4 flex items-center justify-between border-b border-slate-100 bg-white sticky top-0 z-10 pt-safe">
-            <div
-              onClick={() => setScreen("home")}
-              className="flex items-center gap-1.5 cursor-pointer select-none"
-            >
-              <Image
-                src="/images/cursor_icon.png"
-                alt="Logo ClicBouffe"
-                width={22}
-                height={22}
-                priority
-                className="w-5 h-5 object-contain"
-              />
-              <h1 className="text-xl font-black text-[#00AFF2] tracking-tight">ClicBouffe</h1>
+          {/* Header Mobile */}
+          <div className="p-3 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-20 pt-safe">
+            <div className="flex items-center gap-1.5" onClick={() => setScreen("home")}>
+              <Image src="/images/cursor_icon.png" alt="Logo" width={20} height={20} />
+              <h1 className="text-lg font-black text-[#00AFF2]">ClicBouffe</h1>
             </div>
-            <div className="flex items-center gap-3 text-slate-800">
-              <button
-                onClick={() => setShowFreeFoodModal(true)}
-                className="p-1 hover:text-[#00AFF2] transition-colors relative"
-                aria-label="Notifications"
-              >
-                <Bell className="w-5 h-5 stroke-[1.8]" />
-                <span className="w-2 h-2 rounded-full bg-[#00AFF2] absolute top-1 right-1" />
+            <div className="flex items-center gap-1 text-[11px] text-slate-500 font-medium">
+              <MapPin className="w-3 h-3 text-[#00AFF2]" />
+              <span>{deliveryAddress}</span>
+            </div>
+            <div className="flex items-center gap-2 text-slate-800">
+              <button onClick={() => setShowFreeFoodModal(true)} className="p-1 relative">
+                <Bell className="w-4 h-4 stroke-[1.8]" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#00AFF2] absolute top-1 right-1" />
               </button>
-              <button
-                onClick={() => setScreen("free_food")}
-                className="p-1 hover:text-[#00AFF2] transition-colors"
-                aria-label="Recherche"
-              >
-                <Search className="w-5 h-5 stroke-[1.8]" />
-              </button>
-              <button
-                onClick={() => setShowDeliveryRatesModal(true)}
-                className="p-1 hover:text-[#00AFF2] transition-colors"
-                aria-label="Menu"
-              >
-                <MenuIcon className="w-5 h-5 stroke-[2]" />
+              <button onClick={() => setShowDeliveryRatesModal(true)} className="p-1">
+                <MenuIcon className="w-4 h-4 stroke-[2]" />
               </button>
             </div>
           </div>
 
-          {/* Contenu Scrollable */}
-          <div className="flex-1 p-3 space-y-3 pb-24">
-            {/* Bannière Carrousel Amberger */}
-            <div className="flex items-center gap-2 overflow-x-hidden">
-              <div className="w-8 h-32 rounded-xl bg-slate-100 shrink-0 opacity-40 border" />
+          {/* Onglet Accueil */}
+          {currentScreen === "home" && (
+            <div className="p-3 space-y-4 pb-24">
               <div
-                onClick={() => setScreen("free_food")}
-                className="flex-1 bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs cursor-pointer hover:border-[#00AFF2] transition-all"
+                onClick={() => {
+                  const amberger = INITIAL_GRID_DISHES.find((d) => d.name === "Amberger") || INITIAL_GRID_DISHES[0];
+                  setPreviewDish(amberger);
+                  setShowDishPreviewModal(true);
+                }}
+                className="w-full h-44 rounded-2xl overflow-hidden relative shadow-sm border border-slate-200 cursor-pointer"
               >
-                <div className="h-28 bg-black relative flex items-center justify-center">
-                  <Image
-                    src="/images/amberger_banner.png"
-                    alt="Amberger"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <div className="p-2 text-center bg-white border-t border-slate-100">
-                  <p className="text-xs font-bold text-slate-900">Amberger</p>
-                  <p className="text-xs font-semibold text-slate-700">5 000 FCFA</p>
+                <Image src="/images/amberger_banner.jpg" alt="Amberger" fill className="object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent flex flex-col justify-end p-3.5 text-white">
+                  <span className="px-2 py-0.5 rounded-full bg-[#00AFF2] text-white text-[9px] font-bold w-fit uppercase">
+                    Spécialité du Chef
+                  </span>
+                  <h2 className="text-lg font-black text-white mt-1">Amberger Gourmet</h2>
+                  <p className="text-xs text-white/90 font-semibold">5 000 FCFA</p>
                 </div>
               </div>
-              <div className="w-8 h-32 rounded-xl bg-slate-100 shrink-0 opacity-40 border" />
-            </div>
 
-            {/* Titre section */}
-            <p className="text-[11px] font-medium text-slate-700 pt-1">
-              Plats pouvant vous intéresser
-            </p>
+              <div className="flex items-center justify-between pt-1">
+                <p className="text-xs font-bold text-slate-800">Plats pouvant vous intéresser</p>
+                <button onClick={() => setScreen("free_food")} className="text-xs font-bold text-[#00AFF2]">
+                  Tout voir &gt;
+                </button>
+              </div>
 
-            {/* Grille 6 plats (3 colonnes x 2 rangées) */}
-            <div className="grid grid-cols-3 gap-2">
-              {INITIAL_GRID_DISHES.slice(0, 6).map((dish) => (
-                <div
-                  key={dish.id}
-                  onClick={() => {
-                    hapticFeedback("light");
-                    setPreviewDish(dish);
-                    setShowDishPreviewModal(true);
-                  }}
-                  className="bg-white rounded-xl border border-slate-200 p-1.5 flex flex-col items-center justify-between text-center shadow-xs cursor-pointer hover:border-[#00AFF2] transition-all"
-                >
-                  <div className="w-full h-16 relative my-1 flex items-center justify-center">
-                    {dish.img ? (
-                      <Image
-                        src={dish.img}
-                        alt={dish.name}
-                        fill
-                        className="object-contain"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-                        <Utensils className="w-5 h-5" />
+              <div className="grid grid-cols-2 gap-2.5">
+                {INITIAL_GRID_DISHES.slice(0, 6).map((dish) => (
+                  <div
+                    key={dish.id}
+                    onClick={() => {
+                      setPreviewDish(dish);
+                      setShowDishPreviewModal(true);
+                    }}
+                    className="bg-white rounded-xl border border-slate-200 p-2 flex flex-col justify-between shadow-2xs relative"
+                  >
+                    <div className="w-full h-24 relative rounded-lg overflow-hidden bg-slate-100 mb-1.5">
+                      <Image src={dish.img} alt={dish.name} fill className="object-cover" />
+                      {dish.isFree && (
+                        <span className="absolute top-1 right-1 bg-[#00AFF2] text-white text-[8px] font-bold px-1 rounded-full">
+                          Offert
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="truncate pr-1">
+                        <p className="text-xs font-bold text-slate-900 truncate">{dish.name}</p>
+                        <p className="text-[10px] font-semibold text-slate-600">{dish.price}</p>
                       </div>
-                    )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedDishes((prev) => [...prev, dish]);
+                        }}
+                        className="w-6 h-6 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center shrink-0"
+                      >
+                        <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="w-full pt-1 border-t border-slate-100">
-                    <p className="text-[10px] font-bold text-slate-900 truncate">{dish.name}</p>
-                    <p className="text-[9px] font-semibold text-slate-700">{dish.price}</p>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Barre Navigation Basse Pixel-Perfect avec FAB (+) Composer plat */}
+          {/* Onglet Explorer */}
+          {currentScreen === "explorer" && (
+            <div className="p-3 space-y-3 pb-24">
+              <div className="bg-white rounded-xl p-3 border border-slate-200">
+                <div className="flex items-center gap-1 text-[10px] font-bold text-[#00AFF2] uppercase">
+                  <MapPin className="w-3 h-3" />
+                  <span>Akpakpa & Cotonou Est</span>
+                </div>
+                <h2 className="text-sm font-black text-slate-900 mt-0.5">
+                  Restaurants Disponibles
+                </h2>
+              </div>
+
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px]">
+                {[
+                  { id: "all", label: "Tous" },
+                  { id: "local", label: "Cuisine Locale" },
+                  { id: "maquis", label: "Grillades" },
+                  { id: "chawarma", label: "Chawarma" },
+                  { id: "burger", label: "Burgers" },
+                ].map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setSelectedExplorerCategory(cat.id as "all" | "local" | "maquis" | "chawarma" | "burger")}
+                    className={`px-3 py-1 rounded-full font-semibold whitespace-nowrap ${
+                      selectedExplorerCategory === cat.id
+                        ? "bg-[#00AFF2] text-white"
+                        : "bg-white text-slate-700 border border-slate-200"
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="space-y-3">
+                {filteredRestaurants.map((restau) => (
+                  <div
+                    key={restau.id}
+                    className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-2xs"
+                  >
+                    <div className="h-32 w-full relative bg-slate-100">
+                      <Image src={restau.img} alt={restau.name} fill className="object-cover" />
+                      <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-white/95 text-xs font-bold flex items-center gap-1">
+                        <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                        <span>{restau.rating}</span>
+                      </div>
+                    </div>
+                    <div className="p-2.5 flex items-center justify-between">
+                      <div>
+                        <h3 className="font-bold text-slate-900 text-xs">{restau.name}</h3>
+                        <p className="text-[10px] text-slate-500">
+                          {restau.deliveryTime} • {restau.deliveryFee}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setScreen("compose_dish")}
+                        className="px-2.5 py-1 bg-[#00AFF2] text-white rounded-lg text-xs font-bold"
+                      >
+                        Commander
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Onglet Plus Tard */}
+          {currentScreen === "plus_tard" && (
+            <div className="p-3 space-y-3 pb-24">
+              <div className="flex items-center justify-between bg-white rounded-xl p-3 border border-slate-200">
+                <div>
+                  <h2 className="text-xs font-black text-slate-900">Plats Programmés</h2>
+                  <p className="text-[10px] text-slate-500">Commandes pour plus tard</p>
+                </div>
+                <button
+                  onClick={() => setShowScheduleModal(true)}
+                  className="px-3 py-1 bg-[#00AFF2] text-white text-xs font-bold rounded-lg flex items-center gap-1"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Programmer</span>
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                {scheduledDishes.map((item) => (
+                  <div key={item.id} className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-12 h-12 rounded-lg relative overflow-hidden bg-slate-100 shrink-0">
+                        <Image src={item.img} alt={item.dishName} fill className="object-cover" />
+                      </div>
+                      <div>
+                        <span className="text-[9px] font-bold text-[#00AFF2] bg-sky-50 px-1.5 py-0.5 rounded">
+                          {item.scheduledDate} {item.scheduledTime}
+                        </span>
+                        <p className="text-xs font-bold text-slate-900 mt-0.5">{item.dishName}</p>
+                        <p className="text-[10px] text-slate-500">{item.price}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setScheduledDishes((prev) => prev.filter((d) => d.id !== item.id))}
+                      className="p-1 text-rose-500"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Onglet Abonnements */}
+          {currentScreen === "abonnements" && (
+            <div className="p-3 space-y-3 pb-24">
+              <div className="flex items-center justify-between bg-white rounded-xl p-3 border border-slate-200">
+                <div>
+                  <h2 className="text-xs font-black text-slate-900">Mes Abonnements</h2>
+                  <p className="text-[10px] text-slate-500">Livraisons régulières</p>
+                </div>
+                <div className="flex p-0.5 bg-slate-100 rounded-lg text-[10px] font-bold">
+                  <button
+                    onClick={() => setActiveSubTab("active")}
+                    className={`px-2 py-1 rounded ${activeSubTab === "active" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-500"}`}
+                  >
+                    Actifs
+                  </button>
+                  <button
+                    onClick={() => setActiveSubTab("discover")}
+                    className={`px-2 py-1 rounded ${activeSubTab === "discover" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-500"}`}
+                  >
+                    Formules
+                  </button>
+                </div>
+              </div>
+
+              {activeSubTab === "active" ? (
+                <div className="space-y-2">
+                  {subscriptions.map((sub) => (
+                    <div key={sub.id} className="p-3 bg-white rounded-xl border border-slate-200 flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-12 h-12 rounded-lg relative overflow-hidden bg-slate-100 shrink-0">
+                          <Image src={sub.img} alt={sub.title} fill className="object-cover" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                            {sub.status === "actif" ? "Actif" : "En pause"}
+                          </span>
+                          <p className="text-xs font-bold text-slate-900 truncate mt-0.5">{sub.title}</p>
+                          <p className="text-[10px] text-slate-500">{sub.frequency} • {sub.scheduledTime}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[11px]">
+                        <span className="font-bold text-slate-900">{sub.pricePerPeriod}</span>
+                        <button
+                          onClick={() => {
+                            setSubscriptions((prev) =>
+                              prev.map((s) => (s.id === sub.id ? { ...s, status: s.status === "actif" ? "en_pause" : "actif" } : s))
+                            );
+                          }}
+                          className="px-2 py-0.5 text-[10px] font-bold rounded bg-slate-100 text-slate-700"
+                        >
+                          {sub.status === "actif" ? "Mettre en pause" : "Reprendre"}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {AVAILABLE_FORMULAS.map((f) => (
+                    <div key={f.id} className="p-3 bg-white rounded-xl border border-slate-200">
+                      <p className="text-[9px] font-bold text-[#00AFF2] uppercase">{f.badge}</p>
+                      <h3 className="text-xs font-bold text-slate-900 mt-0.5">{f.title}</h3>
+                      <p className="text-[10px] text-slate-500 mt-0.5">{f.description}</p>
+                      <p className="text-xs font-black text-slate-900 mt-1">{f.price}</p>
+                      <button
+                        onClick={() => alert(`Souscription à ${f.title} validée !`)}
+                        className="mt-2 w-full py-1.5 bg-[#00AFF2] text-white text-[11px] font-bold rounded-lg"
+                      >
+                        Souscrire
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Barre de navigation basse */}
           <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 h-16 flex items-center justify-around px-2 z-20 pb-safe">
-            {/* Accueil */}
             <button
               onClick={() => {
                 setActiveNavTab("home");
                 setScreen("home");
               }}
-              className={`flex flex-col items-center gap-0.5 transition-colors ${
-                activeNavTab === "home" ? "text-[#00AFF2]" : "text-slate-600 hover:text-[#00AFF2]"
-              }`}
+              className={`flex flex-col items-center gap-0.5 ${currentTab === "home" ? "text-[#00AFF2]" : "text-slate-600"}`}
             >
-              <HomeNavIcon
-                active={activeNavTab === "home"}
-                className="w-5 h-5 transition-transform active:scale-90"
-              />
-              <span
-                className={`text-[9px] transition-all ${
-                  activeNavTab === "home" ? "font-bold text-[#00AFF2]" : "font-medium text-slate-600"
-                }`}
-              >
+              <HomeNavIcon active={currentTab === "home"} className="w-5 h-5" />
+              <span className={`text-[9px] ${currentTab === "home" ? "font-bold text-[#00AFF2]" : "font-medium text-slate-600"}`}>
                 Accueil
               </span>
             </button>
 
-            {/* Explorer */}
             <button
               onClick={() => {
                 setActiveNavTab("explorer");
-                setScreen("free_food");
+                setScreen("explorer");
               }}
-              className={`flex flex-col items-center gap-0.5 transition-colors ${
-                activeNavTab === "explorer" ? "text-[#00AFF2]" : "text-slate-600 hover:text-[#00AFF2]"
-              }`}
+              className={`flex flex-col items-center gap-0.5 ${currentTab === "explorer" ? "text-[#00AFF2]" : "text-slate-600"}`}
             >
-              <ExplorerNavIcon
-                active={activeNavTab === "explorer"}
-                className="w-5 h-5 transition-transform active:scale-90"
-              />
-              <span
-                className={`text-[9px] transition-all ${
-                  activeNavTab === "explorer" ? "font-bold text-[#00AFF2]" : "font-medium text-slate-600"
-                }`}
-              >
+              <ExplorerNavIcon active={currentTab === "explorer"} className="w-5 h-5" />
+              <span className={`text-[9px] ${currentTab === "explorer" ? "font-bold text-[#00AFF2]" : "font-medium text-slate-600"}`}>
                 Explorer
               </span>
             </button>
 
-            {/* Bouton central surélevé (+) Composer plat */}
             <div
               className="relative -top-5 flex flex-col items-center cursor-pointer"
-              onClick={() => {
-                hapticFeedback("medium");
-                setScreen("compose_dish");
-              }}
+              onClick={() => setScreen("compose_dish")}
             >
-              <div className="w-12 h-12 bg-[#00AFF2] rounded-full flex items-center justify-center text-white shadow-md shadow-[#00AFF2]/40 hover:scale-105 active:scale-95 transition-transform">
+              <div className="w-12 h-12 bg-[#00AFF2] rounded-full flex items-center justify-center text-white shadow-md">
                 <Plus className="w-7 h-7 stroke-[2.5]" />
               </div>
               <span className="text-[9px] font-bold text-black mt-1">Composer plat</span>
             </div>
 
-            {/* Plus tard */}
             <button
               onClick={() => {
                 setActiveNavTab("plus_tard");
-                setShowDeliveryRatesModal(true);
+                setScreen("plus_tard");
               }}
-              className={`flex flex-col items-center gap-0.5 transition-colors ${
-                activeNavTab === "plus_tard" ? "text-[#00AFF2]" : "text-slate-600 hover:text-[#00AFF2]"
-              }`}
+              className={`flex flex-col items-center gap-0.5 ${currentTab === "plus_tard" ? "text-[#00AFF2]" : "text-slate-600"}`}
             >
-              <ClockNavIcon
-                active={activeNavTab === "plus_tard"}
-                className="w-5 h-5 transition-transform active:scale-90"
-              />
-              <span
-                className={`text-[9px] transition-all ${
-                  activeNavTab === "plus_tard" ? "font-bold text-[#00AFF2]" : "font-medium text-slate-600"
-                }`}
-              >
+              <ClockNavIcon active={currentTab === "plus_tard"} className="w-5 h-5" />
+              <span className={`text-[9px] ${currentTab === "plus_tard" ? "font-bold text-[#00AFF2]" : "font-medium text-slate-600"}`}>
                 Plus tard
               </span>
             </button>
 
-            {/* Abonnements */}
             <button
               onClick={() => {
                 setActiveNavTab("abonnements");
-                setScreen("checkout");
+                setScreen("abonnements");
               }}
-              className={`flex flex-col items-center gap-0.5 transition-colors ${
-                activeNavTab === "abonnements" ? "text-[#00AFF2]" : "text-slate-600 hover:text-[#00AFF2]"
-              }`}
+              className={`flex flex-col items-center gap-0.5 ${currentTab === "abonnements" ? "text-[#00AFF2]" : "text-slate-600"}`}
             >
-              <CalendarNavIcon
-                active={activeNavTab === "abonnements"}
-                className="w-5 h-5 transition-transform active:scale-90"
-              />
-              <span
-                className={`text-[9px] transition-all ${
-                  activeNavTab === "abonnements" ? "font-bold text-[#00AFF2]" : "font-medium text-slate-600"
-                }`}
-              >
+              <CalendarNavIcon active={currentTab === "abonnements"} className="w-5 h-5" />
+              <span className={`text-[9px] ${currentTab === "abonnements" ? "font-bold text-[#00AFF2]" : "font-medium text-slate-600"}`}>
                 Abonnements
               </span>
             </button>
@@ -567,48 +610,26 @@ export default function MobileApp({
         </div>
       )}
 
-      {/* ============================================================== */}
-      {/* 4. MODALE BOUFFE GRATUITE (Capture d’écran 2026-10-20 151714.jpg) */}
-      {/* ============================================================== */}
+      {/* 4. Modale Bouffe Gratuite */}
       {showFreeFoodModal && (
-        <div className="absolute inset-0 bg-black/60 z-40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-xs p-5 relative shadow-xl text-center animate-scaleUp">
-            <button
-              onClick={() => setShowFreeFoodModal(false)}
-              className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 p-1"
-              aria-label="Fermer"
-            >
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-xs p-6 relative text-center">
+            <button onClick={() => setShowFreeFoodModal(false)} className="absolute top-4 right-4 text-slate-400">
               <X className="w-5 h-5" />
             </button>
-
-            <h3 className="text-base font-black text-black tracking-wider uppercase mt-1">
-              BOUFFE GRATUITE
-            </h3>
-
-            {/* Illustration Cadeau + Badge 100% GRATUIT */}
-            <div className="my-4 flex flex-col items-center">
-              <div className="relative w-28 h-24 flex items-center justify-center">
-                <div className="w-20 h-20 bg-sky-50 rounded-2xl flex items-center justify-center text-[#00AFF2] border border-sky-100">
-                  <Gift className="w-12 h-12 stroke-[1.8]" />
-                </div>
-                {/* Badge Rosette */}
-                <span className="absolute -top-1 -right-1 px-2.5 py-1 bg-[#00AFF2] text-white rounded-full text-[9px] font-black tracking-wide shadow-sm">
-                  100% GRATUIT
-                </span>
-              </div>
+            <h3 className="text-base font-black text-black tracking-wider uppercase">BOUFFE GRATUITE</h3>
+            <div className="my-4 flex justify-center">
+              <Gift className="w-12 h-12 text-[#00AFF2]" />
             </div>
-
-            <p className="text-xs text-slate-600 leading-relaxed px-2">
-              Profitez d&apos;une bouffe 100% gratuite comme cadeau de bienvenu. Faites votre premier pas gratuitement dans un monde libre en civilisation culinaire.
+            <p className="text-xs text-slate-600">
+              Profitez d&apos;une bouffe 100% gratuite comme cadeau de bienvenu.
             </p>
-
             <button
               onClick={() => {
-                hapticFeedback("medium");
                 setShowFreeFoodModal(false);
                 setScreen("free_food");
               }}
-              className="mt-5 w-full bg-[#00AFF2] hover:bg-[#009bd6] active:scale-95 text-white py-2.5 rounded-lg text-xs font-bold transition-all shadow-sm"
+              className="mt-4 w-full bg-[#00AFF2] text-white py-2.5 rounded-xl text-xs font-bold"
             >
               Profiter
             </button>
@@ -616,420 +637,228 @@ export default function MobileApp({
         </div>
       )}
 
-      {/* ============================================================== */}
-      {/* 5. ÉCRAN CHOIX BOUFFE GRATUITE (Captures 151956, 152219, 152335, 152403) */}
-      {/* ============================================================== */}
-      {currentScreen === "free_food" && (
-        <div className="w-full h-full bg-white flex flex-col justify-between overflow-y-auto">
-          {/* Header */}
-          <div className="p-3 flex items-center gap-2 border-b border-slate-100 sticky top-0 bg-white z-10 pt-safe">
-            <button
-              onClick={() => setScreen("home")}
-              className="p-1 hover:text-[#00AFF2]"
-              aria-label="Retour"
-            >
-              <ArrowLeft className="w-5 h-5 text-black" />
-            </button>
-            <h2 className="text-xs sm:text-sm font-black text-black uppercase tracking-tight">
-              Choix de la bouffe gratuite
-            </h2>
-          </div>
-
-          {/* Explications & Lien tarifs */}
-          <div className="p-4 space-y-3 pb-28">
-            <p className="text-xs text-slate-700 leading-relaxed">
-              Vous pouvez choisir une seule bouffe gratuite. Pour recevoir votre bouffe choisie, il ne vous suffira que de payer la livraison de cette dernière.{" "}
-              <span
-                onClick={() => setShowDeliveryRatesModal(true)}
-                className="text-[#00AFF2] font-semibold cursor-pointer underline"
-              >
-                Lire plus...
-              </span>
-            </p>
-
-            <div className="flex justify-end">
-              <button
-                onClick={() => setShowDeliveryRatesModal(true)}
-                className="flex items-center gap-1.5 text-xs font-bold text-[#00AFF2] hover:opacity-80"
-              >
-                <span>Tarif de livraison</span>
-                <span className="w-5 h-5 rounded-md bg-[#00AFF2] text-white flex items-center justify-center">
-                  <MenuIcon className="w-3.5 h-3.5" />
-                </span>
-              </button>
-            </div>
-
-            {/* Grille 2 colonnes des plats gratuits / sélectionnables */}
-            <div className="grid grid-cols-2 gap-3 pt-1">
-              {(showMoreDishes ? INITIAL_GRID_DISHES : INITIAL_GRID_DISHES.slice(0, 4)).map(
-                (dish) => {
-                  const isSelected = selectedDishes.some((d) => d.id === dish.id);
-                  return (
-                    <div
-                      key={dish.id}
-                      onClick={() => toggleSelectDish(dish)}
-                      className={`rounded-2xl border p-2 flex flex-col items-center justify-between text-center cursor-pointer transition-all ${
-                        isSelected
-                          ? "border-[#00AFF2] bg-sky-50/20 ring-2 ring-[#00AFF2]/30"
-                          : "border-slate-200 bg-white"
-                      }`}
-                    >
-                      {dish.isFree && (
-                        <span className="text-[10px] text-slate-400 self-start ml-1">Gratuit</span>
-                      )}
-
-                      {/* Photo cliquable pour voir l'aperçu */}
-                      <div
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          hapticFeedback("light");
-                          setPreviewDish(dish);
-                          setShowDishPreviewModal(true);
-                        }}
-                        className="w-24 h-24 relative my-1 flex items-center justify-center"
-                      >
-                        {dish.img ? (
-                          <Image
-                            src={dish.img}
-                            alt={dish.name}
-                            fill
-                            className="object-contain"
-                          />
-                        ) : (
-                          <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-                            <Utensils className="w-6 h-6" />
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Footer de carte (devient bleu si sélectionné) */}
-                      <div
-                        className={`w-full py-1.5 px-1 rounded-b-xl transition-colors ${
-                          isSelected
-                            ? "bg-[#00AFF2] text-white"
-                            : "bg-transparent text-slate-900"
-                        }`}
-                      >
-                        <p className="text-xs font-bold truncate">{dish.name}</p>
-                        <p
-                          className={`text-[11px] ${
-                            dish.isFree ? "line-through opacity-75" : "font-semibold"
-                          }`}
-                        >
-                          {dish.originalPrice ?? dish.priceNum} FCFA
-                        </p>
-                      </div>
-                    </div>
-                  );
-                }
-              )}
-            </div>
-
-            {/* Lien Voir plus de bouffes */}
-            <div className="text-center pt-3">
-              <button
-                onClick={() => setShowMoreDishes(!showMoreDishes)}
-                className="text-xs font-medium text-[#00AFF2] underline hover:opacity-80"
-              >
-                {showMoreDishes ? "Voir moins de bouffes" : "Voir plus de bouffes"}
-              </button>
-            </div>
-          </div>
-
-          {/* Bouton Flottant Total (ex: 0 F CFA (1) -> Envoi) */}
-          <div className="fixed bottom-4 right-4 z-20 pb-safe">
-            <button
-              onClick={() => {
-                if (selectedDishes.length > 0) {
-                  hapticFeedback("medium");
-                  setScreen("checkout");
-                }
-              }}
-              disabled={selectedDishes.length === 0}
-              className={`px-5 py-2.5 rounded-full font-bold text-xs shadow-lg flex items-center gap-2 transition-all active:scale-95 ${
-                selectedDishes.length > 0
-                  ? "bg-[#00AFF2] hover:bg-[#009bd6] text-white cursor-pointer"
-                  : "bg-slate-300 text-slate-500 cursor-not-allowed"
-              }`}
-            >
-              <span>
-                {selectedDishes.length === 1 && selectedDishes[0].isFree
-                  ? "0 F CFA (1)"
-                  : `${cartSubtotal} F CFA (${selectedDishes.length})`}
-              </span>
-              <Send className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ============================================================== */}
-      {/* 6. MODALE TARIF DE LIVRAISON (Capture d’écran 2026-10-20 152247.jpg) */}
-      {/* ============================================================== */}
+      {/* 5. Modale Tarif Livraison */}
       {showDeliveryRatesModal && (
-        <div className="absolute inset-0 bg-black/60 z-40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-xs p-5 relative shadow-xl text-center animate-scaleUp">
-            <button
-              onClick={() => setShowDeliveryRatesModal(false)}
-              className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 p-1"
-              aria-label="Fermer"
-            >
-              <X className="w-5 h-5" />
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-xs p-4 relative text-xs">
+            <button onClick={() => setShowDeliveryRatesModal(false)} className="absolute top-3 right-3 text-slate-400">
+              <X className="w-4 h-4" />
             </button>
-
-            <h3 className="text-sm font-black text-black tracking-wider uppercase mb-4">
-              TARIF DE LIVRAISON
-            </h3>
-
-            <div className="divide-y divide-slate-100 text-xs">
-              <div className="py-2.5 flex justify-between">
-                <span className="text-slate-600">Entre 1F et 200F</span>
-                <span className="font-bold text-slate-900">80 F CFA</span>
+            <h3 className="font-bold text-slate-900 mb-2">Tarif de Livraison</h3>
+            <div className="space-y-1.5">
+              <div className="flex justify-between">
+                <span>1-2 plats :</span>
+                <span className="font-bold">80 FCFA</span>
               </div>
-              <div className="py-2.5 flex justify-between">
-                <span className="text-slate-600">Entre 03 et 05 plats</span>
-                <span className="font-bold text-slate-900">130 F CFA</span>
+              <div className="flex justify-between">
+                <span>3-5 plats :</span>
+                <span className="font-bold">130 FCFA</span>
               </div>
-              <div className="py-2.5 flex justify-between">
-                <span className="text-slate-600">Entre 06 et 10 plats</span>
-                <span className="font-bold text-slate-900">170 F CFA</span>
+              <div className="flex justify-between">
+                <span>6-10 plats :</span>
+                <span className="font-bold">170 FCFA</span>
               </div>
-              <div className="py-2.5 flex justify-between">
-                <span className="text-slate-600">Plus de 10 plats</span>
+              <div className="flex justify-between">
+                <span>Plus de 10 plats :</span>
                 <span className="font-bold text-emerald-600">Gratuit</span>
               </div>
             </div>
-
-            <button
-              onClick={() => setShowDeliveryRatesModal(false)}
-              className="mt-4 flex items-center justify-center gap-1.5 text-[11px] font-bold text-[#00AFF2] mx-auto hover:underline"
-            >
-              <Info className="w-3.5 h-3.5" />
-              Politique d&apos;utilisation et conditions
-            </button>
           </div>
         </div>
       )}
 
-      {/* ============================================================== */}
-      {/* 7. MODALE APERÇU PLAT (Capture d’écran 2026-10-20 152030.jpg) */}
-      {/* ============================================================== */}
+      {/* 6. Modale Aperçu Plat */}
       {showDishPreviewModal && previewDish && (
-        <div className="absolute inset-0 bg-black/60 z-40 flex items-center justify-center p-5">
-          <div className="bg-white rounded-2xl w-full max-w-xs overflow-hidden shadow-xl animate-scaleUp">
-            {/* Image avec Overlay nom & prix */}
-            <div className="relative h-48 bg-slate-100">
-              {previewDish.img ? (
-                <Image
-                  src={previewDish.img}
-                  alt={previewDish.name}
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Utensils className="w-12 h-12 text-slate-400" />
-                </div>
-              )}
-              <div className="absolute top-0 inset-x-0 bg-gradient-to-b from-black/70 to-transparent p-3 flex justify-between text-white text-xs font-bold">
-                <span>{previewDish.name}</span>
-                <span>{previewDish.price}</span>
-              </div>
-            </div>
-
-            {/* Barre d'action sombre #333333 */}
-            <div className="bg-[#333333] p-3 flex items-center justify-around text-xs font-bold text-[#00AFF2]">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-xs overflow-hidden shadow-2xl">
+            <div className="relative h-44 bg-slate-100">
+              <Image src={previewDish.img} alt={previewDish.name} fill className="object-cover" />
               <button
-                onClick={() => {
-                  hapticFeedback("success");
-                  if (!selectedDishes.some((d) => d.id === previewDish.id)) {
-                    setSelectedDishes([...selectedDishes, previewDish]);
-                  }
-                  setShowDishPreviewModal(false);
-                  setScreen("free_food");
-                }}
-                className="flex items-center gap-1.5 hover:text-white transition-colors"
+                onClick={() => setShowDishPreviewModal(false)}
+                className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1"
               >
-                <span>Ajouter</span>
-                <span className="w-4 h-4 rounded-full bg-[#00AFF2] text-white flex items-center justify-center">
-                  <Check className="w-3 h-3 stroke-[3]" />
-                </span>
+                <X className="w-4 h-4" />
               </button>
-              <div className="w-[1px] h-4 bg-white/20" />
+            </div>
+            <div className="p-4 text-center">
+              <h3 className="font-bold text-sm text-slate-900">{previewDish.name}</h3>
+              <p className="text-xs font-bold text-[#00AFF2] mt-0.5">{previewDish.price}</p>
               <button
                 onClick={() => {
+                  toggleSelectDish(previewDish);
                   setShowDishPreviewModal(false);
-                  setShowDeliveryRatesModal(true);
                 }}
-                className="flex items-center gap-1.5 hover:text-white transition-colors"
+                className="mt-3 w-full py-2 bg-[#00AFF2] text-white rounded-lg text-xs font-bold"
               >
-                <span>À propos</span>
-                <span className="w-4 h-4 rounded-full bg-[#00AFF2] text-white flex items-center justify-center">
-                  <Info className="w-3 h-3 stroke-[3]" />
-                </span>
+                {selectedDishes.some((d) => d.id === previewDish.id) ? "Retirer" : "Ajouter au panier"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ============================================================== */}
-      {/* 8. ÉCRAN "COMPOSER SON PLAT" (Via bouton central +) */}
-      {/* ============================================================== */}
-      {currentScreen === "compose_dish" && (
-        <div className="w-full h-full bg-white flex flex-col justify-between overflow-y-auto">
-          {/* Header */}
-          <div className="p-3 flex items-center gap-2 border-b border-slate-100 sticky top-0 bg-white z-10 pt-safe">
-            <button
-              onClick={() => setScreen("home")}
-              className="p-1 hover:text-[#00AFF2]"
-              aria-label="Retour"
-            >
-              <ArrowLeft className="w-5 h-5 text-black" />
+      {/* 7. Modale Programmation Plus Tard */}
+      {showScheduleModal && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-xs p-4 relative text-xs">
+            <button onClick={() => setShowScheduleModal(false)} className="absolute top-3 right-3 text-slate-400">
+              <X className="w-4 h-4" />
             </button>
-            <h2 className="text-sm font-bold text-black">Composer son plat</h2>
-          </div>
-
-          <div className="p-4 space-y-4 pb-24 text-xs">
-            <div className="p-3 bg-sky-50 rounded-xl text-[#00AFF2] font-semibold flex items-center gap-2">
-              <Sparkles className="w-4 h-4 shrink-0" />
-              <span>Composez votre plat sur-mesure comme au maquis ou chez vous !</span>
+            <h3 className="font-bold text-slate-900 mb-2">Programmer un plat</h3>
+            <label className="font-semibold block mb-1">1. Plat :</label>
+            <div className="grid grid-cols-2 gap-1 mb-2">
+              {INITIAL_GRID_DISHES.slice(0, 4).map((d) => (
+                <button
+                  key={d.id}
+                  onClick={() => setScheduleDishChoice(d)}
+                  className={`p-1.5 rounded-lg border text-left truncate ${
+                    scheduleDishChoice.id === d.id ? "border-[#00AFF2] bg-sky-50 text-[#00AFF2] font-bold" : "border-slate-200"
+                  }`}
+                >
+                  <p className="truncate">{d.name}</p>
+                </button>
+              ))}
             </div>
-
-            {/* Base */}
-            <div>
-              <p className="font-bold text-slate-900 mb-2">1. Choisissez votre base (Obligatoire)</p>
-              <div className="space-y-1.5">
-                {[
-                  { name: "Pâte noire", price: 500 },
-                  { name: "Pâte blanche (Akassa)", price: 400 },
-                  { name: "Pâte rouge (Amiwo)", price: 600 },
-                  { name: "Riz au gras", price: 800 },
-                ].map((b) => (
-                  <div
-                    key={b.name}
-                    onClick={() => {
-                      hapticFeedback("light");
-                      setComposeBase(b.name);
-                      setComposeBasePrice(b.price);
-                    }}
-                    className={`p-2.5 rounded-xl border flex justify-between items-center cursor-pointer transition-colors ${
-                      composeBase === b.name
-                        ? "border-[#00AFF2] bg-sky-50/50 text-[#00AFF2] font-bold"
-                        : "border-slate-200"
-                    }`}
-                  >
-                    <span>{b.name}</span>
-                    <span>{b.price} FCFA</span>
-                  </div>
-                ))}
-              </div>
+            <label className="font-semibold block mb-1">2. Jour :</label>
+            <div className="flex gap-1 overflow-x-auto pb-1 mb-2">
+              {["Aujourd'hui", "Demain", "Vendredi"].map((day) => (
+                <button
+                  key={day}
+                  onClick={() => setScheduleDay(day)}
+                  className={`px-2 py-1 rounded text-[10px] ${scheduleDay === day ? "bg-[#00AFF2] text-white" : "bg-slate-100"}`}
+                >
+                  {day}
+                </button>
+              ))}
             </div>
-
-            {/* Sauce */}
-            <div>
-              <p className="font-bold text-slate-900 mb-2">2. Choisissez votre sauce (Obligatoire)</p>
-              <div className="space-y-1.5">
-                {["Sauce Gombo", "Sauce Tomate fraîche", "Sauce Légumes (Gboma)"].map((s) => (
-                  <div
-                    key={s}
-                    onClick={() => {
-                      hapticFeedback("light");
-                      setComposeSauce(s);
-                    }}
-                    className={`p-2.5 rounded-xl border flex justify-between items-center cursor-pointer transition-colors ${
-                      composeSauce === s
-                        ? "border-[#00AFF2] bg-sky-50/50 text-[#00AFF2] font-bold"
-                        : "border-slate-200"
-                    }`}
-                  >
-                    <span>{s}</span>
-                    {composeSauce === s && <Check className="w-4 h-4 text-[#00AFF2]" />}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Protéines */}
-            <div>
-              <p className="font-bold text-slate-900 mb-2">3. Viande ou Poisson</p>
-              <div className="space-y-1.5">
-                {[
-                  { name: "Poisson braisé", price: 1000 },
-                  { name: "Poulet bicyclette", price: 1500 },
-                  { name: "Fromage local (Wagashi)", price: 500 },
-                ].map((p) => {
-                  const has = composeProteins.includes(p.name);
-                  return (
-                    <div
-                      key={p.name}
-                      onClick={() => {
-                        hapticFeedback("light");
-                        setComposeProteins(
-                          has
-                            ? composeProteins.filter((x) => x !== p.name)
-                            : [...composeProteins, p.name]
-                        );
-                      }}
-                      className={`p-2.5 rounded-xl border flex justify-between items-center cursor-pointer transition-colors ${
-                        has
-                          ? "border-[#00AFF2] bg-sky-50/50 text-[#00AFF2] font-bold"
-                          : "border-slate-200"
-                      }`}
-                    >
-                      <span>{p.name}</span>
-                      <span>+ {p.price} FCFA</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Suppléments */}
-            <div>
-              <p className="font-bold text-slate-900 mb-2">4. Suppléments (Optionnel)</p>
-              <div className="space-y-1.5">
-                {[
-                  { name: "Alloco", price: 400 },
-                  { name: "Piment noir maison", price: 200 },
-                  { name: "Oeuf dur", price: 200 },
-                ].map((extra) => {
-                  const has = composeExtras.includes(extra.name);
-                  return (
-                    <div
-                      key={extra.name}
-                      onClick={() => {
-                        hapticFeedback("light");
-                        setComposeExtras(
-                          has
-                            ? composeExtras.filter((x) => x !== extra.name)
-                            : [...composeExtras, extra.name]
-                        );
-                      }}
-                      className={`p-2.5 rounded-xl border flex justify-between items-center cursor-pointer transition-colors ${
-                        has
-                          ? "border-[#00AFF2] bg-sky-50/50 text-[#00AFF2] font-bold"
-                          : "border-slate-200"
-                      }`}
-                    >
-                      <span>{extra.name}</span>
-                      <span>+ {extra.price} FCFA</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* Footer Total & Valider */}
-          <div className="fixed bottom-0 left-0 right-0 p-3 bg-white border-t border-slate-200 flex items-center justify-between z-20 pb-safe">
-            <div>
-              <span className="text-[10px] text-slate-500">Total :</span>
-              <p className="text-sm font-bold text-[#00AFF2]">{composeTotal} FCFA</p>
+            <label className="font-semibold block mb-1">3. Heure :</label>
+            <div className="grid grid-cols-3 gap-1 mb-3">
+              {["12h00", "12h30", "19h30"].map((h) => (
+                <button
+                  key={h}
+                  onClick={() => setScheduleHour(h)}
+                  className={`py-1 rounded text-center text-[10px] ${scheduleHour === h ? "bg-[#00AFF2] text-white" : "bg-slate-100"}`}
+                >
+                  {h}
+                </button>
+              ))}
             </div>
             <button
               onClick={() => {
-                hapticFeedback("success");
+                setScheduledDishes([
+                  {
+                    id: `sch-${Date.now()}`,
+                    dishName: scheduleDishChoice.name,
+                    restaurantName: "Saveurs d'Akpakpa",
+                    price: scheduleDishChoice.price,
+                    priceNum: scheduleDishChoice.priceNum,
+                    scheduledDate: scheduleDay,
+                    scheduledTime: scheduleHour,
+                    portions: 1,
+                    instructions: "Livraison soignée",
+                    img: scheduleDishChoice.img,
+                    status: "confirmé",
+                  },
+                  ...scheduledDishes,
+                ]);
+                setShowScheduleModal(false);
+              }}
+              className="w-full py-2 bg-[#00AFF2] text-white font-bold rounded-lg"
+            >
+              Confirmer
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 8. Choix Bouffe Gratuite */}
+      {currentScreen === "free_food" && (
+        <div className="w-full h-full bg-white flex flex-col justify-between p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <button onClick={() => setScreen("home")} className="p-1">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <h2 className="text-xs font-black uppercase">Choix bouffe gratuite</h2>
+          </div>
+          <div className="grid grid-cols-2 gap-2 flex-1 overflow-y-auto pb-16">
+            {INITIAL_GRID_DISHES.slice(0, 4).map((dish) => {
+              const isSelected = selectedDishes.some((d) => d.id === dish.id);
+              return (
+                <div
+                  key={dish.id}
+                  onClick={() => toggleSelectDish(dish)}
+                  className={`p-2 rounded-xl border flex flex-col items-center justify-between text-center ${
+                    isSelected ? "border-[#00AFF2] bg-sky-50/20" : "border-slate-200"
+                  }`}
+                >
+                  <div className="w-20 h-20 relative rounded-lg overflow-hidden bg-slate-100 my-1">
+                    <Image src={dish.img} alt={dish.name} fill className="object-cover" />
+                  </div>
+                  <p className="text-xs font-bold truncate">{dish.name}</p>
+                  <p className="text-[10px] text-slate-500">{dish.price}</p>
+                </div>
+              );
+            })}
+          </div>
+          <div className="fixed bottom-4 right-4">
+            <button
+              onClick={() => setScreen("checkout")}
+              className="px-5 py-2.5 bg-[#00AFF2] text-white font-bold rounded-full text-xs shadow-lg"
+            >
+              Commander ({selectedDishes.length})
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 9. Composer son plat */}
+      {currentScreen === "compose_dish" && (
+        <div className="w-full h-full bg-white flex flex-col justify-between p-4 text-xs">
+          <div className="flex items-center gap-2 mb-3">
+            <button onClick={() => setScreen("home")} className="p-1">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <h2 className="text-sm font-bold">Composer son plat</h2>
+          </div>
+          <div className="space-y-4 flex-1 overflow-y-auto pb-16">
+            <div>
+              <p className="font-bold mb-1">1. Base :</p>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { name: "Pâte noire", price: 500 },
+                  { name: "Pâte blanche", price: 400 },
+                  { name: "Pâte rouge", price: 600 },
+                  { name: "Riz au gras", price: 600 },
+                ].map((b) => (
+                  <button
+                    key={b.name}
+                    onClick={() => {
+                      setComposeBase(b.name);
+                      setComposeBasePrice(b.price);
+                    }}
+                    className={`p-2 rounded-xl border ${composeBase === b.name ? "border-[#00AFF2] bg-sky-50 text-[#00AFF2] font-bold" : "border-slate-200"}`}
+                  >
+                    {b.name} ({b.price} F)
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="font-bold mb-1">2. Protéines :</p>
+              <div className="space-y-1">
+                {["Poisson braisé (500 F)", "Poulet bicyclette (700 F)"].map((p) => (
+                  <div key={p} className="p-2 border rounded-xl flex justify-between">
+                    <span>{p}</span>
+                    <Check className="w-4 h-4 text-[#00AFF2]" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="fixed bottom-0 inset-x-0 p-3 bg-white border-t flex items-center justify-between">
+            <span className="font-bold">{composeTotal} FCFA</span>
+            <button
+              onClick={() => {
                 setSelectedDishes([
                   ...selectedDishes,
                   {
@@ -1037,250 +866,69 @@ export default function MobileApp({
                     name: `${composeBase} (Sur-mesure)`,
                     price: `${composeTotal} FCFA`,
                     priceNum: composeTotal,
-                    img: "/images/dish_pate_noire.png",
+                    img: "/images/dish_pate_noire.jpg",
                   },
                 ]);
                 setScreen("checkout");
               }}
-              className="bg-[#00AFF2] hover:bg-[#009bd6] active:scale-95 text-white px-5 py-2.5 rounded-xl font-bold text-xs shadow-sm transition-all"
+              className="px-4 py-2 bg-[#00AFF2] text-white font-bold rounded-xl"
             >
-              Commander
+              Valider
             </button>
           </div>
         </div>
       )}
 
-      {/* ============================================================== */}
-      {/* 9. ÉCRAN FINALISATION (Capture d’écran 2026-10-20 152446.jpg) */}
-      {/* ============================================================== */}
+      {/* 10. Checkout */}
       {currentScreen === "checkout" && (
-        <div className="w-full h-full bg-white flex flex-col justify-between overflow-y-auto">
-          {/* Header */}
-          <div className="p-3 flex items-center justify-between border-b border-slate-100 sticky top-0 bg-white z-10 pt-safe">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setScreen("free_food")}
-                className="p-1 hover:text-[#00AFF2]"
-                aria-label="Retour"
-              >
-                <ArrowLeft className="w-5 h-5 text-black" />
-              </button>
-              <h2 className="text-sm font-bold text-black">Finalisation</h2>
-            </div>
-            <span className="px-2.5 py-1 bg-sky-100 text-[#00AFF2] rounded-full text-xs font-bold flex items-center gap-1">
-              <Plus className="w-3 h-3 stroke-[3]" />
-              <span>0 F</span>
-            </span>
+        <div className="w-full h-full bg-white flex flex-col justify-between p-4 text-xs">
+          <div className="flex items-center gap-2 mb-3">
+            <button onClick={() => setScreen("home")} className="p-1">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <h2 className="text-sm font-bold">Finalisation</h2>
           </div>
-
-          <div className="p-4 space-y-4 flex-1 pb-28">
-            {/* Étape 1 : Plats (Bleu Déplié par défaut) */}
-            <div className="rounded-xl border border-slate-200 overflow-hidden shadow-xs">
-              <div
-                onClick={() => setExpandedStep(expandedStep === 1 ? 2 : 1)}
-                className="bg-[#00AFF2] text-white p-2.5 flex items-center justify-between text-xs font-bold cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-white text-[#00AFF2] flex items-center justify-center text-[10px] font-black">
-                    1
-                  </span>
-                  <span>
-                    Plats : {selectedDishes.map((d) => d.name).join(", ") || "Aucun plat"}
-                  </span>
-                </div>
-                {expandedStep === 1 ? (
-                  <ChevronUp className="w-4 h-4 stroke-[2.5]" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 stroke-[2.5]" />
-                )}
-              </div>
-
-              {expandedStep === 1 && (
-                <div className="p-3 bg-white flex items-center gap-3 overflow-x-auto">
-                  {/* Cartes des plats sélectionnés */}
-                  {selectedDishes.map((dish) => (
-                    <div
-                      key={dish.id}
-                      className="relative w-28 shrink-0 rounded-xl border border-slate-200 overflow-hidden shadow-xs text-center p-1 bg-white"
-                    >
-                      <button
-                        onClick={() => toggleSelectDish(dish)}
-                        className="absolute top-1 right-1 z-10 bg-black/50 text-white rounded-full p-0.5 hover:bg-red-500 transition-colors"
-                        aria-label="Supprimer"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                      <div className="w-full h-16 relative my-1">
-                        <Image
-                          src={dish.img}
-                          alt={dish.name}
-                          fill
-                          className="object-contain"
-                        />
-                      </div>
-                      <div className="bg-[#00AFF2] text-white py-1 px-0.5 rounded-b-lg">
-                        <p className="text-[10px] font-bold truncate">{dish.name}</p>
-                        <p className="text-[9px] line-through opacity-80">{dish.price}</p>
-                      </div>
-                    </div>
-                  ))}
-
-                  {/* Bouton (+) Ajouter un autre plat */}
-                  <div
-                    onClick={() => setScreen("free_food")}
-                    className="w-24 h-28 shrink-0 rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 hover:border-[#00AFF2] hover:text-[#00AFF2] cursor-pointer transition-colors"
-                  >
-                    <Plus className="w-6 h-6 stroke-[2]" />
-                    <span className="text-[10px] font-bold mt-1">Ajouter</span>
-                  </div>
-                </div>
-              )}
+          <div className="space-y-3 flex-1 overflow-y-auto pb-16">
+            <div className="p-3 bg-slate-50 rounded-xl">
+              <p className="font-bold">Plats ({selectedDishes.length}) :</p>
+              <p className="text-slate-600">{selectedDishes.map((d) => d.name).join(", ")}</p>
             </div>
-
-            {/* Étape 2 : Lieu de livraison (Replié/Dépliable) */}
-            <div className="rounded-xl border border-slate-200 overflow-hidden shadow-xs">
-              <div
-                onClick={() => setExpandedStep(expandedStep === 2 ? 1 : 2)}
-                className="bg-slate-100 p-2.5 flex items-center justify-between text-xs font-bold text-slate-800 cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-white text-slate-700 flex items-center justify-center text-[10px] font-bold">
-                    2
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <span>Lieu de livraison :</span>
-                    <MapPin className="w-3.5 h-3.5 text-[#00AFF2]" />
-                    <span className="text-slate-900">{deliveryAddress}</span>
-                  </div>
-                </div>
-                {expandedStep === 2 ? (
-                  <ChevronUp className="w-4 h-4 stroke-[2.5]" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 stroke-[2.5]" />
-                )}
-              </div>
-
-              {expandedStep === 2 && (
-                <div className="p-3 bg-white space-y-2 text-xs">
-                  <p className="font-semibold text-slate-700">Sélectionnez votre quartier :</p>
-                  {["Terrain Zico, Akpakpa", "Haie Vive, Cotonou", "Fidjrossè Calvaire", "Cadjehoun"].map(
-                    (loc) => (
-                      <div
-                        key={loc}
-                        onClick={() => {
-                          hapticFeedback("light");
-                          setDeliveryAddress(loc);
-                          setExpandedStep(3);
-                        }}
-                        className={`p-2 rounded-lg border cursor-pointer flex justify-between items-center ${
-                          deliveryAddress === loc
-                            ? "border-[#00AFF2] bg-sky-50 text-[#00AFF2] font-bold"
-                            : "border-slate-200"
-                        }`}
-                      >
-                        <span>{loc}</span>
-                        {deliveryAddress === loc && <Check className="w-4 h-4" />}
-                      </div>
-                    )
-                  )}
-                </div>
-              )}
+            <div className="p-3 bg-slate-50 rounded-xl">
+              <p className="font-bold">Livraison à :</p>
+              <p className="text-slate-600">{deliveryAddress}</p>
             </div>
-
-            {/* Étape 3 : Destinataires (Replié/Dépliable) */}
-            <div className="rounded-xl border border-slate-200 overflow-hidden shadow-xs">
-              <div
-                onClick={() => setExpandedStep(expandedStep === 3 ? 1 : 3)}
-                className="bg-slate-100 p-2.5 flex items-center justify-between text-xs font-bold text-slate-800 cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-white text-slate-700 flex items-center justify-center text-[10px] font-bold">
-                    3
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <span>Destinataires :</span>
-                    <Users className="w-3.5 h-3.5 text-[#00AFF2]" />
-                    <span className="text-slate-900">{recipient}</span>
-                  </div>
-                </div>
-                {expandedStep === 3 ? (
-                  <ChevronUp className="w-4 h-4 stroke-[2.5]" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 stroke-[2.5]" />
-                )}
-              </div>
-
-              {expandedStep === 3 && (
-                <div className="p-3 bg-white space-y-2 text-xs">
-                  <p className="font-semibold text-slate-700">Pour qui commandez-vous ?</p>
-                  {["Moi seul(e)", "Un ami / Collègue", "Groupe de personnes"].map((rec) => (
-                    <div
-                      key={rec}
-                      onClick={() => {
-                        hapticFeedback("light");
-                        setRecipient(rec);
-                        setExpandedStep(1);
-                      }}
-                      className={`p-2 rounded-lg border cursor-pointer flex justify-between items-center ${
-                        recipient === rec
-                          ? "border-[#00AFF2] bg-sky-50 text-[#00AFF2] font-bold"
-                          : "border-slate-200"
-                      }`}
-                    >
-                      <span>{rec}</span>
-                      {recipient === rec && <Check className="w-4 h-4" />}
-                    </div>
-                  ))}
-                </div>
-              )}
+            <div className="p-3 bg-slate-50 rounded-xl flex justify-between font-bold text-sm">
+              <span>Total :</span>
+              <span className="text-[#00AFF2]">{formatFCFA(cartTotal)}</span>
             </div>
-
-            {/* Récapitulatif Tarifaire */}
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5 text-xs">
-              <div className="flex justify-between text-slate-600">
-                <span>Sous-total plats ({cartItemsCount}) :</span>
-                <span>{cartSubtotal} FCFA</span>
-              </div>
-              <div className="flex justify-between text-slate-600">
-                <span>Frais de livraison :</span>
-                <span className={deliveryFee === 0 ? "font-bold text-emerald-600" : ""}>
-                  {deliveryFee === 0 ? "Gratuit" : `${deliveryFee} FCFA`}
-                </span>
-              </div>
-              <div className="pt-2 border-t border-slate-200 flex justify-between font-bold text-sm text-slate-900">
-                <span>Total à payer :</span>
-                <span className="text-[#00AFF2]">{cartTotal} FCFA</span>
-              </div>
-            </div>
-
-            {orderConfirmed && (
-              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-center space-y-2 text-emerald-800 animate-fadeIn">
-                <Check className="w-8 h-8 mx-auto text-emerald-600" />
-                <p className="font-bold text-sm">Commande validée avec succès !</p>
-                <p className="text-xs">
-                  Votre repas sera livré à <span className="font-bold">{deliveryAddress}</span> sous 20 minutes.
-                </p>
-              </div>
-            )}
           </div>
-
-          {/* Bouton de confirmation en bas */}
-          <div className="fixed bottom-0 left-0 right-0 p-3 bg-white border-t border-slate-200 z-20 pb-safe">
+          <div className="fixed bottom-0 inset-x-0 p-3 bg-white border-t">
             <button
-              onClick={() => {
-                hapticFeedback("success");
-                setOrderConfirmed(true);
-              }}
-              disabled={selectedDishes.length === 0 || orderConfirmed}
-              className={`w-full py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-md active:scale-95 ${
-                orderConfirmed
-                  ? "bg-emerald-600 text-white"
-                  : "bg-[#00AFF2] hover:bg-[#009bd6] text-white"
-              }`}
+              onClick={() => setOrderConfirmed(true)}
+              className="w-full py-2.5 bg-[#00AFF2] text-white font-bold rounded-xl text-center"
             >
-              {orderConfirmed ? "Commande envoyée ✓" : `Confirmer et Commander (${cartTotal} FCFA)`}
+              Payer {formatFCFA(cartTotal)}
             </button>
           </div>
+
+          {orderConfirmed && (
+            <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl p-5 text-center max-w-xs">
+                <Sparkles className="w-10 h-10 text-emerald-500 mx-auto mb-2" />
+                <h3 className="font-bold text-base">Commande Validée !</h3>
+                <p className="text-xs text-slate-500 mt-1">Livraison en cours vers {deliveryAddress}.</p>
+                <button
+                  onClick={() => {
+                    setOrderConfirmed(false);
+                    setScreen("home");
+                  }}
+                  className="mt-4 w-full py-2 bg-[#00AFF2] text-white font-bold rounded-xl"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

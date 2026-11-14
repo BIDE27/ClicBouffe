@@ -18,6 +18,8 @@ import {
   Search,
   Send,
   Sparkles,
+  Star,
+  Trash2,
   Users,
   Utensils,
   UtensilsCrossed,
@@ -35,6 +37,9 @@ export type Screen =
   | "splash"
   | "onboarding"
   | "home"
+  | "explorer"
+  | "plus_tard"
+  | "abonnements"
   | "free_food"
   | "compose_dish"
   | "checkout";
@@ -43,26 +48,30 @@ export function formatFCFA(amount: number): string {
   return `${amount.toLocaleString("fr-FR").replace(/\s/g, "\u00A0")}\u00A0FCFA`;
 }
 
-interface DishItem {
-  id: string;
-  name: string;
-  price: string;
-  priceNum: number;
-  originalPrice?: number;
-  img: string;
-  isFree?: boolean;
-}
+export {
+  INITIAL_GRID_DISHES,
+  REGIONAL_RESTAURANTS,
+  INITIAL_SCHEDULED_DISHES,
+  INITIAL_SUBSCRIPTIONS,
+  AVAILABLE_FORMULAS,
+} from "@/lib/data/clicbouffe-data";
+export type {
+  DishItem,
+  Restaurant,
+  ScheduledDish,
+  MealSubscription,
+} from "@/lib/data/clicbouffe-data";
 
-const INITIAL_GRID_DISHES: DishItem[] = [
-  { id: "1", name: "Pâte noire", price: "2 000 FCFA", priceNum: 2000, originalPrice: 200, img: "/images/dish_pate_noire.png", isFree: true },
-  { id: "2", name: "Tapioca chaud", price: "100 FCFA", priceNum: 100, originalPrice: 100, img: "/images/dish_tapioca.png", isFree: true },
-  { id: "3", name: "Chawarma", price: "1 000 FCFA", priceNum: 1000, originalPrice: 1000, img: "/images/dish_chawarma.png", isFree: false },
-  { id: "4", name: "Pâte blanche", price: "200 FCFA", priceNum: 200, originalPrice: 200, img: "/images/dish_pate_blanche.png", isFree: true },
-  { id: "5", name: "Gari au lait", price: "200 FCFA", priceNum: 200, originalPrice: 200, img: "/images/dish_gari.png", isFree: true },
-  { id: "6", name: "Pâte rouge", price: "1 000 FCFA", priceNum: 1000, originalPrice: 200, img: "/images/dish_pate_rouge.png", isFree: true },
-  { id: "7", name: "Riz au gras", price: "1 000 FCFA", priceNum: 1000, originalPrice: 1000, img: "/images/onboarding_2.png", isFree: false },
-  { id: "8", name: "Amberger", price: "5 000 FCFA", priceNum: 5000, originalPrice: 5000, img: "/images/amberger_banner.png", isFree: false },
-];
+import {
+  INITIAL_GRID_DISHES,
+  REGIONAL_RESTAURANTS,
+  INITIAL_SCHEDULED_DISHES,
+  INITIAL_SUBSCRIPTIONS,
+  AVAILABLE_FORMULAS,
+  DishItem,
+  ScheduledDish,
+  MealSubscription,
+} from "@/lib/data/clicbouffe-data";
 
 export default function ClicBouffePlatform() {
   const [currentScreen, setCurrentScreen] = useState<Screen>("splash");
@@ -84,9 +93,25 @@ export default function ClicBouffePlatform() {
   // Onglet actif de navigation basse
   const [activeNavTab, setActiveNavTab] = useState<"home" | "explorer" | "plus_tard" | "abonnements">("home");
 
+  // État Explorer
+  const [selectedExplorerCategory, setSelectedExplorerCategory] = useState<"all" | "local" | "maquis" | "chawarma" | "burger">("all");
+
+  // État Plus Tard (Plats programmés)
+  const [scheduledDishes, setScheduledDishes] = useState<ScheduledDish[]>(INITIAL_SCHEDULED_DISHES);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleDishChoice, setScheduleDishChoice] = useState<DishItem>(INITIAL_GRID_DISHES[0]);
+  const [scheduleDay, setScheduleDay] = useState("Aujourd'hui");
+  const [scheduleHour, setScheduleHour] = useState("19h30");
+  const [scheduleNote, setScheduleNote] = useState("");
+  const [schedulePortions, setSchedulePortions] = useState(1);
+
+  // État Abonnements
+  const [subscriptions, setSubscriptions] = useState<MealSubscription[]>(INITIAL_SUBSCRIPTIONS);
+  const [activeSubTab, setActiveSubTab] = useState<"active" | "discover">("active");
+
   // Paramètres de commande & Finalisation
   const [expandedStep, setExpandedStep] = useState<1 | 2 | 3>(1);
-  const [deliveryAddress, setDeliveryAddress] = useState("Terrain Zico, Akpakpa");
+  const [deliveryAddress] = useState("Terrain Zico, Akpakpa");
   const [recipient, setRecipient] = useState("Moi seul(e)");
   const [orderConfirmed, setOrderConfirmed] = useState(false);
 
@@ -100,6 +125,9 @@ export default function ClicBouffePlatform() {
   const setScreen = useCallback((s: Screen) => {
     hapticFeedback("light");
     setCurrentScreen(s);
+    if (s === "home" || s === "explorer" || s === "plus_tard" || s === "abonnements") {
+      setActiveNavTab(s);
+    }
     if (typeof window !== "undefined") {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -143,7 +171,6 @@ export default function ClicBouffePlatform() {
     return acc + dish.priceNum;
   }, 0);
 
-  // Grille officielle : 1-2 = 80 FCFA, 3-5 = 130 FCFA, 6-10 = 170 FCFA, >10 = Gratuit
   const deliveryFee =
     cartItemsCount === 0
       ? 0
@@ -157,29 +184,40 @@ export default function ClicBouffePlatform() {
 
   const cartTotal = cartSubtotal + deliveryFee;
 
-  // Toggle sélection d'un plat
-  const toggleSelectDish = (dish: DishItem) => {
-    hapticFeedback("light");
-    setSelectedDishes((prev) => {
-      const exists = prev.some((d) => d.id === dish.id);
-      if (exists) {
-        return prev.filter((d) => d.id !== dish.id);
-      } else {
-        return [...prev, dish];
-      }
-    });
-  };
-
-  // Composer son plat total
+  // Calcul Composer son plat
   const composeTotal =
     composeBasePrice +
-    composeProteins.reduce((acc, p) => acc + (p === "Poisson braisé" ? 1000 : 1200), 0) +
-    composeExtras.reduce((acc) => acc + 400, 0);
+    composeProteins.length * 500 +
+    composeExtras.length * 300;
 
-  // Filtrage des plats
+  const toggleSelectDish = (dish: DishItem) => {
+    hapticFeedback("light");
+    const exists = selectedDishes.some((d) => d.id === dish.id);
+    if (exists) {
+      setSelectedDishes(selectedDishes.filter((d) => d.id !== dish.id));
+    } else {
+      setSelectedDishes([...selectedDishes, dish]);
+    }
+  };
+
   const displayedHomeDishes = INITIAL_GRID_DISHES.filter((d) =>
     d.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const filteredRestaurants = REGIONAL_RESTAURANTS.filter((r) => {
+    if (selectedExplorerCategory !== "all" && r.categoryId !== selectedExplorerCategory) {
+      return false;
+    }
+    if (searchQuery.trim() !== "") {
+      const q = searchQuery.toLowerCase();
+      return (
+        r.name.toLowerCase().includes(q) ||
+        r.category.toLowerCase().includes(q) ||
+        r.popularDishes.some((p) => p.toLowerCase().includes(q))
+      );
+    }
+    return true;
+  });
 
   return (
     <div className="w-full min-h-screen bg-slate-50 flex flex-col font-sans select-none text-slate-900">
@@ -191,7 +229,6 @@ export default function ClicBouffePlatform() {
           onClick={() => setScreen("onboarding")}
           className="fixed inset-0 z-50 bg-[#00AFF2] flex flex-col items-center justify-center p-6 cursor-pointer"
         >
-          {/* Logo vectoriel officiel extrait du fichier PSD avec son curseur central */}
           <div className="flex flex-col items-center justify-center animate-fadeIn">
             <div className="relative w-48 sm:w-60 h-44 sm:h-56 flex items-center justify-center">
               <Image
@@ -226,7 +263,6 @@ export default function ClicBouffePlatform() {
       {currentScreen === "onboarding" && (
         <main className="min-h-screen w-full bg-white flex flex-col items-center justify-between p-6 sm:py-12">
           <div className="w-full max-w-md flex-1 flex flex-col items-center justify-center text-center">
-            {/* Section visuelle des 3 plats en triangle */}
             <div className="relative w-72 sm:w-80 h-52 sm:h-60 mb-8 flex items-center justify-center">
               {onboardingSteps[onboardingIndex].img ? (
                 <Image
@@ -246,93 +282,79 @@ export default function ClicBouffePlatform() {
               )}
             </div>
 
-            {/* Titre Pixel-Perfect */}
             <h2 className="text-2xl sm:text-3xl font-black text-black tracking-tight whitespace-pre-line leading-tight">
               {onboardingSteps[onboardingIndex].title}
             </h2>
 
-            {/* Description Pixel-Perfect */}
-            <p className="text-xs sm:text-sm text-slate-700 mt-4 leading-relaxed max-w-sm px-2">
+            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed max-w-xs mt-4">
               {onboardingSteps[onboardingIndex].desc}
             </p>
-          </div>
 
-          {/* Pagination & Contrôles */}
-          <div className="w-full max-w-md pb-4 pt-6">
-            {/* 3 Dots */}
-            <div className="flex items-center justify-center gap-3 mb-6">
+            <div className="flex items-center justify-center gap-3 my-8">
               {[0, 1, 2].map((idx) => (
-                <button
+                <span
                   key={idx}
-                  onClick={() => setOnboardingIndex(idx)}
-                  className={`w-2.5 h-2.5 rounded-full border transition-all ${
+                  className={`transition-all duration-300 rounded-full ${
                     onboardingIndex === idx
-                      ? "bg-[#00AFF2] border-[#00AFF2] scale-110"
-                      : "bg-white border-slate-800"
+                      ? "w-3 h-3 bg-[#00AFF2]"
+                      : "w-2.5 h-2.5 border-2 border-black bg-transparent"
                   }`}
-                  aria-label={`Étape ${idx + 1}`}
                 />
               ))}
             </div>
+          </div>
 
-            {/* Barre de navigation basse */}
-            <div className="flex items-center justify-between h-12 px-2">
-              {/* Flèche gauche */}
-              <div className="w-10 flex items-center">
-                {onboardingIndex > 0 ? (
-                  <button
-                    onClick={() => {
-                      hapticFeedback("light");
-                      setOnboardingIndex(onboardingIndex - 1);
-                    }}
-                    className="p-1 text-black hover:opacity-70 active:scale-95 transition-transform"
-                    aria-label="Précédent"
-                  >
-                    <ChevronLeft className="w-8 h-8 stroke-[2.5]" />
-                  </button>
-                ) : (
-                  <div className="w-8" />
-                )}
-              </div>
+          <div className="w-full max-w-md flex items-center justify-between px-2 pt-4">
+            <button
+              onClick={() => {
+                if (onboardingIndex > 0) {
+                  hapticFeedback("light");
+                  setOnboardingIndex(onboardingIndex - 1);
+                }
+              }}
+              className={`p-2 text-black transition-opacity ${
+                onboardingIndex > 0 ? "opacity-100 hover:text-[#00AFF2]" : "opacity-0 pointer-events-none"
+              }`}
+              aria-label="Étape précédente"
+            >
+              <ChevronLeft className="w-8 h-8 stroke-[2.5]" />
+            </button>
 
-              {/* Bouton central (SAUTER / COMMENCER) */}
-              <button
-                onClick={() => {
-                  hapticFeedback("medium");
+            <button
+              onClick={() => {
+                hapticFeedback("medium");
+                setScreen("home");
+              }}
+              className="bg-[#00AFF2] hover:bg-[#009bd6] active:scale-95 text-white font-extrabold text-xs sm:text-sm tracking-wider px-8 py-2.5 rounded-lg shadow-sm shadow-[#00AFF2]/30 uppercase transition-all"
+            >
+              SAUTER
+            </button>
+
+            <button
+              onClick={() => {
+                hapticFeedback("light");
+                if (onboardingIndex < 2) {
+                  setOnboardingIndex(onboardingIndex + 1);
+                } else {
                   setScreen("home");
-                  setTimeout(() => setShowFreeFoodModal(true), 800);
-                }}
-                className="bg-[#00AFF2] hover:bg-[#009bd6] active:scale-95 text-white px-8 py-2.5 rounded-lg text-xs font-bold tracking-wider shadow-sm transition-all uppercase"
-              >
-                {onboardingIndex === 2 ? "COMMENCER" : "SAUTER"}
-              </button>
-
-              {/* Flèche droite */}
-              <div className="w-10 flex items-center justify-end">
-                {onboardingIndex < 2 ? (
-                  <button
-                    onClick={() => {
-                      hapticFeedback("light");
-                      setOnboardingIndex(onboardingIndex + 1);
-                    }}
-                    className="p-1 text-black hover:opacity-70 active:scale-95 transition-transform"
-                    aria-label="Suivant"
-                  >
-                    <ChevronRight className="w-8 h-8 stroke-[2.5]" />
-                  </button>
-                ) : (
-                  <div className="w-8" />
-                )}
-              </div>
-            </div>
+                }
+              }}
+              className="p-2 text-black hover:text-[#00AFF2] transition-colors"
+              aria-label="Étape suivante"
+            >
+              <ChevronRight className="w-8 h-8 stroke-[2.5]" />
+            </button>
           </div>
         </main>
       )}
 
       {/* ============================================================== */}
-      {/* 3. ÉCRAN PRINCIPAL D'ACCUEIL (Capture 151615.jpg) */}
+      {/* 3. ÉCRANS PRINCIPAUX AVEC HEADER & BOTTOM NAV UNIFIÉS */}
       {/* ============================================================== */}
-      {currentScreen === "home" && (
+      {(currentScreen === "home" ||
+        currentScreen === "explorer" ||
+        currentScreen === "plus_tard" ||
+        currentScreen === "abonnements") && (
         <div className="min-h-screen w-full bg-white flex flex-col justify-between">
           {/* Top Bar Responsive */}
           <header className="p-4 border-b border-slate-100 bg-white/95 backdrop-blur-md sticky top-0 z-30 pt-safe">
@@ -360,12 +382,12 @@ export default function ClicBouffePlatform() {
                 </div>
               </div>
 
-              {/* Barre de recherche sur grand écran */}
+              {/* Barre de recherche responsive */}
               <div className="hidden md:flex flex-1 max-w-sm relative">
                 <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Rechercher un plat, une pâte..."
+                  placeholder="Rechercher un plat, un restaurant..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 bg-slate-100 text-xs rounded-full border border-slate-200 focus:border-[#00AFF2] focus:bg-white outline-none transition-all"
@@ -400,83 +422,592 @@ export default function ClicBouffePlatform() {
             </div>
           </header>
 
-          {/* Contenu Scrollable Principal */}
-          <main className="flex-1 w-full max-w-5xl mx-auto p-3 sm:p-6 space-y-4 pb-28">
-            {/* Bannière Carrousel Amberger */}
-            <div className="flex items-center gap-2 sm:gap-4 overflow-x-hidden">
-              <div className="w-8 sm:w-16 h-32 sm:h-44 rounded-2xl bg-slate-100 shrink-0 opacity-40 border" />
+          {/* ============================================================== */}
+          {/* ONGLET 1 : ACCUEIL */}
+          {/* ============================================================== */}
+          {currentScreen === "home" && (
+            <main className="flex-1 w-full max-w-5xl mx-auto p-3 sm:p-6 space-y-4 pb-28">
+              {/* Bannière Hero Amberger Propre & Stylée */}
               <div
-                onClick={() => setScreen("free_food")}
-                className="flex-1 bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-xs cursor-pointer hover:border-[#00AFF2] transition-all"
+                onClick={() => {
+                  hapticFeedback("light");
+                  const amberger = INITIAL_GRID_DISHES.find((d) => d.name === "Amberger") || INITIAL_GRID_DISHES[0];
+                  setPreviewDish(amberger);
+                  setShowDishPreviewModal(true);
+                }}
+                className="w-full h-44 sm:h-64 rounded-3xl overflow-hidden relative shadow-sm border border-slate-200/90 group cursor-pointer hover:shadow-lg transition-all"
               >
-                <div className="h-28 sm:h-44 bg-black relative flex items-center justify-center">
-                  <Image
-                    src="/images/amberger_banner.png"
-                    alt="Amberger Signature"
-                    fill
-                    className="object-cover"
-                    priority
-                  />
-                </div>
-                <div className="p-2.5 sm:p-4 text-center bg-white border-t border-slate-100">
-                  <p className="text-xs sm:text-base font-bold text-slate-900">Amberger</p>
-                  <p className="text-xs sm:text-sm font-semibold text-slate-700">5 000 FCFA</p>
+                <Image
+                  src="/images/amberger_banner.jpg"
+                  alt="Amberger Signature"
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent flex flex-col justify-end p-4 sm:p-6 text-white">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#00AFF2] text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider">
+                      Spécialité du Chef
+                    </span>
+                    <span className="text-[10px] sm:text-xs text-white/80 font-medium">
+                      Terrain Zico • Préparé à la minute
+                    </span>
+                  </div>
+                  <div className="flex items-end justify-between mt-1">
+                    <div>
+                      <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                        Amberger Gourmet Signature
+                      </h2>
+                      <p className="text-xs sm:text-sm text-white/90 font-semibold mt-0.5">
+                        5 000 FCFA <span className="font-normal text-white/75 text-[11px]">• Double steak, cheddar affiné & sauce maison</span>
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        hapticFeedback("medium");
+                        const amberger = INITIAL_GRID_DISHES.find((d) => d.name === "Amberger");
+                        if (amberger) setSelectedDishes((prev) => [...prev, amberger]);
+                      }}
+                      className="px-4 py-2 bg-white text-slate-900 rounded-xl font-bold text-xs sm:text-sm hover:bg-[#00AFF2] hover:text-white transition-all shadow-md active:scale-95 flex items-center gap-1.5 shrink-0"
+                    >
+                      <span>Commander</span>
+                      <Plus className="w-4 h-4 stroke-[2.5]" />
+                    </button>
+                  </div>
                 </div>
               </div>
-              <div className="w-8 sm:w-16 h-32 sm:h-44 rounded-2xl bg-slate-100 shrink-0 opacity-40 border" />
-            </div>
 
-            {/* Titre section */}
-            <div className="flex items-center justify-between pt-2">
-              <p className="text-xs sm:text-sm font-bold text-slate-800">
-                Plats pouvant vous intéresser
-              </p>
-              <button
-                onClick={() => setScreen("free_food")}
-                className="text-xs font-bold text-[#00AFF2] hover:underline"
-              >
-                Tout voir &gt;
-              </button>
-            </div>
-
-            {/* Grille des plats (3 colonnes mobile, 4-6 colonnes desktop) */}
-            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-4">
-              {displayedHomeDishes.slice(0, 6).map((dish) => (
-                <div
-                  key={dish.id}
-                  onClick={() => {
-                    hapticFeedback("light");
-                    setPreviewDish(dish);
-                    setShowDishPreviewModal(true);
-                  }}
-                  className="bg-white rounded-2xl border border-slate-200 p-2 flex flex-col items-center justify-between text-center shadow-xs cursor-pointer hover:border-[#00AFF2] hover:shadow-md transition-all"
+              {/* Titre section Plats */}
+              <div className="flex items-center justify-between pt-2">
+                <div>
+                  <p className="text-xs sm:text-sm font-bold text-slate-800">
+                    Plats pouvant vous intéresser
+                  </p>
+                  <p className="text-[11px] text-slate-500">
+                    Sélectionnés pour vous à Akpakpa (Cotonou)
+                  </p>
+                </div>
+                <button
+                  onClick={() => setScreen("free_food")}
+                  className="text-xs font-bold text-[#00AFF2] hover:underline"
                 >
-                  <div className="w-full h-16 sm:h-24 relative my-1 flex items-center justify-center">
-                    {dish.img ? (
+                  Tout voir &gt;
+                </button>
+              </div>
+
+              {/* Grille des plats authentiques, centrés, avec belles cartes */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
+                {displayedHomeDishes.slice(0, 6).map((dish) => (
+                  <div
+                    key={dish.id}
+                    onClick={() => {
+                      hapticFeedback("light");
+                      setPreviewDish(dish);
+                      setShowDishPreviewModal(true);
+                    }}
+                    className="bg-white rounded-2xl border border-slate-200/90 p-2.5 flex flex-col justify-between text-left shadow-xs hover:shadow-md hover:border-[#00AFF2] transition-all group cursor-pointer relative"
+                  >
+                    {/* Conteneur d'image propre, centré, aspect-ratio parfait sans coupures */}
+                    <div className="w-full h-28 sm:h-36 relative rounded-xl overflow-hidden bg-slate-100 mb-2">
                       <Image
                         src={dish.img}
                         alt={dish.name}
                         fill
-                        className="object-contain"
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        sizes="(max-width: 640px) 50vw, 200px"
                       />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-                        <Utensils className="w-5 h-5" />
+                      {dish.isFree && (
+                        <span className="absolute top-1.5 right-1.5 bg-[#00AFF2] text-white text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-xs">
+                          1er Offert
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Informations du plat */}
+                    <div className="w-full pt-1 flex items-center justify-between">
+                      <div className="flex-1 min-w-0 pr-1">
+                        <p className="text-xs sm:text-sm font-bold text-slate-900 truncate group-hover:text-[#00AFF2] transition-colors">
+                          {dish.name}
+                        </p>
+                        <p className="text-[11px] sm:text-xs font-semibold text-slate-700">
+                          {dish.price}
+                        </p>
                       </div>
-                    )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          hapticFeedback("medium");
+                          setSelectedDishes((prev) => [...prev, dish]);
+                        }}
+                        className="w-7 h-7 rounded-full bg-slate-100 group-hover:bg-[#00AFF2] group-hover:text-white text-slate-700 flex items-center justify-center transition-colors shrink-0 shadow-2xs"
+                        aria-label={`Ajouter ${dish.name} au panier`}
+                      >
+                        <Plus className="w-4 h-4 stroke-[2.5]" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="w-full pt-1.5 border-t border-slate-100">
-                    <p className="text-[10px] sm:text-xs font-bold text-slate-900 truncate">
-                      {dish.name}
+                ))}
+              </div>
+            </main>
+          )}
+
+          {/* ============================================================== */}
+          {/* ONGLET 2 : EXPLORER (RESTAURANTS DISPONIBLES DANS LA SOUS-RÉGION) */}
+          {/* ============================================================== */}
+          {currentScreen === "explorer" && (
+            <main className="flex-1 w-full max-w-5xl mx-auto p-3 sm:p-6 space-y-4 pb-28">
+              {/* En-tête Sous-région */}
+              <div className="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-[#00AFF2] uppercase tracking-wide">
+                    <MapPin className="w-3.5 h-3.5" />
+                    <span>Sous-région : Akpakpa & Cotonou Est</span>
+                  </div>
+                  <h2 className="text-lg sm:text-xl font-black text-slate-900 mt-0.5">
+                    Restaurants & Maquis Disponibles
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Livraison directe chez vous au {deliveryAddress} (dès 80 FCFA)
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-200/60 flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    6 Ouverts maintenant
+                  </span>
+                </div>
+              </div>
+
+              {/* Filtres thématiques par catégorie */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs">
+                {[
+                  { id: "all", label: "🍽️ Tous les restaurants" },
+                  { id: "local", label: "🍲 Cuisine Locale & Pâtes" },
+                  { id: "maquis", label: "🍗 Maquis & Grillades" },
+                  { id: "chawarma", label: "🌯 Chawarma & Wraps" },
+                  { id: "burger", label: "🍔 Fast-Food & Burgers" },
+                ].map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => {
+                      hapticFeedback("light");
+                      setSelectedExplorerCategory(cat.id as "all" | "local" | "maquis" | "chawarma" | "burger");
+                    }}
+                    className={`px-3.5 py-1.5 rounded-full whitespace-nowrap font-semibold transition-all ${
+                      selectedExplorerCategory === cat.id
+                        ? "bg-[#00AFF2] text-white shadow-xs"
+                        : "bg-white text-slate-700 border border-slate-200 hover:border-[#00AFF2]"
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Grille des restaurants */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredRestaurants.map((restau) => (
+                  <div
+                    key={restau.id}
+                    className="bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-xs hover:shadow-md hover:border-[#00AFF2] transition-all flex flex-col group cursor-pointer"
+                    onClick={() => {
+                      hapticFeedback("light");
+                      setScreen("free_food");
+                    }}
+                  >
+                    {/* Photo du restaurant */}
+                    <div className="h-36 sm:h-44 w-full relative bg-slate-100 overflow-hidden">
+                      <Image
+                        src={restau.img}
+                        alt={restau.name}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute top-2 left-2 flex flex-wrap gap-1">
+                        {restau.badges.map((b) => (
+                          <span
+                            key={b}
+                            className="px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold"
+                          >
+                            {b}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="absolute bottom-2 right-2 px-2 py-1 rounded-lg bg-white/95 backdrop-blur-xs text-slate-900 text-xs font-bold shadow-xs flex items-center gap-1">
+                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                        <span>{restau.rating}</span>
+                        <span className="text-[10px] text-slate-500 font-normal">({restau.reviewsCount})</span>
+                      </div>
+                    </div>
+
+                    {/* Détails du restaurant */}
+                    <div className="p-3.5 flex-1 flex flex-col justify-between">
+                      <div>
+                        <h3 className="font-bold text-slate-900 text-sm sm:text-base group-hover:text-[#00AFF2] transition-colors truncate">
+                          {restau.name}
+                        </h3>
+                        <p className="text-xs text-slate-500 font-medium mt-0.5">
+                          {restau.category} • {restau.distance}
+                        </p>
+
+                        {/* Plats phares */}
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {restau.popularDishes.slice(0, 3).map((dish) => (
+                            <span
+                              key={dish}
+                              className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[10px] font-medium"
+                            >
+                              {dish}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                        <div className="text-slate-600 font-medium">
+                          <span>⏱️ {restau.deliveryTime}</span>
+                          <span className="mx-1">•</span>
+                          <span className="text-[#00AFF2] font-semibold">{restau.deliveryFee}</span>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            hapticFeedback("medium");
+                            setScreen("compose_dish");
+                          }}
+                          className="px-3 py-1 bg-[#00AFF2] text-white rounded-lg font-bold hover:bg-[#0098d4] transition-colors shadow-2xs"
+                        >
+                          Commander
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </main>
+          )}
+
+          {/* ============================================================== */}
+          {/* ONGLET 3 : PLUS TARD (PLATS ENREGISTRÉS & PROGRAMMÉS) */}
+          {/* ============================================================== */}
+          {currentScreen === "plus_tard" && (
+            <main className="flex-1 w-full max-w-4xl mx-auto p-3 sm:p-6 space-y-4 pb-28">
+              {/* En-tête */}
+              <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-[#00AFF2] uppercase tracking-wide">
+                    <ClockNavIcon active className="w-4 h-4" />
+                    <span>Planification des repas</span>
+                  </div>
+                  <h2 className="text-lg sm:text-xl font-black text-slate-900 mt-0.5">
+                    Plats Programmés pour Plus Tard
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Vos commandes programmées pour être préparées et livrées à l&apos;heure de votre choix.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => {
+                    hapticFeedback("light");
+                    setShowScheduleModal(true);
+                  }}
+                  className="px-4 py-2 bg-[#00AFF2] text-white rounded-xl font-bold text-xs hover:bg-[#0098d4] transition-all shadow-xs flex items-center justify-center gap-1.5"
+                >
+                  <Plus className="w-4 h-4 stroke-[2.5]" />
+                  <span>Programmer un plat</span>
+                </button>
+              </div>
+
+              {/* Prochaine livraison programmée */}
+              {scheduledDishes.length > 0 && (
+                <div className="bg-gradient-to-r from-[#00AFF2]/10 via-[#00AFF2]/5 to-transparent rounded-2xl p-3 sm:p-4 border border-[#00AFF2]/20 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#00AFF2] text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <ClockNavIcon active className="w-5 h-5" cutoutColor="#00AFF2" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-slate-900">
+                      Prochaine livraison programmée
                     </p>
-                    <p className="text-[9px] sm:text-[11px] font-semibold text-slate-700">
-                      {dish.price}
+                    <p className="text-[11px] sm:text-xs text-slate-600 truncate">
+                      <span className="font-bold text-[#00AFF2]">{scheduledDishes[0].scheduledDate} à {scheduledDishes[0].scheduledTime}</span> : {scheduledDishes[0].dishName} ({scheduledDishes[0].restaurantName})
                     </p>
                   </div>
                 </div>
-              ))}
-            </div>
-          </main>
+              )}
+
+              {/* Liste des plats programmés */}
+              <div className="space-y-3">
+                {scheduledDishes.map((item) => (
+                  <div
+                    key={item.id}
+                    className="bg-white rounded-2xl border border-slate-200/90 p-3.5 sm:p-4 shadow-xs hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden relative bg-slate-100 shrink-0">
+                        <Image
+                          src={item.img}
+                          alt={item.dishName}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded-full bg-[#00AFF2]/15 text-[#00AFF2] text-[10px] font-bold">
+                            ⏰ {item.scheduledDate} à {item.scheduledTime}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-medium">
+                            {item.portions} portion(s)
+                          </span>
+                        </div>
+                        <h3 className="font-bold text-slate-900 text-sm sm:text-base mt-1">
+                          {item.dishName}
+                        </h3>
+                        <p className="text-xs text-slate-500">
+                          Restau : <span className="font-semibold text-slate-700">{item.restaurantName}</span>
+                        </p>
+                        {item.instructions && (
+                          <p className="text-[11px] text-slate-500 italic mt-0.5">
+                            &ldquo;{item.instructions}&rdquo;
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex sm:flex-col items-center sm:items-end justify-between border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100 gap-2">
+                      <p className="text-sm sm:text-base font-bold text-slate-900">
+                        {item.price}
+                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => {
+                            hapticFeedback("light");
+                            alert(`Créneau modifié avec succès pour ${item.dishName} !`);
+                          }}
+                          className="px-2.5 py-1 text-xs font-semibold text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+                        >
+                          Modifier créneau
+                        </button>
+                        <button
+                          onClick={() => {
+                            hapticFeedback("medium");
+                            setScheduledDishes((prev) => prev.filter((d) => d.id !== item.id));
+                          }}
+                          className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                          aria-label="Supprimer la programmation"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Rappel Grille de Livraison Officielle */}
+              <div className="bg-slate-100/80 rounded-2xl p-3.5 border border-slate-200 text-xs text-slate-600 flex items-start gap-2.5">
+                <Info className="w-4 h-4 text-[#00AFF2] shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold text-slate-800">
+                    Tarifs de livraison officiels pour vos commandes programmées :
+                  </p>
+                  <p className="mt-0.5 text-slate-500">
+                    1 à 2 plats = <strong>80 FCFA</strong> • 3 à 5 plats = <strong>130 FCFA</strong> • 6 à 10 plats = <strong>170 FCFA</strong> • Plus de 10 plats = <strong>Gratuit (0 FCFA)</strong>.
+                  </p>
+                </div>
+              </div>
+            </main>
+          )}
+
+          {/* ============================================================== */}
+          {/* ONGLET 4 : ABONNEMENTS (PLATS & RESTAURANTS ABONNÉS) */}
+          {/* ============================================================== */}
+          {currentScreen === "abonnements" && (
+            <main className="flex-1 w-full max-w-4xl mx-auto p-3 sm:p-6 space-y-4 pb-28">
+              {/* En-tête */}
+              <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-[#00AFF2] uppercase tracking-wide">
+                    <CalendarNavIcon active className="w-4 h-4" />
+                    <span>Gestion des abonnements</span>
+                  </div>
+                  <h2 className="text-lg sm:text-xl font-black text-slate-900 mt-0.5">
+                    Mes Abonnements & Formules Repas
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Vos plats et restaurants réguliers livrés automatiquement à créneau fixe.
+                  </p>
+                </div>
+
+                {/* Switcher Onglets Mes Abos vs Découvrir */}
+                <div className="flex items-center p-1 bg-slate-100 rounded-xl">
+                  <button
+                    onClick={() => {
+                      hapticFeedback("light");
+                      setActiveSubTab("active");
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      activeSubTab === "active"
+                        ? "bg-white text-slate-900 shadow-xs"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    Actifs ({subscriptions.filter((s) => s.status === "actif").length})
+                  </button>
+                  <button
+                    onClick={() => {
+                      hapticFeedback("light");
+                      setActiveSubTab("discover");
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      activeSubTab === "discover"
+                        ? "bg-white text-slate-900 shadow-xs"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    Formules ({AVAILABLE_FORMULAS.length})
+                  </button>
+                </div>
+              </div>
+
+              {activeSubTab === "active" ? (
+                <div className="space-y-3">
+                  {subscriptions.map((sub) => (
+                    <div
+                      key={sub.id}
+                      className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-start justify-between gap-4"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden relative bg-slate-100 shrink-0">
+                          <Image
+                            src={sub.img}
+                            alt={sub.title}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                sub.status === "actif"
+                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60"
+                                  : "bg-amber-50 text-amber-700 border border-amber-200/60"
+                              }`}
+                            >
+                              {sub.status === "actif" ? "● Actif" : "❚❚ En pause"}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-medium">
+                              {sub.renewalDate}
+                            </span>
+                          </div>
+                          <h3 className="font-bold text-slate-900 text-sm sm:text-base mt-1">
+                            {sub.title}
+                          </h3>
+                          <p className="text-xs font-semibold text-slate-700">
+                            {sub.targetName}
+                          </p>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            Restau : <span className="font-semibold">{sub.providerName}</span> • Créneau : <span className="font-semibold text-slate-700">{sub.frequency} à {sub.scheduledTime}</span>
+                          </p>
+
+                          {sub.benefits && (
+                            <ul className="mt-2 space-y-0.5">
+                              {sub.benefits.map((b) => (
+                                <li key={b} className="text-[11px] text-slate-600 flex items-center gap-1.5">
+                                  <Check className="w-3 h-3 text-[#00AFF2]" />
+                                  <span>{b}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex sm:flex-col items-center sm:items-end justify-between border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100 gap-3">
+                        <p className="text-sm sm:text-base font-bold text-slate-900">
+                          {sub.pricePerPeriod}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              hapticFeedback("light");
+                              setSubscriptions((prev) =>
+                                prev.map((s) =>
+                                  s.id === sub.id
+                                    ? { ...s, status: s.status === "actif" ? "en_pause" : "actif" }
+                                    : s
+                                )
+                              );
+                            }}
+                            className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-colors ${
+                              sub.status === "actif"
+                                ? "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200"
+                                : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200"
+                            }`}
+                          >
+                            {sub.status === "actif" ? "Mettre en pause" : "Reprendre"}
+                          </button>
+                          <button
+                            onClick={() => {
+                              hapticFeedback("light");
+                              alert(`Options d'abonnement pour ${sub.title} modifiées !`);
+                            }}
+                            className="px-3 py-1.5 text-xs font-semibold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors"
+                          >
+                            Gérer
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {AVAILABLE_FORMULAS.map((formula) => (
+                    <div
+                      key={formula.id}
+                      className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs hover:shadow-md hover:border-[#00AFF2] transition-all flex flex-col justify-between"
+                    >
+                      <div>
+                        <span className="px-2 py-0.5 rounded-full bg-[#00AFF2]/10 text-[#00AFF2] text-[10px] font-bold">
+                          {formula.badge}
+                        </span>
+                        <h3 className="font-bold text-slate-900 text-base mt-2">
+                          {formula.title}
+                        </h3>
+                        <p className="text-xs text-slate-500 mt-1">
+                          {formula.description}
+                        </p>
+                        <p className="text-lg font-black text-slate-900 mt-3">
+                          {formula.price}
+                        </p>
+                        <ul className="mt-3 space-y-1 text-xs text-slate-600">
+                          {formula.features.map((f) => (
+                            <li key={f} className="flex items-center gap-1.5">
+                              <Check className="w-3.5 h-3.5 text-[#00AFF2]" />
+                              <span>{f}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <button
+                        onClick={() => {
+                          hapticFeedback("medium");
+                          alert(`Souscription confirmée à la ${formula.title} !`);
+                        }}
+                        className="mt-4 w-full py-2 bg-[#00AFF2] text-white rounded-xl font-bold text-xs hover:bg-[#0098d4] transition-colors shadow-xs"
+                      >
+                        Souscrire à cette formule
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </main>
+          )}
 
           {/* Barre Navigation Basse Pixel-Perfect avec FAB (+) Composer plat */}
           <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200 h-16 flex items-center justify-around px-2 z-30 pb-safe">
@@ -508,7 +1039,7 @@ export default function ClicBouffePlatform() {
               <button
                 onClick={() => {
                   setActiveNavTab("explorer");
-                  setScreen("free_food");
+                  setScreen("explorer");
                 }}
                 className={`flex flex-col items-center gap-0.5 transition-colors ${
                   activeNavTab === "explorer" ? "text-[#00AFF2]" : "text-slate-600 hover:text-[#00AFF2]"
@@ -545,7 +1076,7 @@ export default function ClicBouffePlatform() {
               <button
                 onClick={() => {
                   setActiveNavTab("plus_tard");
-                  setShowDeliveryRatesModal(true);
+                  setScreen("plus_tard");
                 }}
                 className={`flex flex-col items-center gap-0.5 transition-colors ${
                   activeNavTab === "plus_tard" ? "text-[#00AFF2]" : "text-slate-600 hover:text-[#00AFF2]"
@@ -568,7 +1099,7 @@ export default function ClicBouffePlatform() {
               <button
                 onClick={() => {
                   setActiveNavTab("abonnements");
-                  setScreen("checkout");
+                  setScreen("abonnements");
                 }}
                 className={`flex flex-col items-center gap-0.5 transition-colors ${
                   activeNavTab === "abonnements" ? "text-[#00AFF2]" : "text-slate-600 hover:text-[#00AFF2]"
@@ -609,7 +1140,6 @@ export default function ClicBouffePlatform() {
               BOUFFE GRATUITE
             </h3>
 
-            {/* Illustration Cadeau + Badge 100% GRATUIT */}
             <div className="my-5 flex flex-col items-center">
               <div className="relative w-28 h-24 flex items-center justify-center">
                 <div className="w-20 h-20 bg-sky-50 rounded-2xl flex items-center justify-center text-[#00AFF2] border border-sky-100">
@@ -644,7 +1174,6 @@ export default function ClicBouffePlatform() {
       {/* ============================================================== */}
       {currentScreen === "free_food" && (
         <div className="min-h-screen w-full bg-white flex flex-col justify-between">
-          {/* Header */}
           <header className="p-4 border-b border-slate-100 sticky top-0 bg-white z-20 pt-safe">
             <div className="max-w-4xl mx-auto flex items-center gap-3">
               <button
@@ -660,7 +1189,6 @@ export default function ClicBouffePlatform() {
             </div>
           </header>
 
-          {/* Corps de page */}
           <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 space-y-4 pb-28">
             <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
               Vous pouvez choisir une seule bouffe gratuite. Pour recevoir votre bouffe choisie, il ne vous suffira que de payer la livraison de cette dernière.{" "}
@@ -684,7 +1212,6 @@ export default function ClicBouffePlatform() {
               </button>
             </div>
 
-            {/* Grille des plats (2 colonnes mobile, 4 colonnes desktop) */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 pt-1">
               {(showMoreDishes ? INITIAL_GRID_DISHES : INITIAL_GRID_DISHES.slice(0, 4)).map(
                 (dish) => {
@@ -712,14 +1239,14 @@ export default function ClicBouffePlatform() {
                           setPreviewDish(dish);
                           setShowDishPreviewModal(true);
                         }}
-                        className="w-24 sm:w-28 h-24 sm:h-28 relative my-1 flex items-center justify-center"
+                        className="w-24 sm:w-28 h-24 sm:h-28 relative my-1 rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center"
                       >
                         {dish.img ? (
                           <Image
                             src={dish.img}
                             alt={dish.name}
                             fill
-                            className="object-contain"
+                            className="object-cover"
                           />
                         ) : (
                           <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
@@ -728,7 +1255,6 @@ export default function ClicBouffePlatform() {
                         )}
                       </div>
 
-                      {/* Footer carte (Cyan si sélectionné) */}
                       <div
                         className={`w-full py-1.5 px-1 rounded-b-xl transition-colors ${
                           isSelected
@@ -751,7 +1277,6 @@ export default function ClicBouffePlatform() {
               )}
             </div>
 
-            {/* Lien Voir plus de bouffes */}
             <div className="text-center pt-4">
               <button
                 onClick={() => setShowMoreDishes(!showMoreDishes)}
@@ -762,7 +1287,6 @@ export default function ClicBouffePlatform() {
             </div>
           </main>
 
-          {/* Bouton Flottant Total (0 F CFA (1) -> Finalisation) */}
           <div className="fixed bottom-5 right-5 z-30 pb-safe">
             <button
               onClick={() => {
@@ -852,46 +1376,42 @@ export default function ClicBouffePlatform() {
                   className="object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Utensils className="w-12 h-12 text-slate-400" />
+                <div className="w-full h-full flex items-center justify-center text-slate-400">
+                  <Utensils className="w-12 h-12" />
                 </div>
               )}
-              <div className="absolute top-0 inset-x-0 bg-gradient-to-b from-black/70 to-transparent p-3.5 flex justify-between text-white text-xs font-bold">
-                <span>{previewDish.name}</span>
-                <span>{previewDish.price}</span>
-              </div>
+              <button
+                onClick={() => setShowDishPreviewModal(false)}
+                className="absolute top-3 right-3 bg-black/60 text-white rounded-full p-1.5 hover:bg-black transition-colors"
+                aria-label="Fermer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+              {previewDish.isFree && (
+                <span className="absolute bottom-3 left-3 px-3 py-1 bg-[#00AFF2] text-white rounded-full text-xs font-bold shadow-sm">
+                  100% Gratuit (1er plat)
+                </span>
+              )}
             </div>
 
-            {/* Barre d'action sombre #333333 */}
-            <div className="bg-[#333333] p-3.5 flex items-center justify-around text-xs font-bold text-[#00AFF2]">
+            <div className="p-5 text-center">
+              <h3 className="text-lg font-black text-slate-900">{previewDish.name}</h3>
+              <p className="text-base font-bold text-[#00AFF2] mt-1">{previewDish.price}</p>
+              <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                Préparé avec des ingrédients frais du terroir béninois selon la recette traditionnelle. Livré chaud et prêt à déguster chez vous à Akpakpa.
+              </p>
+
               <button
                 onClick={() => {
-                  hapticFeedback("success");
-                  if (!selectedDishes.some((d) => d.id === previewDish.id)) {
-                    setSelectedDishes([...selectedDishes, previewDish]);
-                  }
+                  hapticFeedback("medium");
+                  toggleSelectDish(previewDish);
                   setShowDishPreviewModal(false);
-                  setScreen("free_food");
                 }}
-                className="flex items-center gap-1.5 hover:text-white transition-colors"
+                className="mt-5 w-full py-3 bg-[#00AFF2] hover:bg-[#009bd6] active:scale-95 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-[#00AFF2]/30"
               >
-                <span>Ajouter</span>
-                <span className="w-4 h-4 rounded-full bg-[#00AFF2] text-white flex items-center justify-center">
-                  <Check className="w-3 h-3 stroke-[3]" />
-                </span>
-              </button>
-              <div className="w-[1px] h-4 bg-white/20" />
-              <button
-                onClick={() => {
-                  setShowDishPreviewModal(false);
-                  setShowDeliveryRatesModal(true);
-                }}
-                className="flex items-center gap-1.5 hover:text-white transition-colors"
-              >
-                <span>À propos</span>
-                <span className="w-4 h-4 rounded-full bg-[#00AFF2] text-white flex items-center justify-center">
-                  <Info className="w-3 h-3 stroke-[3]" />
-                </span>
+                {selectedDishes.some((d) => d.id === previewDish.id)
+                  ? "Retirer du panier"
+                  : "Ajouter au panier"}
               </button>
             </div>
           </div>
@@ -899,38 +1419,205 @@ export default function ClicBouffePlatform() {
       )}
 
       {/* ============================================================== */}
-      {/* 8. ÉCRAN COMPOSER SON PLAT */}
+      {/* 8. MODALE PROGRAMMER UN PLAT POUR PLUS TARD */}
+      {/* ============================================================== */}
+      {showScheduleModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl w-full max-w-sm sm:max-w-md p-5 relative shadow-2xl animate-scaleUp max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setShowScheduleModal(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1"
+              aria-label="Fermer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2 text-[#00AFF2] mb-1">
+              <ClockNavIcon active className="w-5 h-5" />
+              <h3 className="text-base font-black text-slate-900">
+                Programmer un plat pour plus tard
+              </h3>
+            </div>
+            <p className="text-xs text-slate-500 mb-4">
+              Choisissez le plat et l&apos;heure à laquelle vous souhaitez être livré.
+            </p>
+
+            <div className="space-y-3.5 text-xs">
+              {/* Choix du plat */}
+              <div>
+                <label className="font-bold text-slate-700 block mb-1.5">
+                  1. Sélectionner le plat :
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {INITIAL_GRID_DISHES.slice(0, 4).map((d) => (
+                    <button
+                      key={d.id}
+                      type="button"
+                      onClick={() => setScheduleDishChoice(d)}
+                      className={`p-2 rounded-xl border text-left flex items-center gap-2 transition-all ${
+                        scheduleDishChoice.id === d.id
+                          ? "border-[#00AFF2] bg-sky-50 text-[#00AFF2] font-bold"
+                          : "border-slate-200 text-slate-700"
+                      }`}
+                    >
+                      <div className="w-10 h-10 rounded-lg relative overflow-hidden bg-slate-100 shrink-0">
+                        <Image src={d.img} alt={d.name} fill className="object-cover" />
+                      </div>
+                      <div className="truncate">
+                        <p className="text-xs truncate">{d.name}</p>
+                        <p className="text-[10px] text-slate-500">{d.price}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Choix du jour */}
+              <div>
+                <label className="font-bold text-slate-700 block mb-1.5">
+                  2. Jour de livraison :
+                </label>
+                <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                  {["Aujourd'hui", "Demain", "Vendredi", "Samedi", "Dimanche"].map((day) => (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => setScheduleDay(day)}
+                      className={`px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap transition-all ${
+                        scheduleDay === day
+                          ? "bg-[#00AFF2] text-white"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      }`}
+                    >
+                      {day}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Choix de l'heure */}
+              <div>
+                <label className="font-bold text-slate-700 block mb-1.5">
+                  3. Heure souhaitée :
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {["12h00", "12h30", "13h00", "19h00", "19h30", "20h00"].map((h) => (
+                    <button
+                      key={h}
+                      type="button"
+                      onClick={() => setScheduleHour(h)}
+                      className={`py-1.5 px-2 rounded-lg font-semibold text-center transition-all ${
+                        scheduleHour === h
+                          ? "bg-[#00AFF2] text-white"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      }`}
+                    >
+                      {h}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Portions */}
+              <div>
+                <label className="font-bold text-slate-700 block mb-1.5">
+                  4. Portions :
+                </label>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSchedulePortions(Math.max(1, schedulePortions - 1))}
+                    className="w-8 h-8 rounded-lg bg-slate-100 font-bold text-slate-700 hover:bg-slate-200"
+                  >
+                    -
+                  </button>
+                  <span className="font-bold text-sm">{schedulePortions}</span>
+                  <button
+                    type="button"
+                    onClick={() => setSchedulePortions(schedulePortions + 1)}
+                    className="w-8 h-8 rounded-lg bg-slate-100 font-bold text-slate-700 hover:bg-slate-200"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              {/* Instructions */}
+              <div>
+                <label className="font-bold text-slate-700 block mb-1.5">
+                  5. Instructions particulières (Optionnel) :
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex : sans piment, sauce à part..."
+                  value={scheduleNote}
+                  onChange={(e) => setScheduleNote(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl outline-none focus:border-[#00AFF2]"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  hapticFeedback("success");
+                  const newScheduled: ScheduledDish = {
+                    id: `sch-${Date.now()}`,
+                    dishName: scheduleDishChoice.name,
+                    restaurantName: "Saveurs d'Akpakpa (Terrain Zico)",
+                    price: `${scheduleDishChoice.priceNum * schedulePortions} FCFA`,
+                    priceNum: scheduleDishChoice.priceNum * schedulePortions,
+                    scheduledDate: scheduleDay,
+                    scheduledTime: scheduleHour,
+                    portions: schedulePortions,
+                    instructions: scheduleNote || "Préparation soignée à l'heure",
+                    img: scheduleDishChoice.img,
+                    status: "confirmé",
+                  };
+                  setScheduledDishes([newScheduled, ...scheduledDishes]);
+                  setShowScheduleModal(false);
+                }}
+                className="w-full py-3 bg-[#00AFF2] text-white font-bold rounded-xl mt-3 hover:bg-[#0098d4] transition-all shadow-md shadow-[#00AFF2]/30 uppercase tracking-wider text-xs"
+              >
+                Confirmer la programmation
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* 9. ÉCRAN COMPOSER SON PLAT (+ FAB) */}
       {/* ============================================================== */}
       {currentScreen === "compose_dish" && (
         <div className="min-h-screen w-full bg-white flex flex-col justify-between">
           <header className="p-4 border-b border-slate-100 sticky top-0 bg-white z-20 pt-safe">
-            <div className="max-w-2xl mx-auto flex items-center gap-3">
-              <button
-                onClick={() => setScreen("home")}
-                className="p-1 text-black hover:text-[#00AFF2]"
-                aria-label="Retour"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <h2 className="text-sm font-bold text-black">Composer son plat sur-mesure</h2>
+            <div className="max-w-2xl mx-auto flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setScreen("home")}
+                  className="p-1 text-black hover:text-[#00AFF2]"
+                  aria-label="Retour"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+                <h2 className="text-sm sm:text-base font-bold text-black">Composer son plat</h2>
+              </div>
+              <span className="text-xs font-bold text-[#00AFF2]">Sur-mesure</span>
             </div>
           </header>
 
-          <main className="flex-1 max-w-2xl w-full mx-auto p-4 sm:p-6 space-y-4 pb-28 text-xs sm:text-sm">
-            <div className="p-3 bg-sky-50 rounded-2xl text-[#00AFF2] font-semibold flex items-center gap-2">
-              <Sparkles className="w-5 h-5 shrink-0" />
-              <span>Composez votre plat préféré avec votre base, sauce et viande locale !</span>
-            </div>
-
+          <main className="flex-1 max-w-2xl w-full mx-auto p-4 sm:p-6 space-y-6 pb-28 text-xs sm:text-sm">
             {/* 1. Base */}
             <div>
-              <p className="font-bold text-slate-900 mb-2">1. Choisissez votre base (Obligatoire)</p>
-              <div className="space-y-2">
+              <p className="font-bold text-slate-900 mb-2">1. Choisir votre pâte / base (Obligatoire)</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {[
                   { name: "Pâte noire", price: 500 },
-                  { name: "Pâte blanche (Akassa)", price: 400 },
+                  { name: "Pâte blanche", price: 400 },
                   { name: "Pâte rouge (Amiwo)", price: 600 },
-                  { name: "Riz au gras", price: 800 },
+                  { name: "Riz au gras", price: 600 },
+                  { name: "Gari au lait", price: 200 },
+                  { name: "Tapioca chaud", price: 200 },
                 ].map((b) => (
                   <div
                     key={b.name}
@@ -939,14 +1626,14 @@ export default function ClicBouffePlatform() {
                       setComposeBase(b.name);
                       setComposeBasePrice(b.price);
                     }}
-                    className={`p-3 rounded-xl border flex justify-between items-center cursor-pointer transition-colors ${
+                    className={`p-3 rounded-xl border flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${
                       composeBase === b.name
-                        ? "border-[#00AFF2] bg-sky-50/50 text-[#00AFF2] font-bold"
+                        ? "border-[#00AFF2] bg-sky-50 text-[#00AFF2] font-bold"
                         : "border-slate-200"
                     }`}
                   >
                     <span>{b.name}</span>
-                    <span>{b.price} FCFA</span>
+                    <span className="text-[11px] text-slate-500 mt-0.5">{b.price} FCFA</span>
                   </div>
                 ))}
               </div>
@@ -954,23 +1641,22 @@ export default function ClicBouffePlatform() {
 
             {/* 2. Sauce */}
             <div>
-              <p className="font-bold text-slate-900 mb-2">2. Choisissez votre sauce (Obligatoire)</p>
-              <div className="space-y-2">
-                {["Sauce Gombo", "Sauce Tomate fraîche", "Sauce Légumes (Gboma)"].map((s) => (
+              <p className="font-bold text-slate-900 mb-2">2. Choisir la sauce</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {["Sauce Gombo crincrin", "Sauce Graine", "Sauce Tomate pimentée", "Sauce Légume", "Sauce d'arachide"].map((s) => (
                   <div
                     key={s}
                     onClick={() => {
                       hapticFeedback("light");
                       setComposeSauce(s);
                     }}
-                    className={`p-3 rounded-xl border flex justify-between items-center cursor-pointer transition-colors ${
+                    className={`p-2.5 rounded-xl border text-center cursor-pointer transition-colors ${
                       composeSauce === s
-                        ? "border-[#00AFF2] bg-sky-50/50 text-[#00AFF2] font-bold"
+                        ? "border-[#00AFF2] bg-sky-50 text-[#00AFF2] font-bold"
                         : "border-slate-200"
                     }`}
                   >
                     <span>{s}</span>
-                    {composeSauce === s && <Check className="w-4 h-4 text-[#00AFF2]" />}
                   </div>
                 ))}
               </div>
@@ -978,12 +1664,13 @@ export default function ClicBouffePlatform() {
 
             {/* 3. Protéines */}
             <div>
-              <p className="font-bold text-slate-900 mb-2">3. Viande ou Poisson</p>
+              <p className="font-bold text-slate-900 mb-2">3. Protéines / Garnitures</p>
               <div className="space-y-2">
                 {[
-                  { name: "Poisson braisé", price: 1000 },
-                  { name: "Poulet bicyclette", price: 1500 },
-                  { name: "Fromage local (Wagashi)", price: 500 },
+                  { name: "Poisson braisé", price: 500 },
+                  { name: "Poulet bicyclette doré", price: 700 },
+                  { name: "Viande de bœuf", price: 600 },
+                  { name: "Fromage Wagashi frit", price: 400 },
                 ].map((p) => {
                   const has = composeProteins.includes(p.name);
                   return (
@@ -1016,7 +1703,7 @@ export default function ClicBouffePlatform() {
               <p className="font-bold text-slate-900 mb-2">4. Suppléments (Optionnel)</p>
               <div className="space-y-2">
                 {[
-                  { name: "Alloco", price: 400 },
+                  { name: "Alloco doré", price: 400 },
                   { name: "Piment noir maison", price: 200 },
                   { name: "Oeuf dur", price: 200 },
                 ].map((extra) => {
@@ -1047,7 +1734,6 @@ export default function ClicBouffePlatform() {
             </div>
           </main>
 
-          {/* Footer Total & Valider */}
           <div className="fixed bottom-0 inset-x-0 p-3 bg-white border-t border-slate-200 z-20 pb-safe">
             <div className="max-w-2xl mx-auto flex items-center justify-between">
               <div>
@@ -1066,7 +1752,7 @@ export default function ClicBouffePlatform() {
                       name: `${composeBase} (Sur-mesure)`,
                       price: `${composeTotal} FCFA`,
                       priceNum: composeTotal,
-                      img: "/images/dish_pate_noire.png",
+                      img: "/images/dish_pate_noire.jpg",
                     },
                   ]);
                   setScreen("checkout");
@@ -1081,7 +1767,7 @@ export default function ClicBouffePlatform() {
       )}
 
       {/* ============================================================== */}
-      {/* 9. ÉCRAN FINALISATION / CHECKOUT (Capture 152446.jpg) */}
+      {/* 10. ÉCRAN FINALISATION / CHECKOUT (Capture 152446.jpg) */}
       {/* ============================================================== */}
       {currentScreen === "checkout" && (
         <div className="min-h-screen w-full bg-white flex flex-col justify-between">
@@ -1105,7 +1791,7 @@ export default function ClicBouffePlatform() {
           </header>
 
           <main className="flex-1 max-w-2xl w-full mx-auto p-4 sm:p-6 space-y-4 pb-28">
-            {/* Étape 1 : Plats (Bleu Déplié par défaut) */}
+            {/* Étape 1 : Plats */}
             <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
               <div
                 onClick={() => setExpandedStep(expandedStep === 1 ? 2 : 1)}
@@ -1140,184 +1826,217 @@ export default function ClicBouffePlatform() {
                       >
                         <X className="w-3 h-3" />
                       </button>
-                      <div className="w-full h-16 relative my-1">
+                      <div className="w-full h-16 relative my-1 rounded-lg overflow-hidden bg-slate-100">
                         <Image
                           src={dish.img}
                           alt={dish.name}
                           fill
-                          className="object-contain"
+                          className="object-cover"
                         />
                       </div>
-                      <div className="bg-[#00AFF2] text-white py-1 px-0.5 rounded-b-lg">
-                        <p className="text-[10px] font-bold truncate">{dish.name}</p>
-                        <p className="text-[9px] line-through opacity-80">{dish.price}</p>
-                      </div>
+                      <p className="text-[11px] font-bold truncate">{dish.name}</p>
+                      <p className="text-[10px] text-slate-500">
+                        {dish.isFree && selectedDishes.findIndex((d) => d.id === dish.id) === 0
+                          ? "0 F CFA (Offert)"
+                          : dish.price}
+                      </p>
                     </div>
                   ))}
-
-                  {/* Bouton (+) Ajouter */}
-                  <div
+                  <button
                     onClick={() => setScreen("free_food")}
-                    className="w-24 h-28 shrink-0 rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 hover:border-[#00AFF2] hover:text-[#00AFF2] cursor-pointer transition-colors"
+                    className="w-20 h-24 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center text-slate-400 hover:border-[#00AFF2] hover:text-[#00AFF2] shrink-0 text-xs gap-1"
                   >
-                    <Plus className="w-6 h-6 stroke-[2]" />
-                    <span className="text-[10px] font-bold mt-1">Ajouter</span>
-                  </div>
+                    <Plus className="w-5 h-5" />
+                    <span>Ajouter</span>
+                  </button>
                 </div>
               )}
             </div>
 
-            {/* Étape 2 : Lieu de livraison (Replié/Dépliable) */}
+            {/* Étape 2 : Destinataire */}
             <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
               <div
-                onClick={() => setExpandedStep(expandedStep === 2 ? 1 : 2)}
-                className="bg-slate-100 p-3 flex items-center justify-between text-xs sm:text-sm font-bold text-slate-800 cursor-pointer"
+                onClick={() => setExpandedStep(expandedStep === 2 ? 3 : 2)}
+                className="bg-white text-slate-800 p-3 flex items-center justify-between text-xs sm:text-sm font-bold cursor-pointer border-b border-slate-100"
               >
                 <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-white text-slate-700 flex items-center justify-center text-[11px] font-bold">
+                  <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center text-[11px] font-black">
                     2
                   </span>
-                  <div className="flex items-center gap-1.5">
-                    <span>Lieu de livraison :</span>
-                    <MapPin className="w-3.5 h-3.5 text-[#00AFF2]" />
-                    <span className="text-slate-900">{deliveryAddress}</span>
-                  </div>
+                  <span>Destinataire : {recipient}</span>
                 </div>
                 {expandedStep === 2 ? (
-                  <ChevronUp className="w-4 h-4 stroke-[2.5]" />
+                  <ChevronUp className="w-4 h-4 stroke-[2]" />
                 ) : (
-                  <ChevronDown className="w-4 h-4 stroke-[2.5]" />
+                  <ChevronDown className="w-4 h-4 stroke-[2]" />
                 )}
               </div>
 
               {expandedStep === 2 && (
-                <div className="p-4 bg-white space-y-2 text-xs sm:text-sm">
-                  <p className="font-semibold text-slate-700">Sélectionnez votre quartier :</p>
-                  {[
-                    "Terrain Zico, Akpakpa",
-                    "Haie Vive, Cotonou",
-                    "Fidjrossè Calvaire",
-                    "Cadjehoun",
-                  ].map((loc) => (
+                <div className="p-4 bg-white space-y-2 text-xs">
+                  {["Moi seul(e)", "Offrir à un proche", "Groupe d'amis"].map((r) => (
                     <div
-                      key={loc}
+                      key={r}
                       onClick={() => {
                         hapticFeedback("light");
-                        setDeliveryAddress(loc);
-                        setExpandedStep(3);
+                        setRecipient(r);
                       }}
-                      className={`p-2.5 rounded-xl border cursor-pointer flex justify-between items-center ${
-                        deliveryAddress === loc
+                      className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer ${
+                        recipient === r
                           ? "border-[#00AFF2] bg-sky-50 text-[#00AFF2] font-bold"
-                          : "border-slate-200"
+                          : "border-slate-200 text-slate-700"
                       }`}
                     >
-                      <span>{loc}</span>
-                      {deliveryAddress === loc && <Check className="w-4 h-4" />}
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4" />
+                        <span>{r}</span>
+                      </div>
+                      {recipient === r && <Check className="w-4 h-4" />}
                     </div>
                   ))}
                 </div>
               )}
             </div>
 
-            {/* Étape 3 : Destinataires (Replié/Dépliable) */}
+            {/* Étape 3 : Adresse & Paiement */}
             <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
               <div
                 onClick={() => setExpandedStep(expandedStep === 3 ? 1 : 3)}
-                className="bg-slate-100 p-3 flex items-center justify-between text-xs sm:text-sm font-bold text-slate-800 cursor-pointer"
+                className="bg-white text-slate-800 p-3 flex items-center justify-between text-xs sm:text-sm font-bold cursor-pointer"
               >
                 <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-white text-slate-700 flex items-center justify-center text-[11px] font-bold">
+                  <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center text-[11px] font-black">
                     3
                   </span>
-                  <div className="flex items-center gap-1.5">
-                    <span>Destinataires :</span>
-                    <Users className="w-3.5 h-3.5 text-[#00AFF2]" />
-                    <span className="text-slate-900">{recipient}</span>
-                  </div>
+                  <span>Adresse & Mode de Paiement</span>
                 </div>
                 {expandedStep === 3 ? (
-                  <ChevronUp className="w-4 h-4 stroke-[2.5]" />
+                  <ChevronUp className="w-4 h-4 stroke-[2]" />
                 ) : (
-                  <ChevronDown className="w-4 h-4 stroke-[2.5]" />
+                  <ChevronDown className="w-4 h-4 stroke-[2]" />
                 )}
               </div>
 
               {expandedStep === 3 && (
-                <div className="p-4 bg-white space-y-2 text-xs sm:text-sm">
-                  <p className="font-semibold text-slate-700">Pour qui commandez-vous ?</p>
-                  {["Moi seul(e)", "Un ami / Collègue", "Groupe de personnes"].map((rec) => (
-                    <div
-                      key={rec}
-                      onClick={() => {
-                        hapticFeedback("light");
-                        setRecipient(rec);
-                        setExpandedStep(1);
-                      }}
-                      className={`p-2.5 rounded-xl border cursor-pointer flex justify-between items-center ${
-                        recipient === rec
-                          ? "border-[#00AFF2] bg-sky-50 text-[#00AFF2] font-bold"
-                          : "border-slate-200"
-                      }`}
-                    >
-                      <span>{rec}</span>
-                      {recipient === rec && <Check className="w-4 h-4" />}
+                <div className="p-4 bg-white space-y-4 text-xs">
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">
+                      Adresse de livraison à Akpakpa :
+                    </label>
+                    <div className="flex items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                      <MapPin className="w-4 h-4 text-[#00AFF2]" />
+                      <span className="font-medium text-slate-800">{deliveryAddress}</span>
                     </div>
-                  ))}
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1.5">
+                      Mode de paiement sécurisé :
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="p-3 border-2 border-[#00AFF2] bg-sky-50/40 rounded-xl text-center font-bold text-slate-900 cursor-pointer">
+                        <p className="text-xs">MTN / Moov Money</p>
+                        <p className="text-[10px] text-emerald-600 font-semibold mt-0.5">
+                          Instantané (Bénin)
+                        </p>
+                      </div>
+                      <div className="p-3 border border-slate-200 rounded-xl text-center font-bold text-slate-500 hover:border-slate-300 cursor-pointer">
+                        <p className="text-xs">Paiement à la livraison</p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">Espèces au livreur</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Récapitulatif Tarifaire */}
-            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 text-xs sm:text-sm">
+            {/* Récapitulatif Tarifaire Officiel */}
+            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-2 text-xs">
               <div className="flex justify-between text-slate-600">
-                <span>Sous-total plats ({cartItemsCount}) :</span>
-                <span>{cartSubtotal} FCFA</span>
+                <span>Sous-total plats ({cartItemsCount})</span>
+                <span className="font-semibold text-slate-900">{formatFCFA(cartSubtotal)}</span>
               </div>
               <div className="flex justify-between text-slate-600">
-                <span>Frais de livraison :</span>
-                <span className={deliveryFee === 0 ? "font-bold text-emerald-600" : ""}>
-                  {deliveryFee === 0 ? "Gratuit" : `${deliveryFee} FCFA`}
+                <span>
+                  Frais de livraison (
+                  {cartItemsCount <= 2
+                    ? "1-2 plats"
+                    : cartItemsCount <= 5
+                    ? "3-5 plats"
+                    : cartItemsCount <= 10
+                    ? "6-10 plats"
+                    : ">10 plats"}
+                  )
+                </span>
+                <span className="font-semibold text-slate-900">
+                  {deliveryFee === 0 ? "Gratuit" : formatFCFA(deliveryFee)}
                 </span>
               </div>
-              <div className="pt-2 border-t border-slate-200 flex justify-between font-black text-sm sm:text-base text-slate-900">
-                <span>Total à payer :</span>
-                <span className="text-[#00AFF2]">{cartTotal} FCFA</span>
+              <div className="border-t border-slate-200 pt-2 flex justify-between font-bold text-sm text-slate-900">
+                <span>Total à payer</span>
+                <span className="text-[#00AFF2] text-base font-black">
+                  {formatFCFA(cartTotal)}
+                </span>
               </div>
             </div>
-
-            {orderConfirmed && (
-              <div className="p-5 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-2 text-emerald-800 animate-fadeIn">
-                <Check className="w-8 h-8 mx-auto text-emerald-600" />
-                <p className="font-bold text-sm sm:text-base">Commande validée avec succès !</p>
-                <p className="text-xs sm:text-sm">
-                  Votre repas sera livré à <span className="font-bold">{deliveryAddress}</span> sous 20 minutes.
-                </p>
-              </div>
-            )}
           </main>
 
-          {/* Bouton de confirmation */}
           <div className="fixed bottom-0 inset-x-0 p-3 bg-white border-t border-slate-200 z-20 pb-safe">
-            <div className="max-w-2xl mx-auto">
+            <div className="max-w-2xl mx-auto flex items-center justify-between">
+              <div>
+                <span className="text-[10px] sm:text-xs text-slate-500">Montant net :</span>
+                <p className="text-sm sm:text-base font-black text-[#00AFF2]">
+                  {formatFCFA(cartTotal)}
+                </p>
+              </div>
               <button
                 onClick={() => {
                   hapticFeedback("success");
                   setOrderConfirmed(true);
                 }}
-                disabled={selectedDishes.length === 0 || orderConfirmed}
-                className={`w-full py-3.5 rounded-2xl font-bold text-xs sm:text-sm uppercase tracking-wider transition-all shadow-md active:scale-95 ${
-                  orderConfirmed
-                    ? "bg-emerald-600 text-white"
-                    : "bg-[#00AFF2] hover:bg-[#009bd6] text-white shadow-[#00AFF2]/30"
-                }`}
+                disabled={selectedDishes.length === 0}
+                className="bg-[#00AFF2] hover:bg-[#009bd6] active:scale-95 text-white px-8 py-3 rounded-xl font-bold text-xs uppercase shadow-md shadow-[#00AFF2]/30 flex items-center gap-2"
               >
-                {orderConfirmed
-                  ? "Commande envoyée avec succès ✓"
-                  : `Confirmer et Commander (${cartTotal} FCFA)`}
+                <span>Confirmer commande</span>
+                <Check className="w-4 h-4 stroke-[3]" />
               </button>
             </div>
           </div>
+
+          {/* Modale Succès Commande */}
+          {orderConfirmed && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fadeIn">
+              <div className="bg-white rounded-3xl w-full max-w-xs sm:max-w-sm p-6 text-center shadow-2xl animate-scaleUp">
+                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3">
+                  <Sparkles className="w-8 h-8" />
+                </div>
+                <h3 className="text-lg font-black text-slate-900">
+                  Commande Confirmée !
+                </h3>
+                <p className="text-xs text-slate-600 mt-2 leading-relaxed">
+                  Votre commande a été transmise aux restaurateurs partenaires d&apos;Akpakpa. Un livreur ClicBouffe se met en route dès que les plats sont chauds.
+                </p>
+                <div className="my-4 p-3 bg-slate-50 rounded-xl text-left text-xs space-y-1">
+                  <p className="font-semibold text-slate-800">
+                    Livraison : {deliveryAddress}
+                  </p>
+                  <p className="text-slate-600">Total : {formatFCFA(cartTotal)}</p>
+                  <p className="text-[#00AFF2] font-bold">Délai estimé : 20 - 30 minutes</p>
+                </div>
+                <button
+                  onClick={() => {
+                    hapticFeedback("light");
+                    setOrderConfirmed(false);
+                    setSelectedDishes([]);
+                    setScreen("home");
+                  }}
+                  className="w-full py-3 bg-[#00AFF2] text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-md"
+                >
+                  Retour à l&apos;accueil
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
