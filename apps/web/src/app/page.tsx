@@ -46,7 +46,7 @@ import {
   CalendarNavIcon,
 } from "@/components/navigation-icons";
 
-export type Screen =
+type Screen =
   | "splash"
   | "onboarding"
   | "home"
@@ -57,23 +57,9 @@ export type Screen =
   | "compose_dish"
   | "checkout";
 
-export function formatFCFA(amount: number): string {
+function formatFCFA(amount: number): string {
   return `${amount.toLocaleString("fr-FR").replace(/\s/g, "\u00A0")}\u00A0FCFA`;
 }
-
-export {
-  INITIAL_GRID_DISHES,
-  REGIONAL_RESTAURANTS,
-  INITIAL_SCHEDULED_DISHES,
-  INITIAL_SUBSCRIPTIONS,
-  AVAILABLE_FORMULAS,
-} from "@/lib/data/clicbouffe-data";
-export type {
-  DishItem,
-  Restaurant,
-  ScheduledDish,
-  MealSubscription,
-} from "@/lib/data/clicbouffe-data";
 
 import {
   INITIAL_GRID_DISHES,
