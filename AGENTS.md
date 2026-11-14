@@ -136,6 +136,8 @@ Pour garantir un niveau de qualité logiciel d'excellence, chaque lot de travail
 2. **Revue Pré-Commit Obligatoire** :
    * Aucune clé secrète présente dans les fichiers trackés.
    * Zéro erreur TypeScript et zéro avertissement linter.
+3. **Publication Automatique Git Push Immédiate (Règle Permanente)** :
+   * Chaque lot de modifications validé doit être systématiquement poussé vers le dépôt distant (`git push origin main`) dès la validation du commit, sans solliciter de confirmation préalable à l'utilisateur, afin de déclencher instantanément le déploiement continu Vercel CI/CD et de maintenir la production en ligne synchronisée.
 
 ---
 
