@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import {
   ArrowLeft,
   Beef,
   Bell,
   Check,
+  ChefHat,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -20,10 +21,15 @@ import {
   Sparkles,
   Star,
   Trash2,
+  User,
   Utensils,
   X,
 } from "lucide-react";
 import { PromoCarousel } from "@/components/home/promo-carousel";
+import { AuthModal } from "@/components/auth/auth-modal";
+import { RestaurantDashboard } from "@/components/restaurant-dashboard/restaurant-dashboard";
+import { authService } from "@/lib/services/auth-service";
+import { UserProfile } from "@/lib/types/database";
 import { hapticFeedback } from "@/lib/native/haptics";
 import {
   HomeNavIcon,
@@ -72,6 +78,17 @@ export default function MobileApp({
   const [internalScreen, setInternalScreen] = useState<Screen>(forcedScreen || "splash");
   const currentScreen = forcedScreen ?? internalScreen;
   const [onboardingIndex, setOnboardingIndex] = useState(0);
+
+  // État Authentification & Espace Restaurateur Mobile
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [currentViewMode, setCurrentViewMode] = useState<"marketplace" | "kds">("marketplace");
+
+  useEffect(() => {
+    authService.getCurrentProfile().then((profile) => {
+      if (profile) setCurrentUser(profile);
+    });
+  }, []);
 
   // Modales
   const [showFreeFoodModal, setShowFreeFoodModal] = useState(false);
@@ -283,7 +300,49 @@ export default function MobileApp({
               <MapPin className="w-3 h-3 text-[#00AFF2]" />
               <span>{deliveryAddress}</span>
             </div>
-            <div className="flex items-center gap-2 text-slate-800">
+            <div className="flex items-center gap-1.5 text-slate-800">
+              {/* Espace Restaurateur / Connexion Mobile */}
+              {currentUser ? (
+                <div className="flex items-center gap-1">
+                  {currentUser.role === "restaurant_owner" && (
+                    <button
+                      onClick={() => {
+                        hapticFeedback("light");
+                        setCurrentViewMode(currentViewMode === "kds" ? "marketplace" : "kds");
+                      }}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-black flex items-center gap-1 ${
+                        currentViewMode === "kds"
+                          ? "bg-[#00AFF2] text-white"
+                          : "bg-slate-900 text-white"
+                      }`}
+                    >
+                      <ChefHat className="w-3 h-3 text-amber-300" />
+                      <span>{currentViewMode === "kds" ? "Store" : "KDS"}</span>
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      hapticFeedback("light");
+                      setShowAuthModal(true);
+                    }}
+                    className="w-6 h-6 rounded-full bg-sky-100 text-[#00AFF2] font-black text-[10px] flex items-center justify-center border border-sky-300"
+                  >
+                    {currentUser.full_name.charAt(0)}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    hapticFeedback("light");
+                    setShowAuthModal(true);
+                  }}
+                  className="px-2 py-1 bg-[#00AFF2] text-white rounded-lg text-[10px] font-black flex items-center gap-1 shadow-2xs"
+                >
+                  <User className="w-3 h-3" />
+                  <span>Connexion</span>
+                </button>
+              )}
+
               <button onClick={() => setShowFreeFoodModal(true)} className="p-1 relative">
                 <Bell className="w-4 h-4 stroke-[1.8]" />
                 <span className="w-1.5 h-1.5 rounded-full bg-[#00AFF2] absolute top-1 right-1" />
@@ -294,8 +353,25 @@ export default function MobileApp({
             </div>
           </div>
 
-          {/* Onglet Accueil */}
-          {currentScreen === "home" && (
+          {/* ============================================================== */}
+          {/* VUE KDS RESTAURATEUR OU MARKETPLACE MOBILE */}
+          {/* ============================================================== */}
+          {currentViewMode === "kds" ? (
+            <div className="flex-1 w-full pb-16">
+              <RestaurantDashboard
+                ownerId={currentUser?.id}
+                onSwitchToClientMode={() => setCurrentViewMode("marketplace")}
+                onSignOut={() => {
+                  authService.signOut();
+                  setCurrentUser(null);
+                  setCurrentViewMode("marketplace");
+                }}
+              />
+            </div>
+          ) : (
+            <>
+              {/* Onglet Accueil */}
+              {currentScreen === "home" && (
             <div className="p-3 space-y-4 pb-24">
               {/* Carrousel publicitaire automatique rotatif */}
               <PromoCarousel
@@ -560,9 +636,15 @@ export default function MobileApp({
               )}
             </div>
           )}
+          </>
+          )}
 
           {/* Barre de navigation basse */}
-          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 h-16 flex items-center justify-around px-2 z-20 pb-safe">
+          <div
+            className={`fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 h-16 flex items-center justify-around px-2 z-20 pb-safe ${
+              currentViewMode === "kds" ? "hidden" : ""
+            }`}
+          >
             <button
               onClick={() => {
                 setActiveNavTab("home");
@@ -949,6 +1031,18 @@ export default function MobileApp({
           )}
         </div>
       )}
+
+      {/* Modale d'Authentification & Création de Compte Dynamique */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={(profile) => {
+          setCurrentUser(profile);
+          if (profile.role === "restaurant_owner") {
+            setCurrentViewMode("kds");
+          }
+        }}
+      />
     </div>
   );
 }

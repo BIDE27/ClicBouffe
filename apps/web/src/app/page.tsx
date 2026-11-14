@@ -7,6 +7,7 @@ import {
   Beef,
   Bell,
   Check,
+  ChefHat,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -15,6 +16,7 @@ import {
   Flame,
   Gift,
   Info,
+  LogOut,
   MapPin,
   Menu as MenuIcon,
   Plus,
@@ -25,12 +27,17 @@ import {
   Sparkles,
   Star,
   Trash2,
+  User,
   Users,
   Utensils,
   UtensilsCrossed,
   X,
 } from "lucide-react";
 import { PromoCarousel } from "@/components/home/promo-carousel";
+import { AuthModal } from "@/components/auth/auth-modal";
+import { RestaurantDashboard } from "@/components/restaurant-dashboard/restaurant-dashboard";
+import { authService } from "@/lib/services/auth-service";
+import { UserProfile } from "@/lib/types/database";
 import { hapticFeedback } from "@/lib/native/haptics";
 import {
   HomeNavIcon,
@@ -84,6 +91,17 @@ import {
 export default function ClicBouffePlatform() {
   const [currentScreen, setCurrentScreen] = useState<Screen>("splash");
   const [onboardingIndex, setOnboardingIndex] = useState(0);
+
+  // État Authentification & Espace Restaurateur Dynamique
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [currentViewMode, setCurrentViewMode] = useState<"marketplace" | "kds">("marketplace");
+
+  useEffect(() => {
+    authService.getCurrentProfile().then((profile) => {
+      if (profile) setCurrentUser(profile);
+    });
+  }, []);
 
   // Modales
   const [showFreeFoodModal, setShowFreeFoodModal] = useState(false);
@@ -394,8 +412,70 @@ export default function ClicBouffePlatform() {
                 />
               </div>
 
-              {/* Actions Droite */}
-              <div className="flex items-center gap-2 sm:gap-4 text-slate-800">
+              {/* Actions Droite & Authentification */}
+              <div className="flex items-center gap-2 sm:gap-3 text-slate-800">
+                {/* Espace Utilisateur & Connexion Dynamique */}
+                {currentUser ? (
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    {currentUser.role === "restaurant_owner" && (
+                      <button
+                        onClick={() => {
+                          hapticFeedback("light");
+                          setCurrentViewMode(currentViewMode === "kds" ? "marketplace" : "kds");
+                        }}
+                        className={`px-2.5 sm:px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs ${
+                          currentViewMode === "kds"
+                            ? "bg-[#00AFF2] text-white"
+                            : "bg-slate-900 hover:bg-slate-800 text-white"
+                        }`}
+                      >
+                        <ChefHat className="w-3.5 h-3.5 text-amber-300" />
+                        <span className="hidden sm:inline">
+                          {currentViewMode === "kds" ? "Boutique Client" : "Espace Restaurateur"}
+                        </span>
+                        <span className="sm:hidden">KDS</span>
+                      </button>
+                    )}
+
+                    <div className="flex items-center gap-1.5 pl-1.5 border-l border-slate-200">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-sky-100 border border-sky-300 text-[#00AFF2] flex items-center justify-center font-bold text-xs">
+                        {currentUser.full_name.charAt(0)}
+                      </div>
+                      <div className="hidden lg:block text-left">
+                        <p className="text-xs font-bold text-slate-800 leading-tight">
+                          {currentUser.full_name}
+                        </p>
+                        <span className="text-[10px] font-semibold text-slate-400 capitalize">
+                          {currentUser.role === "restaurant_owner" ? "Restaurateur" : "Client"}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          hapticFeedback("light");
+                          authService.signOut();
+                          setCurrentUser(null);
+                          setCurrentViewMode("marketplace");
+                        }}
+                        className="p-1 text-slate-400 hover:text-rose-500 transition-colors"
+                        title="Se déconnecter"
+                      >
+                        <LogOut className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      hapticFeedback("light");
+                      setShowAuthModal(true);
+                    }}
+                    className="px-3 sm:px-3.5 py-1.5 bg-[#00AFF2] hover:bg-[#0098d4] text-white rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all active:scale-95"
+                  >
+                    <User className="w-3.5 h-3.5" />
+                    <span>Connexion</span>
+                  </button>
+                )}
+
                 <button
                   onClick={() => setShowFreeFoodModal(true)}
                   className="p-1.5 hover:text-[#00AFF2] transition-colors relative"
@@ -423,9 +503,24 @@ export default function ClicBouffePlatform() {
           </header>
 
           {/* ============================================================== */}
-          {/* ONGLET 1 : ACCUEIL */}
+          {/* VUE KDS RESTAURATEUR OU MARKETPLACE CLIENT */}
           {/* ============================================================== */}
-          {currentScreen === "home" && (
+          {currentViewMode === "kds" ? (
+            <div className="flex-1 w-full">
+              <RestaurantDashboard
+                ownerId={currentUser?.id}
+                onSwitchToClientMode={() => setCurrentViewMode("marketplace")}
+                onSignOut={() => {
+                  authService.signOut();
+                  setCurrentUser(null);
+                  setCurrentViewMode("marketplace");
+                }}
+              />
+            </div>
+          ) : (
+            <>
+              {/* ONGLET 1 : ACCUEIL */}
+              {currentScreen === "home" && (
             <main className="flex-1 w-full max-w-5xl mx-auto p-3 sm:p-6 space-y-4 pb-28">
               {/* Carrousel publicitaire automatique rotatif (Partenaires & Vendeurs) */}
               <PromoCarousel
@@ -988,9 +1083,15 @@ export default function ClicBouffePlatform() {
               )}
             </main>
           )}
+          </>
+          )}
 
           {/* Barre Navigation Basse Pixel-Perfect avec FAB (+) Composer plat */}
-          <nav className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200 h-16 flex items-center justify-around px-2 z-30 pb-safe">
+          <nav
+            className={`fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200 h-16 flex items-center justify-around px-2 z-30 pb-safe ${
+              currentViewMode === "kds" ? "hidden" : ""
+            }`}
+          >
             <div className="max-w-lg w-full mx-auto flex items-center justify-around">
               {/* Accueil */}
               <button
@@ -2019,6 +2120,18 @@ export default function ClicBouffePlatform() {
           )}
         </div>
       )}
+
+      {/* Modale d'Authentification & Création de Compte Dynamique */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={(profile) => {
+          setCurrentUser(profile);
+          if (profile.role === "restaurant_owner") {
+            setCurrentViewMode("kds");
+          }
+        }}
+      />
     </div>
   );
 }
