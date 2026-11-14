@@ -26,6 +26,7 @@ node_modules/
 out/
 build/
 dist/
+/public/
 
 # Flutter / Dart
 .dart_tool/
