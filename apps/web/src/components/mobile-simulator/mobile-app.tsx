@@ -4,19 +4,26 @@ import React, { useState } from "react";
 import Image from "next/image";
 import {
   ArrowLeft,
+  Beef,
   Bell,
   Check,
   ChevronLeft,
   ChevronRight,
+  Clock,
+  Flame,
   Gift,
   MapPin,
   Menu as MenuIcon,
   Plus,
+  Sandwich,
+  Soup,
   Sparkles,
   Star,
   Trash2,
+  Utensils,
   X,
 } from "lucide-react";
+import { PromoCarousel } from "@/components/home/promo-carousel";
 import { hapticFeedback } from "@/lib/native/haptics";
 import {
   HomeNavIcon,
@@ -30,6 +37,7 @@ import {
   INITIAL_SUBSCRIPTIONS,
   AVAILABLE_FORMULAS,
   INITIAL_GRID_DISHES,
+  EXPLORER_CATEGORIES,
   DishItem,
   ScheduledDish,
   MealSubscription,
@@ -268,8 +276,7 @@ export default function MobileApp({
         <div className="w-full h-full bg-white flex flex-col justify-between overflow-y-auto">
           {/* Header Mobile */}
           <div className="p-3 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-20 pt-safe">
-            <div className="flex items-center gap-1.5" onClick={() => setScreen("home")}>
-              <Image src="/images/cursor_icon.png" alt="Logo" width={20} height={20} />
+            <div className="flex items-center cursor-pointer select-none" onClick={() => setScreen("home")}>
               <h1 className="text-lg font-black text-[#00AFF2]">ClicBouffe</h1>
             </div>
             <div className="flex items-center gap-1 text-[11px] text-slate-500 font-medium">
@@ -290,23 +297,22 @@ export default function MobileApp({
           {/* Onglet Accueil */}
           {currentScreen === "home" && (
             <div className="p-3 space-y-4 pb-24">
-              <div
-                onClick={() => {
-                  const amberger = INITIAL_GRID_DISHES.find((d) => d.name === "Amberger") || INITIAL_GRID_DISHES[0];
-                  setPreviewDish(amberger);
+              {/* Carrousel publicitaire automatique rotatif */}
+              <PromoCarousel
+                variant="mobile"
+                onSelectSlide={(slide) => {
+                  const targetDish =
+                    INITIAL_GRID_DISHES.find((d) => d.name === slide.dishRefName) || INITIAL_GRID_DISHES[0];
+                  setPreviewDish(targetDish);
                   setShowDishPreviewModal(true);
                 }}
-                className="w-full h-44 rounded-2xl overflow-hidden relative shadow-sm border border-slate-200 cursor-pointer"
-              >
-                <Image src="/images/amberger_banner.jpg" alt="Amberger" fill className="object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent flex flex-col justify-end p-3.5 text-white">
-                  <span className="px-2 py-0.5 rounded-full bg-[#00AFF2] text-white text-[9px] font-bold w-fit uppercase">
-                    Spécialité du Chef
-                  </span>
-                  <h2 className="text-lg font-black text-white mt-1">Amberger Gourmet</h2>
-                  <p className="text-xs text-white/90 font-semibold">5 000 FCFA</p>
-                </div>
-              </div>
+                onOrderDish={(dishRefName) => {
+                  const targetDish =
+                    INITIAL_GRID_DISHES.find((d) => d.name === dishRefName) || INITIAL_GRID_DISHES[0];
+                  setPreviewDish(targetDish);
+                  setShowDishPreviewModal(true);
+                }}
+              />
 
               <div className="flex items-center justify-between pt-1">
                 <p className="text-xs font-bold text-slate-800">Plats pouvant vous intéresser</p>
@@ -367,26 +373,37 @@ export default function MobileApp({
                 </h2>
               </div>
 
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px]">
-                {[
-                  { id: "all", label: "Tous" },
-                  { id: "local", label: "Cuisine Locale" },
-                  { id: "maquis", label: "Grillades" },
-                  { id: "chawarma", label: "Chawarma" },
-                  { id: "burger", label: "Burgers" },
-                ].map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => setSelectedExplorerCategory(cat.id as "all" | "local" | "maquis" | "chawarma" | "burger")}
-                    className={`px-3 py-1 rounded-full font-semibold whitespace-nowrap ${
-                      selectedExplorerCategory === cat.id
-                        ? "bg-[#00AFF2] text-white"
-                        : "bg-white text-slate-700 border border-slate-200"
-                    }`}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] no-scrollbar">
+                {EXPLORER_CATEGORIES.map((cat) => {
+                  const Icon =
+                    cat.iconName === "Utensils"
+                      ? Utensils
+                      : cat.iconName === "Soup"
+                      ? Soup
+                      : cat.iconName === "Flame"
+                      ? Flame
+                      : cat.iconName === "Sandwich"
+                      ? Sandwich
+                      : Beef;
+                  const isSelected = selectedExplorerCategory === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => {
+                        hapticFeedback("light");
+                        setSelectedExplorerCategory(cat.id);
+                      }}
+                      className={`px-2.5 py-1 rounded-full font-semibold whitespace-nowrap flex items-center gap-1 transition-all ${
+                        isSelected
+                          ? "bg-[#00AFF2] text-white shadow-2xs"
+                          : "bg-white text-slate-700 border border-slate-200"
+                      }`}
+                    >
+                      <Icon className={`w-3 h-3 ${isSelected ? "text-white" : "text-[#00AFF2]"}`} />
+                      <span>{cat.shortLabel}</span>
+                    </button>
+                  );
+                })}
               </div>
 
               <div className="space-y-3">
@@ -447,8 +464,9 @@ export default function MobileApp({
                         <Image src={item.img} alt={item.dishName} fill className="object-cover" />
                       </div>
                       <div>
-                        <span className="text-[9px] font-bold text-[#00AFF2] bg-sky-50 px-1.5 py-0.5 rounded">
-                          {item.scheduledDate} {item.scheduledTime}
+                        <span className="text-[9px] font-bold text-[#00AFF2] bg-sky-50 px-1.5 py-0.5 rounded flex items-center gap-1 w-fit">
+                          <Clock className="w-2.5 h-2.5 text-[#00AFF2]" />
+                          <span>{item.scheduledDate} à {item.scheduledTime}</span>
                         </span>
                         <p className="text-xs font-bold text-slate-900 mt-0.5">{item.dishName}</p>
                         <p className="text-[10px] text-slate-500">{item.price}</p>

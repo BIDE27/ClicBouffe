@@ -285,3 +285,92 @@ export const AVAILABLE_FORMULAS = [
     features: ["Portions pour 4 personnes", "Poisson ou poulet braisé entier", "Boissons fraîches offertes"],
   },
 ];
+
+export interface PromoSlide {
+  id: string;
+  tag: string;
+  tagBg: string;
+  partnerName: string;
+  partnerLocation: string;
+  title: string;
+  price: string;
+  priceDetails: string;
+  img: string;
+  isSponsored: boolean;
+  ctaText: string;
+  dishRefName: string;
+}
+
+export const PROMOTIONAL_CAROUSEL_SLIDES: PromoSlide[] = [
+  {
+    id: "promo-1",
+    tag: "SPÉCIALITÉ DU CHEF",
+    tagBg: "bg-[#00AFF2]",
+    partnerName: "Le Burger Béninois",
+    partnerLocation: "Terrain Zico • Préparé à la minute",
+    title: "Amberger Gourmet Signature",
+    price: "5 000 FCFA",
+    priceDetails: "Double steak, cheddar affiné & sauce maison",
+    img: "/images/amberger_banner.jpg",
+    isSponsored: true,
+    ctaText: "Commander",
+    dishRefName: "Amberger",
+  },
+  {
+    id: "promo-2",
+    tag: "RESTAURANT EN VEDETTE",
+    tagBg: "bg-emerald-600",
+    partnerName: "Le Maquis du Port",
+    partnerLocation: "Zone Portuaire • Pêche fraîche du jour",
+    title: "Daurade Braisée Royale & Alloco",
+    price: "3 500 FCFA",
+    priceDetails: "Marinade maison au piment vert doux & oignons braisés",
+    img: "/images/restau_maquis.jpg",
+    isSponsored: true,
+    ctaText: "Commander",
+    dishRefName: "Pâte rouge",
+  },
+  {
+    id: "promo-3",
+    tag: "RECETTE DU JOUR SPONSORISÉE",
+    tagBg: "bg-amber-600",
+    partnerName: "Chez Maman Cécile",
+    partnerLocation: "Enagnon • Cuisiné au feu de bois",
+    title: "Pâte Rouge Amiwo & Poulet Doré",
+    price: "2 000 FCFA",
+    priceDetails: "Poulet bicyclette croustillant, sauce tomate mijotée",
+    img: "/images/dish_pate_rouge.jpg",
+    isSponsored: true,
+    ctaText: "Commander",
+    dishRefName: "Pâte rouge",
+  },
+  {
+    id: "promo-4",
+    tag: "GOÛTER TERROIR POPULAIRE",
+    tagBg: "bg-purple-600",
+    partnerName: "Saveurs d'Akpakpa",
+    partnerLocation: "Terrain Zico • Pause 16h Gourmande",
+    title: "Tapioca Chaud & Gari au Lait",
+    price: "300 FCFA",
+    priceDetails: "Lait sucré onctueux, arachides grillées croquantes",
+    img: "/images/dish_tapioca.jpg",
+    isSponsored: true,
+    ctaText: "Commander",
+    dishRefName: "Tapioca chaud",
+  },
+];
+
+export interface CategoryFilterItem {
+  id: "all" | "local" | "maquis" | "chawarma" | "burger";
+  label: string;
+  shortLabel: string;
+  iconName: "Utensils" | "Soup" | "Flame" | "Sandwich" | "Beef";
+}
+
+export const EXPLORER_CATEGORIES: CategoryFilterItem[] = [
+  { id: "all", label: "Tous les restaurants", shortLabel: "Tous", iconName: "Utensils" },
+  { id: "local", label: "Cuisine Locale & Pâtes", shortLabel: "Cuisine Locale", iconName: "Soup" },
+  { id: "maquis", label: "Maquis & Grillades", shortLabel: "Grillades", iconName: "Flame" },
+  { id: "chawarma", label: "Chawarma & Wraps", shortLabel: "Chawarma", iconName: "Sandwich" },
+  { id: "burger", label: "Fast-Food & Burgers", shortLabel: "Burgers", iconName: "Beef" },
+];

@@ -110,7 +110,20 @@ Pour garantir un niveau de qualité logiciel d'excellence, chaque lot de travail
 
 ---
 
-## 6. 🚀 GIT, CI/CD & CONVENTIONS DE COMMITS
+## 6. 🎨 DESIGN SYSTEM, ICONOGRAPHIE ET STANDARDS VISUELS
+
+1. **Interdiction Absolue des Émojis et Émoticônes dans l'Interface** :
+   * **Aucun caractère émoji ou émoticône Unicode** (ex: `🍽️`, `🍲`, `🍗`, `🌯`, `🍔`, `⏰`, `⏱️`, `●`, `❚❚`, etc.) ne doit être inséré dans le code JSX, les libellés de boutons, les badges, les filtres de catégories ou les cartes.
+   * **Remplacement Obligatoire par des Icônes Vectorielles** : Utilisation exclusive d'icônes vectorielles professionnelles (Lucide React ou SVG personnalisés pixel-perfect).
+   * **Cohérence Stylistique** : Les icônes doivent partager la même épaisseur de trait (`strokeWidth` de 1.5 à 2) et les mêmes codes couleurs de la charte ClicBouffe (`#00AFF2` primaire, ardoise/gris neutre, ambre/émeraude pour les statuts).
+
+2. **Espaces Publicitaires et Carrousels Automatiques Partenaires** :
+   * Les bannières d'accueil doivent intégrer un **carrousel automatique rotatif** avec défilement fluide, indicateurs de position (dots/pills), support tactile (swipe), pause au survol/toucher et badge discret d'annonce partenaire (`Sponsorisé` ou `Annonce Partenaire`).
+   * Cet espace est réservé à la promotion des restaurants partenaires et des créations culinaires d'utilisateurs vendeurs de la marketplace.
+
+---
+
+## 7. 🚀 GIT, CI/CD & CONVENTIONS DE COMMITS
 
 1. **Convention de Commits (en Français Obligatoire)** :
    * Format type : `<type>: <description impérative en français>`

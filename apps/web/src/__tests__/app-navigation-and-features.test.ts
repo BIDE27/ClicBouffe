@@ -5,9 +5,48 @@ import {
   INITIAL_SUBSCRIPTIONS,
   AVAILABLE_FORMULAS,
   INITIAL_GRID_DISHES,
+  PROMOTIONAL_CAROUSEL_SLIDES,
+  EXPLORER_CATEGORIES,
 } from "../lib/data/clicbouffe-data";
 
 describe("Fonctionnalités avancées ClicBouffe (Explorer, Plus Tard, Abonnements & Images)", () => {
+  describe("Carrousel publicitaire automatique (Sponsors & Partenaires)", () => {
+    it("propose au moins 4 diapositives publicitaires rotatives avec prix en FCFA", () => {
+      expect(PROMOTIONAL_CAROUSEL_SLIDES.length).toBeGreaterThanOrEqual(4);
+      PROMOTIONAL_CAROUSEL_SLIDES.forEach((slide) => {
+        expect(slide.title).toBeTruthy();
+        expect(slide.partnerName).toBeTruthy();
+        expect(slide.partnerLocation).toBeTruthy();
+        expect(slide.price).toContain("FCFA");
+        expect(slide.img).toMatch(/\.(jpg|png)$/);
+        expect(slide.isSponsored).toBe(true);
+        expect(slide.dishRefName).toBeTruthy();
+      });
+    });
+
+    it("contient l'Amberger signature et les spécialités partenaires", () => {
+      const titles = PROMOTIONAL_CAROUSEL_SLIDES.map((s) => s.title);
+      expect(titles.some((t) => t.includes("Amberger"))).toBe(true);
+      expect(titles.some((t) => t.includes("Daurade") || t.includes("Poisson"))).toBe(true);
+      expect(titles.some((t) => t.includes("Pâte Rouge"))).toBe(true);
+      expect(titles.some((t) => t.includes("Tapioca"))).toBe(true);
+    });
+  });
+
+  describe("Standards visuels : Zéro émoji et catégories avec icônes vectorielles", () => {
+    it("toutes les catégories de l'onglet Explorer possèdent une icône vectorielle valide et aucun émoji", () => {
+      expect(EXPLORER_CATEGORIES.length).toBeGreaterThanOrEqual(5);
+      const emojiRegex = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}]/u;
+      EXPLORER_CATEGORIES.forEach((cat) => {
+        expect(cat.id).toBeTruthy();
+        expect(cat.label).toBeTruthy();
+        expect(cat.shortLabel).toBeTruthy();
+        expect(emojiRegex.test(cat.label)).toBe(false);
+        expect(emojiRegex.test(cat.shortLabel)).toBe(false);
+        expect(["Utensils", "Soup", "Flame", "Sandwich", "Beef"]).toContain(cat.iconName);
+      });
+    });
+  });
   describe("Catalogue des plats et photos authentiques", () => {
     it("tous les plats de la grille utilisent des photos authentiques .jpg sans découpage amateur", () => {
       INITIAL_GRID_DISHES.forEach((dish) => {
