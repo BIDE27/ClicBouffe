@@ -16,7 +16,6 @@ import {
   Flame,
   Gift,
   Info,
-  LogOut,
   MapPin,
   Menu as MenuIcon,
   Plus,
@@ -31,10 +30,13 @@ import {
   Users,
   Utensils,
   UtensilsCrossed,
+  Wallet,
   X,
 } from "lucide-react";
 import { PromoCarousel } from "@/components/home/promo-carousel";
 import { AuthModal } from "@/components/auth/auth-modal";
+import { SideDrawer } from "@/components/navigation/side-drawer";
+import { WalletModal } from "@/components/wallet/wallet-modal";
 import { RestaurantDashboard } from "@/components/restaurant-dashboard/restaurant-dashboard";
 import { authService } from "@/lib/services/auth-service";
 import { UserProfile } from "@/lib/types/database";
@@ -78,14 +80,19 @@ export default function ClicBouffePlatform() {
   const [currentScreen, setCurrentScreen] = useState<Screen>("splash");
   const [onboardingIndex, setOnboardingIndex] = useState(0);
 
-  // État Authentification & Espace Restaurateur Dynamique
+  // État Authentification, Portefeuille & Espace Restaurateur Dynamique
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [currentViewMode, setCurrentViewMode] = useState<"marketplace" | "kds">("marketplace");
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [showSideDrawer, setShowSideDrawer] = useState(false);
+  const [showWalletModal, setShowWalletModal] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
 
   useEffect(() => {
     authService.getCurrentProfile().then((profile) => {
       if (profile) setCurrentUser(profile);
+      setWalletBalance(authService.getWalletBalance());
     });
   }, []);
 
@@ -398,70 +405,63 @@ export default function ClicBouffePlatform() {
                 />
               </div>
 
-              {/* Actions Droite & Authentification */}
-              <div className="flex items-center gap-2 sm:gap-3 text-slate-800">
-                {/* Espace Utilisateur & Connexion Dynamique */}
-                {currentUser ? (
-                  <div className="flex items-center gap-1.5 sm:gap-2">
-                    {currentUser.role === "restaurant_owner" && (
-                      <button
-                        onClick={() => {
-                          hapticFeedback("light");
-                          setCurrentViewMode(currentViewMode === "kds" ? "marketplace" : "kds");
-                        }}
-                        className={`px-2.5 sm:px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs ${
-                          currentViewMode === "kds"
-                            ? "bg-[#00AFF2] text-white"
-                            : "bg-slate-900 hover:bg-slate-800 text-white"
-                        }`}
-                      >
-                        <ChefHat className="w-3.5 h-3.5 text-amber-300" />
-                        <span className="hidden sm:inline">
-                          {currentViewMode === "kds" ? "Boutique Client" : "Espace Restaurateur"}
-                        </span>
-                        <span className="sm:hidden">KDS</span>
-                      </button>
-                    )}
-
-                    <div className="flex items-center gap-1.5 pl-1.5 border-l border-slate-200">
-                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-sky-100 border border-sky-300 text-[#00AFF2] flex items-center justify-center font-bold text-xs">
-                        {currentUser.full_name.charAt(0)}
-                      </div>
-                      <div className="hidden lg:block text-left">
-                        <p className="text-xs font-bold text-slate-800 leading-tight">
-                          {currentUser.full_name}
-                        </p>
-                        <span className="text-[10px] font-semibold text-slate-400 capitalize">
-                          {currentUser.role === "restaurant_owner" ? "Restaurateur" : "Client"}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => {
-                          hapticFeedback("light");
-                          authService.signOut();
-                          setCurrentUser(null);
-                          setCurrentViewMode("marketplace");
-                        }}
-                        className="p-1 text-slate-400 hover:text-rose-500 transition-colors"
-                        title="Se déconnecter"
-                      >
-                        <LogOut className="w-4 h-4" />
-                      </button>
-                    </div>
+              {/* Actions Droite : Portefeuille, Recherche, Notifications & Menu Latéral */}
+              <div className="flex items-center gap-1.5 sm:gap-2.5 text-slate-800">
+                {/* Pilule Portefeuille Utilisateur (0 FCFA au départ ou solde réel) */}
+                <button
+                  onClick={() => {
+                    hapticFeedback("light");
+                    setShowWalletModal(true);
+                  }}
+                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-sky-50 hover:bg-sky-100 border border-sky-200/80 text-slate-800 transition-all active:scale-95 group shadow-2xs"
+                  title="Mon Portefeuille ClicBouffe (cliquez pour recharger)"
+                >
+                  <div className="w-5 h-5 rounded-full bg-[#00AFF2] text-white flex items-center justify-center shrink-0">
+                    <Wallet className="w-3 h-3 stroke-[2.5]" />
                   </div>
-                ) : (
+                  <span className="text-xs font-black text-slate-900 group-hover:text-[#00AFF2] transition-colors">
+                    {formatFCFA(walletBalance)}
+                  </span>
+                  <span className="hidden sm:inline-block text-[10px] font-bold text-[#00AFF2] bg-white px-1.5 py-0.2 rounded-full border border-sky-100">
+                    +
+                  </span>
+                </button>
+
+                {/* Si restaurateur, bouton rapide d'accès KDS */}
+                {currentUser?.role === "restaurant_owner" && (
+                  <button
+                    onClick={() => {
+                      hapticFeedback("light");
+                      setCurrentViewMode(currentViewMode === "kds" ? "marketplace" : "kds");
+                    }}
+                    className={`px-2 sm:px-2.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs ${
+                      currentViewMode === "kds"
+                        ? "bg-[#00AFF2] text-white"
+                        : "bg-slate-900 hover:bg-slate-800 text-white"
+                    }`}
+                  >
+                    <ChefHat className="w-3.5 h-3.5 text-amber-300" />
+                    <span className="hidden sm:inline">
+                      {currentViewMode === "kds" ? "Boutique" : "KDS"}
+                    </span>
+                  </button>
+                )}
+
+                {/* Si non connecté, bouton rapide Connexion */}
+                {!currentUser && (
                   <button
                     onClick={() => {
                       hapticFeedback("light");
                       setShowAuthModal(true);
                     }}
-                    className="px-3 sm:px-3.5 py-1.5 bg-[#00AFF2] hover:bg-[#0098d4] text-white rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all active:scale-95"
+                    className="px-2.5 sm:px-3 py-1.5 bg-[#00AFF2] hover:bg-[#0098d4] text-white rounded-xl font-bold text-xs flex items-center gap-1 shadow-xs transition-all active:scale-95"
                   >
                     <User className="w-3.5 h-3.5" />
-                    <span>Connexion</span>
+                    <span className="hidden sm:inline">Connexion</span>
                   </button>
                 )}
 
+                {/* Notifications */}
                 <button
                   onClick={() => setShowFreeFoodModal(true)}
                   className="p-1.5 hover:text-[#00AFF2] transition-colors relative"
@@ -470,6 +470,8 @@ export default function ClicBouffePlatform() {
                   <Bell className="w-5 h-5 stroke-[1.8]" />
                   <span className="w-2 h-2 rounded-full bg-[#00AFF2] absolute top-1.5 right-1.5" />
                 </button>
+
+                {/* Recherche */}
                 <button
                   onClick={() => setScreen("free_food")}
                   className="p-1.5 hover:text-[#00AFF2] transition-colors"
@@ -477,10 +479,15 @@ export default function ClicBouffePlatform() {
                 >
                   <Search className="w-5 h-5 stroke-[1.8]" />
                 </button>
+
+                {/* Menu Latéral (Hamburger) */}
                 <button
-                  onClick={() => setShowDeliveryRatesModal(true)}
+                  onClick={() => {
+                    hapticFeedback("light");
+                    setShowSideDrawer(true);
+                  }}
                   className="p-1.5 hover:text-[#00AFF2] transition-colors"
-                  aria-label="Menu"
+                  aria-label="Menu latéral"
                 >
                   <MenuIcon className="w-5 h-5 stroke-[2]" />
                 </button>
@@ -507,7 +514,7 @@ export default function ClicBouffePlatform() {
             <>
               {/* ONGLET 1 : ACCUEIL */}
               {currentScreen === "home" && (
-            <main className="flex-1 w-full max-w-5xl mx-auto p-3 sm:p-6 space-y-4 pb-28">
+            <main className="flex-1 w-full max-w-5xl mx-auto p-3 sm:p-6 space-y-4 pb-36 sm:pb-40 lg:pb-44">
               {/* Carrousel publicitaire automatique rotatif (Partenaires & Vendeurs) */}
               <PromoCarousel
                 slides={PROMOTIONAL_CAROUSEL_SLIDES}
@@ -542,7 +549,7 @@ export default function ClicBouffePlatform() {
                 </button>
               </div>
 
-              {/* Grille des plats authentiques, centrés, avec belles cartes */}
+              {/* Grille des plats authentiques, centrés, avec belles cartes adaptées au PC */}
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
                 {displayedHomeDishes.slice(0, 6).map((dish) => (
                   <div
@@ -554,14 +561,14 @@ export default function ClicBouffePlatform() {
                     }}
                     className="bg-white rounded-2xl border border-slate-200/90 p-2.5 flex flex-col justify-between text-left shadow-xs hover:shadow-md hover:border-[#00AFF2] transition-all group cursor-pointer relative"
                   >
-                    {/* Conteneur d'image propre, centré, aspect-ratio parfait sans coupures */}
-                    <div className="w-full h-28 sm:h-36 relative rounded-xl overflow-hidden bg-slate-100 mb-2">
+                    {/* Conteneur d'image propre, centré, sans coupures sur PC */}
+                    <div className="w-full h-24 sm:h-28 md:h-32 aspect-4/3 relative rounded-xl overflow-hidden bg-slate-100 mb-2">
                       <Image
                         src={dish.img}
                         alt={dish.name}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        sizes="(max-width: 640px) 50vw, 200px"
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 180px"
                       />
                       {dish.isFree && (
                         <span className="absolute top-1.5 right-1.5 bg-[#00AFF2] text-white text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-xs">
@@ -602,7 +609,7 @@ export default function ClicBouffePlatform() {
           {/* ONGLET 2 : EXPLORER (RESTAURANTS DISPONIBLES DANS LA SOUS-RÉGION) */}
           {/* ============================================================== */}
           {currentScreen === "explorer" && (
-            <main className="flex-1 w-full max-w-5xl mx-auto p-3 sm:p-6 space-y-4 pb-28">
+            <main className="flex-1 w-full max-w-5xl mx-auto p-3 sm:p-6 space-y-4 pb-36 sm:pb-40">
               {/* En-tête Sous-région */}
               <div className="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
@@ -747,7 +754,7 @@ export default function ClicBouffePlatform() {
           {/* ONGLET 3 : PLUS TARD (PLATS ENREGISTRÉS & PROGRAMMÉS) */}
           {/* ============================================================== */}
           {currentScreen === "plus_tard" && (
-            <main className="flex-1 w-full max-w-4xl mx-auto p-3 sm:p-6 space-y-4 pb-28">
+            <main className="flex-1 w-full max-w-4xl mx-auto p-3 sm:p-6 space-y-4 pb-36 sm:pb-40">
               {/* En-tête */}
               <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
@@ -881,7 +888,7 @@ export default function ClicBouffePlatform() {
           {/* ONGLET 4 : ABONNEMENTS (PLATS & RESTAURANTS ABONNÉS) */}
           {/* ============================================================== */}
           {currentScreen === "abonnements" && (
-            <main className="flex-1 w-full max-w-4xl mx-auto p-3 sm:p-6 space-y-4 pb-28">
+            <main className="flex-1 w-full max-w-4xl mx-auto p-3 sm:p-6 space-y-4 pb-36 sm:pb-40">
               {/* En-tête */}
               <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
@@ -1256,7 +1263,7 @@ export default function ClicBouffePlatform() {
             </div>
           </header>
 
-          <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 space-y-4 pb-28">
+          <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 space-y-4 pb-36 sm:pb-40">
             <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
               Vous pouvez choisir une seule bouffe gratuite. Pour recevoir votre bouffe choisie, il ne vous suffira que de payer la livraison de cette dernière.{" "}
               <span
@@ -1673,7 +1680,7 @@ export default function ClicBouffePlatform() {
             </div>
           </header>
 
-          <main className="flex-1 max-w-2xl w-full mx-auto p-4 sm:p-6 space-y-6 pb-28 text-xs sm:text-sm">
+          <main className="flex-1 max-w-2xl w-full mx-auto p-4 sm:p-6 space-y-6 pb-36 sm:pb-40 text-xs sm:text-sm">
             {/* 1. Base */}
             <div>
               <p className="font-bold text-slate-900 mb-2">1. Choisir votre pâte / base (Obligatoire)</p>
@@ -1857,7 +1864,7 @@ export default function ClicBouffePlatform() {
             </div>
           </header>
 
-          <main className="flex-1 max-w-2xl w-full mx-auto p-4 sm:p-6 space-y-4 pb-28">
+          <main className="flex-1 max-w-2xl w-full mx-auto p-4 sm:p-6 space-y-4 pb-36 sm:pb-40">
             {/* Étape 1 : Plats */}
             <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
               <div
@@ -2117,6 +2124,37 @@ export default function ClicBouffePlatform() {
             setCurrentViewMode("kds");
           }
         }}
+      />
+
+      {/* Menu Latéral Coulissant (Side Drawer) */}
+      <SideDrawer
+        isOpen={showSideDrawer}
+        onClose={() => setShowSideDrawer(false)}
+        currentUser={currentUser}
+        walletBalance={walletBalance}
+        onOpenAuth={() => setShowAuthModal(true)}
+        onSignOut={() => {
+          authService.signOut();
+          setCurrentUser(null);
+          setCurrentViewMode("marketplace");
+        }}
+        onOpenWallet={() => setShowWalletModal(true)}
+        onOpenDeliveryRates={() => setShowDeliveryRatesModal(true)}
+        onNavigateToScreen={(scr) => setScreen(scr)}
+        theme={theme}
+        onToggleTheme={() => setTheme((prev) => (prev === "light" ? "dark" : "light"))}
+        currentViewMode={currentViewMode}
+        onToggleViewMode={() =>
+          setCurrentViewMode((prev) => (prev === "marketplace" ? "kds" : "marketplace"))
+        }
+      />
+
+      {/* Modale de Recharge Portefeuille */}
+      <WalletModal
+        isOpen={showWalletModal}
+        onClose={() => setShowWalletModal(false)}
+        walletBalance={walletBalance}
+        onBalanceUpdated={(newBal) => setWalletBalance(newBal)}
       />
     </div>
   );

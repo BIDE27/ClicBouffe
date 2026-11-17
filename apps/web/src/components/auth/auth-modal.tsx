@@ -74,13 +74,6 @@ export function AuthModal({
     }
   };
 
-  const handleQuickDemo = (demoRole: "customer" | "restaurant_owner") => {
-    hapticFeedback("light");
-    const profile = authService.loginDemo(demoRole);
-    onSuccess(profile);
-    onClose();
-  };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
       <div
@@ -331,46 +324,6 @@ export function AuthModal({
               <ArrowRight className="w-4 h-4 stroke-[2.5]" />
             </button>
           </form>
-
-          {/* Séparateur pour accès démo rapide */}
-          <div className="relative my-3">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200" />
-            </div>
-            <div className="relative flex justify-center text-[10px] uppercase font-bold text-slate-400">
-              <span className="bg-white px-2">Accès Démo 1-Clic</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => handleQuickDemo("customer")}
-              className="p-2.5 rounded-xl bg-slate-50 hover:bg-sky-50 hover:border-[#00AFF2] border border-slate-200 transition-all text-left flex items-center gap-2 group"
-            >
-              <div className="w-6 h-6 rounded-lg bg-sky-100 text-[#00AFF2] flex items-center justify-center shrink-0">
-                <User className="w-3.5 h-3.5" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] font-bold text-slate-800 leading-tight">Démo Client</p>
-                <p className="text-[9px] text-slate-500 truncate">Koffi Mensah</p>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleQuickDemo("restaurant_owner")}
-              className="p-2.5 rounded-xl bg-slate-50 hover:bg-sky-50 hover:border-[#00AFF2] border border-slate-200 transition-all text-left flex items-center gap-2 group"
-            >
-              <div className="w-6 h-6 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
-                <ChefHat className="w-3.5 h-3.5" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] font-bold text-slate-800 leading-tight">Démo Restau</p>
-                <p className="text-[9px] text-slate-500 truncate">Le Maquis du Port</p>
-              </div>
-            </button>
-          </div>
         </div>
       </div>
     </div>

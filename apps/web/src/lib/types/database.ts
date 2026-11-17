@@ -7,6 +7,7 @@ export interface UserProfile {
   phone_number?: string;
   role: UserRole;
   avatar_url?: string;
+  wallet_balance?: number;
   created_at: string;
 }
 

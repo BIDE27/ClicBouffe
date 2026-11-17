@@ -246,6 +246,40 @@ export const authService = {
   },
 
   /**
+   * Récupère le solde du portefeuille (0 FCFA par défaut tant que non rechargé)
+   */
+  getWalletBalance(): number {
+    if (typeof window === "undefined") return 0;
+    const stored = localStorage.getItem("clicbouffe_wallet_balance");
+    if (!stored) return 0;
+    const parsed = parseInt(stored, 10);
+    return isNaN(parsed) ? 0 : parsed;
+  },
+
+  /**
+   * Recharge le portefeuille de l'utilisateur
+   */
+  rechargeWallet(amount: number): number {
+    const current = this.getWalletBalance();
+    const newBalance = current + amount;
+    if (typeof window !== "undefined") {
+      localStorage.setItem("clicbouffe_wallet_balance", newBalance.toString());
+      // Mise à jour du profil en cache si existant
+      const cached = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
+      if (cached) {
+        try {
+          const profile = JSON.parse(cached) as UserProfile;
+          profile.wallet_balance = newBalance;
+          localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(profile));
+        } catch {
+          // Ignoré
+        }
+      }
+    }
+    return newBalance;
+  },
+
+  /**
    * Déconnexion
    */
   async signOut(): Promise<void> {

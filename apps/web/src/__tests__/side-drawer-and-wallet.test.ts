@@ -1,0 +1,60 @@
+import { describe, it, expect, beforeEach } from "vitest";
+
+// Polyfill minimal localStorage pour l'environnement Node.js de test
+const memoryStore: Record<string, string> = {};
+if (typeof globalThis.localStorage === "undefined") {
+  globalThis.localStorage = {
+    getItem: (key: string) => memoryStore[key] || null,
+    setItem: (key: string, value: string) => {
+      memoryStore[key] = String(value);
+    },
+    removeItem: (key: string) => {
+      delete memoryStore[key];
+    },
+    clear: () => {
+      for (const k in memoryStore) delete memoryStore[k];
+    },
+    key: (index: number) => Object.keys(memoryStore)[index] || null,
+    length: 0,
+  };
+}
+if (typeof (globalThis as unknown as { window?: unknown }).window === "undefined") {
+  (globalThis as unknown as { window: unknown }).window = globalThis;
+}
+
+import { authService } from "../lib/services/auth-service";
+
+describe("Gestion du Portefeuille et Menu Latéral", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("devrait initialiser le solde du portefeuille à 0 FCFA par défaut", () => {
+    const balance = authService.getWalletBalance();
+    expect(balance).toBe(0);
+  });
+
+  it("devrait créditer et mettre à jour le solde lors d'une recharge", () => {
+    expect(authService.getWalletBalance()).toBe(0);
+
+    const newBalance1 = authService.rechargeWallet(2000);
+    expect(newBalance1).toBe(2000);
+    expect(authService.getWalletBalance()).toBe(2000);
+
+    const newBalance2 = authService.rechargeWallet(5000);
+    expect(newBalance2).toBe(7000);
+    expect(authService.getWalletBalance()).toBe(7000);
+  });
+
+  it("devrait persister le solde rechargé dans le stockage local", () => {
+    authService.rechargeWallet(10000);
+    const balance = authService.getWalletBalance();
+    expect(balance).toBe(10000);
+  });
+
+  it("gère les déconnexions sans altérer l'intégrité du solde", async () => {
+    authService.rechargeWallet(3000);
+    await authService.signOut();
+    expect(authService.getWalletBalance()).toBe(3000);
+  });
+});
