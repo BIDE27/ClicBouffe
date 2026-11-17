@@ -37,7 +37,6 @@ import { PromoCarousel } from "@/components/home/promo-carousel";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { SideDrawer } from "@/components/navigation/side-drawer";
 import { WalletModal } from "@/components/wallet/wallet-modal";
-import { LogoMarmite } from "@/components/ui/logo-marmite";
 import { RestaurantDashboard } from "@/components/restaurant-dashboard/restaurant-dashboard";
 import { authService } from "@/lib/services/auth-service";
 import { UserProfile } from "@/lib/types/database";
@@ -410,9 +409,8 @@ export default function ClicBouffePlatform() {
               <div className="flex items-center gap-2.5">
                 <div
                   onClick={() => setScreen("home")}
-                  className="flex items-center gap-2 cursor-pointer select-none group"
+                  className="flex items-center cursor-pointer select-none"
                 >
-                  <LogoMarmite className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl shadow-xs shrink-0" size={32} withBackground />
                   <h1 className="text-xl sm:text-2xl font-black text-[#00AFF2] tracking-tight">
                     ClicBouffe
                   </h1>

@@ -124,10 +124,11 @@ Pour garantir un niveau de qualité logiciel d'excellence, chaque lot de travail
 3. **Logo Officiel Unique et Permanent de ClicBouffe (Marmite avec Curseur de Clic Intérieur)** :
    * **Emblème Visuel Obligatoire** : Le logo officiel et permanent de ClicBouffe est strictement constitué de **la marmite (avec ses deux poignées latérales, son couvercle et sa couronne supérieure) contenant le curseur de clic avec ses rayons d'impact à l'intérieur** (identique à l'emblème officiel du splash screen de chargement issu des maquettes d'origine).
    * **Emplacements d'Application Obligatoires** : Cette icône de marque doit être systématiquement et universellement appliquée pour :
-     - L'en-tête de l'application (TopBar) et l'écran de chargement (Splash Screen).
+     - L'écran de chargement (Splash Screen).
      - L'icône officielle du Menu Latéral (SideDrawer) en remplacement de toute abréviation temporaire 'CB'.
      - Le Favicon officiel du site Web (`/favicon.ico`, `/favicon.png`, `/favicon.svg`).
      - L'icône d'application mobile Apple (`/apple-touch-icon.png`) et Android / Web Manifest (`/icon.png`).
+     *(Remarque : Dans la barre supérieure TopBar, le logo reste typographique et épuré avec l'intitulé 'ClicBouffe' sans icône marmite juxtaposée).*
 
 ---
 
