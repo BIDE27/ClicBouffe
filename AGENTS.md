@@ -130,6 +130,19 @@ Pour garantir un niveau de qualité logiciel d'excellence, chaque lot de travail
      - L'icône d'application mobile Apple (`/apple-touch-icon.png`) et Android / Web Manifest (`/icon.png`).
      *(Remarque : Dans la barre supérieure TopBar, le logo reste typographique et épuré avec l'intitulé 'ClicBouffe' sans icône marmite juxtaposée).*
 
+4. **Support Universel du Mode Sombre (Dark Mode First-Class Obligatoire)** :
+   * **Alignement Systématique de Toute Vue** : Chaque nouvelle page, écran, composant, modale popup (`fixed inset-0`), tiroir coulissant (`SideDrawer`), carte de plat ou restaurant, champ de formulaire (`input`, `select`), bouton et séparateur doit **impérativement et systématiquement** intégrer le support complet du mode sombre (`dark:`) via Tailwind CSS.
+   * **Charte Chromatique Mode Sombre** :
+     - Fond d'écran principal : `dark:bg-slate-950`
+     - Modales, tiroirs, cartes et conteneurs : `dark:bg-slate-900` avec bordure `dark:border-slate-800`
+     - Éléments surélevés / sous-cartes : `dark:bg-slate-850` ou `dark:bg-slate-800` avec bordure `dark:border-slate-700`
+     - Textes principaux : `dark:text-white` ou `dark:text-slate-100`
+     - Textes secondaires / métadonnées : `dark:text-slate-400`
+     - Champs de saisie : `dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500`
+     - Boutons inactifs / secondaires : `dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700`
+     - Accents de marque ClicBouffe : maintien du bleu primaire `#00AFF2` avec anneaux/halo adaptés (`dark:bg-sky-950/40`, `dark:border-[#00AFF2]/60`).
+   * **Interdiction des Surfaces Blanches en Mode Sombre** : Aucune modale, carte, bandeau ou conteneur blanc (`bg-white` sans contrepartie `dark:bg-slate-900`) n'est toléré lorsque la classe `.dark` est active sur l'élément racine `html`.
+
 ---
 
 ## 7. 🚀 GIT, CI/CD & CONVENTIONS DE COMMITS

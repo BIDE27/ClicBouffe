@@ -126,7 +126,7 @@ export function PromoCarousel({
                   onOrderDish(slide.dishRefName);
                 }
               }}
-              className={`snap-start shrink-0 relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-md border border-slate-200/90 group cursor-pointer transition-all duration-300 hover:shadow-xl hover:border-[#00AFF2]/60 ${
+              className={`snap-start shrink-0 relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-md border border-slate-200/90 dark:border-slate-800 group cursor-pointer transition-all duration-300 hover:shadow-xl hover:border-[#00AFF2]/60 ${
                 variant === "mobile"
                   ? "w-[86%] sm:w-[340px] h-44 sm:h-50"
                   : "w-[86%] sm:w-[420px] md:w-[460px] h-48 sm:h-56"
@@ -214,7 +214,7 @@ export function PromoCarousel({
               prevCard();
             }}
             aria-label="Carte précédente"
-            className="w-7 h-7 rounded-full bg-slate-100 hover:bg-[#00AFF2] hover:text-white text-slate-700 flex items-center justify-center transition-all shadow-2xs active:scale-90"
+            className="w-7 h-7 rounded-full bg-slate-100 hover:bg-[#00AFF2] hover:text-white dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-[#00AFF2] dark:hover:text-white text-slate-700 flex items-center justify-center transition-all shadow-2xs active:scale-90"
           >
             <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
           </button>
@@ -224,11 +224,11 @@ export function PromoCarousel({
               nextCard();
             }}
             aria-label="Carte suivante"
-            className="w-7 h-7 rounded-full bg-slate-100 hover:bg-[#00AFF2] hover:text-white text-slate-700 flex items-center justify-center transition-all shadow-2xs active:scale-90"
+            className="w-7 h-7 rounded-full bg-slate-100 hover:bg-[#00AFF2] hover:text-white dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-[#00AFF2] dark:hover:text-white text-slate-700 flex items-center justify-center transition-all shadow-2xs active:scale-90"
           >
             <ChevronRight className="w-4 h-4 stroke-[2.5]" />
           </button>
-          <span className="text-[11px] text-slate-400 font-medium ml-1">
+          <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium ml-1">
             {currentIndex + 1} / {totalCards}
           </span>
         </div>
@@ -246,7 +246,7 @@ export function PromoCarousel({
                 }}
                 aria-label={`Afficher la carte ${idx + 1}`}
                 className={`h-1.5 rounded-full transition-all duration-300 ${
-                  isActive ? "w-5 bg-[#00AFF2]" : "w-1.5 bg-slate-200 hover:bg-slate-300"
+                  isActive ? "w-5 bg-[#00AFF2]" : "w-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600"
                 }`}
               />
             );

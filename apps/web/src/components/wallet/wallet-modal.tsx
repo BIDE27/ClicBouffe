@@ -76,20 +76,20 @@ export function WalletModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
       <div
-        className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200"
+        className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800 text-slate-900 dark:text-slate-100 flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200 transition-colors"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Modal */}
-        <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-900/90">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-sky-100 text-[#00AFF2] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-sky-100 dark:bg-sky-950/60 text-[#00AFF2] flex items-center justify-center">
               <Wallet className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-base font-black text-slate-900 tracking-tight leading-tight">
+              <h2 className="text-base font-black text-slate-900 dark:text-white tracking-tight leading-tight">
                 Portefeuille ClicBouffe
               </h2>
-              <p className="text-[10px] text-slate-500 font-medium">Recharge instantanée 0 frais</p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Recharge instantanée 0 frais</p>
             </div>
           </div>
           <button
@@ -97,7 +97,7 @@ export function WalletModal({
               hapticFeedback("light");
               onClose();
             }}
-            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-all"
+            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-all"
             aria-label="Fermer"
           >
             <X className="w-4 h-4 stroke-[2.5]" />
@@ -108,22 +108,22 @@ export function WalletModal({
         <div className="p-4 sm:p-5 overflow-y-auto space-y-4">
           {isSuccess ? (
             <div className="py-8 text-center space-y-4 animate-in zoom-in-95 duration-300">
-              <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-md">
+              <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-md">
                 <CheckCircle2 className="w-9 h-9 stroke-[2.5]" />
               </div>
               <div>
-                <h3 className="text-lg font-black text-slate-900">Recharge Réussie !</h3>
-                <p className="text-xs text-slate-500 mt-1">
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">Recharge Réussie !</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   Votre compte a été crédité de{" "}
-                  <strong className="text-slate-900 font-bold">
+                  <strong className="text-slate-900 dark:text-white font-bold">
                     {formatFCFA(rechargeAmountSuccess)}
                   </strong>
                 </p>
               </div>
 
               {/* Nouveau solde */}
-              <div className="p-4 rounded-2xl bg-sky-50 border border-sky-100 max-w-xs mx-auto">
-                <p className="text-[11px] font-semibold text-slate-500">Nouveau Solde Disponible</p>
+              <div className="p-4 rounded-2xl bg-sky-50 dark:bg-sky-950/40 border border-sky-100 dark:border-sky-900 max-w-xs mx-auto">
+                <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Nouveau Solde Disponible</p>
                 <p className="text-2xl font-black text-[#00AFF2] mt-0.5">
                   {formatFCFA(walletBalance)}
                 </p>
@@ -161,7 +161,7 @@ export function WalletModal({
 
               {/* Montants rapides */}
               <div>
-                <label className="text-xs font-bold text-slate-700 mb-2 block">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 block">
                   Montant à recharger
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -179,7 +179,7 @@ export function WalletModal({
                         className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition-all text-center ${
                           isSelected
                             ? "bg-[#00AFF2] text-white border-[#00AFF2] shadow-xs scale-102"
-                            : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
+                            : "bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750"
                         }`}
                       >
                         +{formatFCFA(amt)}
@@ -200,14 +200,14 @@ export function WalletModal({
                       setCustomAmount(e.target.value);
                       setSelectedAmount(0);
                     }}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:border-[#00AFF2] outline-none text-slate-800"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:bg-white dark:focus:bg-slate-850 focus:border-[#00AFF2] outline-none text-slate-800 dark:text-slate-100 transition-colors"
                   />
                 </div>
               </div>
 
               {/* Choix de l'opérateur de paiement (MOMO Bénin & Carte) */}
               <div>
-                <label className="text-xs font-bold text-slate-700 mb-2 block">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 block">
                   Moyen de paiement
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -219,8 +219,8 @@ export function WalletModal({
                     }}
                     className={`p-2.5 rounded-xl border text-left flex items-center gap-2 transition-all ${
                       operator === "mtn"
-                        ? "bg-amber-50/70 border-amber-400 text-amber-900 ring-2 ring-amber-400/30"
-                        : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
+                        ? "bg-amber-50/70 dark:bg-amber-950/30 border-amber-400 dark:border-amber-500 text-amber-900 dark:text-amber-200 ring-2 ring-amber-400/30"
+                        : "bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750"
                     }`}
                   >
                     <div className="w-7 h-7 rounded-lg bg-amber-400 text-slate-900 font-black text-[10px] flex items-center justify-center shrink-0">
@@ -228,7 +228,7 @@ export function WalletModal({
                     </div>
                     <div className="min-w-0">
                       <p className="text-[11px] font-bold truncate">MTN MoMo</p>
-                      <p className="text-[9px] text-slate-500">Bénin (*880#)</p>
+                      <p className="text-[9px] text-slate-500 dark:text-slate-400">Bénin (*880#)</p>
                     </div>
                   </button>
 
@@ -240,8 +240,8 @@ export function WalletModal({
                     }}
                     className={`p-2.5 rounded-xl border text-left flex items-center gap-2 transition-all ${
                       operator === "moov"
-                        ? "bg-blue-50/70 border-blue-500 text-blue-900 ring-2 ring-blue-500/30"
-                        : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
+                        ? "bg-blue-50/70 dark:bg-blue-950/30 border-blue-500 text-blue-900 dark:text-blue-200 ring-2 ring-blue-500/30"
+                        : "bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750"
                     }`}
                   >
                     <div className="w-7 h-7 rounded-lg bg-blue-600 text-white font-black text-[10px] flex items-center justify-center shrink-0">
@@ -249,7 +249,7 @@ export function WalletModal({
                     </div>
                     <div className="min-w-0">
                       <p className="text-[11px] font-bold truncate">Moov Money</p>
-                      <p className="text-[9px] text-slate-500">Flooz (*155#)</p>
+                      <p className="text-[9px] text-slate-500 dark:text-slate-400">Flooz (*155#)</p>
                     </div>
                   </button>
 
@@ -261,8 +261,8 @@ export function WalletModal({
                     }}
                     className={`p-2.5 rounded-xl border text-left flex items-center gap-2 transition-all ${
                       operator === "celtiis"
-                        ? "bg-emerald-50/70 border-emerald-500 text-emerald-900 ring-2 ring-emerald-500/30"
-                        : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
+                        ? "bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-500 text-emerald-900 dark:text-emerald-200 ring-2 ring-emerald-500/30"
+                        : "bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750"
                     }`}
                   >
                     <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white font-black text-[9px] flex items-center justify-center shrink-0">
@@ -270,7 +270,7 @@ export function WalletModal({
                     </div>
                     <div className="min-w-0">
                       <p className="text-[11px] font-bold truncate">Celtiis Cash</p>
-                      <p className="text-[9px] text-slate-500">Bénin (*889#)</p>
+                      <p className="text-[9px] text-slate-500 dark:text-slate-400">Bénin (*889#)</p>
                     </div>
                   </button>
 
@@ -282,8 +282,8 @@ export function WalletModal({
                     }}
                     className={`p-2.5 rounded-xl border text-left flex items-center gap-2 transition-all ${
                       operator === "card"
-                        ? "bg-purple-50/70 border-purple-500 text-purple-900 ring-2 ring-purple-500/30"
-                        : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
+                        ? "bg-purple-50/70 dark:bg-purple-950/30 border-purple-500 text-purple-900 dark:text-purple-200 ring-2 ring-purple-500/30"
+                        : "bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750"
                     }`}
                   >
                     <div className="w-7 h-7 rounded-lg bg-purple-600 text-white font-black text-[10px] flex items-center justify-center shrink-0">
@@ -291,7 +291,7 @@ export function WalletModal({
                     </div>
                     <div className="min-w-0">
                       <p className="text-[11px] font-bold truncate">Carte Bancaire</p>
-                      <p className="text-[9px] text-slate-500">Visa / Master</p>
+                      <p className="text-[9px] text-slate-500 dark:text-slate-400">Visa / Master</p>
                     </div>
                   </button>
                 </div>
@@ -300,7 +300,7 @@ export function WalletModal({
               {/* Numéro de téléphone pour le débit MOMO */}
               {operator !== "card" && (
                 <div>
-                  <label className="text-xs font-bold text-slate-700 mb-1 block">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 block">
                     Numéro mobile à débiter
                   </label>
                   <div className="relative">
@@ -310,7 +310,7 @@ export function WalletModal({
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                       placeholder="97 00 00 00"
-                      className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:border-[#00AFF2] outline-none text-slate-800 font-mono"
+                      className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:bg-white dark:focus:bg-slate-850 focus:border-[#00AFF2] outline-none text-slate-800 dark:text-slate-100 font-mono transition-colors"
                     />
                   </div>
                 </div>
@@ -320,7 +320,7 @@ export function WalletModal({
               <button
                 type="submit"
                 disabled={isLoading || currentAmountToRecharge <= 0}
-                className="w-full py-2.5 bg-[#00AFF2] hover:bg-[#0098d4] disabled:bg-slate-300 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-1.5 mt-2"
+                className="w-full py-2.5 bg-[#00AFF2] hover:bg-[#0098d4] disabled:bg-slate-300 dark:disabled:bg-slate-800 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-1.5 mt-2"
               >
                 <span>
                   {isLoading

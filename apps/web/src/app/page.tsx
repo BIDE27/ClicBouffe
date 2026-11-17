@@ -308,7 +308,7 @@ export default function ClicBouffePlatform() {
       {/* 2. ÉCRANS ONBOARDING (Captures 151155, 151227, 151522.jpg) */}
       {/* ============================================================== */}
       {currentScreen === "onboarding" && (
-        <main className="min-h-screen w-full bg-white flex flex-col items-center justify-between p-6 sm:py-12">
+        <main className="min-h-screen w-full bg-white dark:bg-slate-950 flex flex-col items-center justify-between p-6 sm:py-12 text-slate-900 dark:text-white transition-colors">
           <div className="w-full max-w-md flex-1 flex flex-col items-center justify-center text-center">
             <div className="relative w-72 sm:w-80 h-52 sm:h-60 mb-8 flex items-center justify-center">
               {onboardingSteps[onboardingIndex].img ? (
@@ -320,20 +320,20 @@ export default function ClicBouffePlatform() {
                   priority
                 />
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 p-4">
+                <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 p-4">
                   <UtensilsCrossed className="w-12 h-12 text-[#00AFF2] mb-2" />
-                  <span className="text-xs text-slate-500 font-semibold">
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
                     Emplacement photo {onboardingIndex + 1}
                   </span>
                 </div>
               )}
             </div>
 
-            <h2 className="text-2xl sm:text-3xl font-black text-black tracking-tight whitespace-pre-line leading-tight">
+            <h2 className="text-2xl sm:text-3xl font-black text-black dark:text-white tracking-tight whitespace-pre-line leading-tight">
               {onboardingSteps[onboardingIndex].title}
             </h2>
 
-            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed max-w-xs mt-4">
+            <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed max-w-xs mt-4">
               {onboardingSteps[onboardingIndex].desc}
             </p>
 
@@ -344,7 +344,7 @@ export default function ClicBouffePlatform() {
                   className={`transition-all duration-300 rounded-full ${
                     onboardingIndex === idx
                       ? "w-3 h-3 bg-[#00AFF2]"
-                      : "w-2.5 h-2.5 border-2 border-black bg-transparent"
+                      : "w-2.5 h-2.5 border-2 border-black dark:border-slate-400 bg-transparent"
                   }`}
                 />
               ))}
@@ -359,7 +359,7 @@ export default function ClicBouffePlatform() {
                   setOnboardingIndex(onboardingIndex - 1);
                 }
               }}
-              className={`p-2 text-black transition-opacity ${
+              className={`p-2 text-black dark:text-white transition-opacity ${
                 onboardingIndex > 0 ? "opacity-100 hover:text-[#00AFF2]" : "opacity-0 pointer-events-none"
               }`}
               aria-label="Étape précédente"
@@ -386,7 +386,7 @@ export default function ClicBouffePlatform() {
                   setScreen("home");
                 }
               }}
-              className="p-2 text-black hover:text-[#00AFF2] transition-colors"
+              className="p-2 text-black dark:text-white hover:text-[#00AFF2] transition-colors"
               aria-label="Étape suivante"
             >
               <ChevronRight className="w-8 h-8 stroke-[2.5]" />
@@ -639,21 +639,21 @@ export default function ClicBouffePlatform() {
           {currentScreen === "explorer" && (
             <main className="flex-1 w-full max-w-5xl mx-auto p-3 sm:p-6 space-y-4 pb-36 sm:pb-40">
               {/* En-tête Sous-région */}
-              <div className="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors">
                 <div>
                   <div className="flex items-center gap-1.5 text-xs font-bold text-[#00AFF2] uppercase tracking-wide">
                     <MapPin className="w-3.5 h-3.5" />
                     <span>Sous-région : Akpakpa & Cotonou Est</span>
                   </div>
-                  <h2 className="text-lg sm:text-xl font-black text-slate-900 mt-0.5">
+                  <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white mt-0.5">
                     Restaurants & Maquis Disponibles
                   </h2>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Livraison directe chez vous au {deliveryAddress} (dès 80 FCFA)
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-200/60 flex items-center gap-1">
+                  <span className="px-3 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold rounded-full border border-emerald-200/60 dark:border-emerald-800 flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                     6 Ouverts maintenant
                   </span>
@@ -684,7 +684,7 @@ export default function ClicBouffePlatform() {
                       className={`px-3.5 py-1.5 rounded-full whitespace-nowrap font-semibold transition-all flex items-center gap-1.5 ${
                         isSelected
                           ? "bg-[#00AFF2] text-white shadow-xs"
-                          : "bg-white text-slate-700 border border-slate-200 hover:border-[#00AFF2]"
+                          : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:border-[#00AFF2] dark:hover:border-[#00AFF2]"
                       }`}
                     >
                       <Icon className={`w-3.5 h-3.5 ${isSelected ? "text-white" : "text-[#00AFF2]"}`} />
@@ -699,14 +699,14 @@ export default function ClicBouffePlatform() {
                 {filteredRestaurants.map((restau) => (
                   <div
                     key={restau.id}
-                    className="bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-xs hover:shadow-md hover:border-[#00AFF2] transition-all flex flex-col group cursor-pointer"
+                    className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden shadow-xs hover:shadow-md hover:border-[#00AFF2] dark:hover:border-[#00AFF2] transition-all flex flex-col group cursor-pointer"
                     onClick={() => {
                       hapticFeedback("light");
                       setScreen("free_food");
                     }}
                   >
                     {/* Photo du restaurant */}
-                    <div className="h-36 sm:h-44 w-full relative bg-slate-100 overflow-hidden">
+                    <div className="h-36 sm:h-44 w-full relative bg-slate-100 dark:bg-slate-800 overflow-hidden">
                       <Image
                         src={restau.img}
                         alt={restau.name}
@@ -723,20 +723,20 @@ export default function ClicBouffePlatform() {
                           </span>
                         ))}
                       </div>
-                      <div className="absolute bottom-2 right-2 px-2 py-1 rounded-lg bg-white/95 backdrop-blur-xs text-slate-900 text-xs font-bold shadow-xs flex items-center gap-1">
+                      <div className="absolute bottom-2 right-2 px-2 py-1 rounded-lg bg-white/95 dark:bg-slate-900/95 backdrop-blur-xs text-slate-900 dark:text-white text-xs font-bold shadow-xs flex items-center gap-1">
                         <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                         <span>{restau.rating}</span>
-                        <span className="text-[10px] text-slate-500 font-normal">({restau.reviewsCount})</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">({restau.reviewsCount})</span>
                       </div>
                     </div>
 
                     {/* Détails du restaurant */}
                     <div className="p-3.5 flex-1 flex flex-col justify-between">
                       <div>
-                        <h3 className="font-bold text-slate-900 text-sm sm:text-base group-hover:text-[#00AFF2] transition-colors truncate">
+                        <h3 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base group-hover:text-[#00AFF2] transition-colors truncate">
                           {restau.name}
                         </h3>
-                        <p className="text-xs text-slate-500 font-medium mt-0.5">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                           {restau.category} • {restau.distance}
                         </p>
 
@@ -745,7 +745,7 @@ export default function ClicBouffePlatform() {
                           {restau.popularDishes.slice(0, 3).map((dish) => (
                             <span
                               key={dish}
-                              className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[10px] font-medium"
+                              className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-medium"
                             >
                               {dish}
                             </span>
@@ -753,8 +753,8 @@ export default function ClicBouffePlatform() {
                         </div>
                       </div>
 
-                      <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                        <div className="text-slate-600 font-medium flex items-center gap-1.5">
+                      <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                        <div className="text-slate-600 dark:text-slate-300 font-medium flex items-center gap-1.5">
                           <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                           <span>{restau.deliveryTime}</span>
                           <span className="mx-1">•</span>
@@ -784,16 +784,16 @@ export default function ClicBouffePlatform() {
           {currentScreen === "plus_tard" && (
             <main className="flex-1 w-full max-w-4xl mx-auto p-3 sm:p-6 space-y-4 pb-36 sm:pb-40">
               {/* En-tête */}
-              <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors">
                 <div>
                   <div className="flex items-center gap-1.5 text-xs font-bold text-[#00AFF2] uppercase tracking-wide">
                     <ClockNavIcon active className="w-4 h-4" />
                     <span>Planification des repas</span>
                   </div>
-                  <h2 className="text-lg sm:text-xl font-black text-slate-900 mt-0.5">
+                  <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white mt-0.5">
                     Plats Programmés pour Plus Tard
                   </h2>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Vos commandes programmées pour être préparées et livrées à l&apos;heure de votre choix.
                   </p>
                 </div>
@@ -812,15 +812,15 @@ export default function ClicBouffePlatform() {
 
               {/* Prochaine livraison programmée */}
               {scheduledDishes.length > 0 && (
-                <div className="bg-gradient-to-r from-[#00AFF2]/10 via-[#00AFF2]/5 to-transparent rounded-2xl p-3 sm:p-4 border border-[#00AFF2]/20 flex items-center gap-3">
+                <div className="bg-gradient-to-r from-[#00AFF2]/10 via-[#00AFF2]/5 to-transparent dark:from-[#00AFF2]/20 dark:via-[#00AFF2]/10 dark:to-transparent rounded-2xl p-3 sm:p-4 border border-[#00AFF2]/20 dark:border-[#00AFF2]/30 flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-[#00AFF2] text-white flex items-center justify-center shrink-0 shadow-xs">
                     <ClockNavIcon active className="w-5 h-5" cutoutColor="#00AFF2" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-slate-900">
+                    <p className="text-xs font-bold text-slate-900 dark:text-white">
                       Prochaine livraison programmée
                     </p>
-                    <p className="text-[11px] sm:text-xs text-slate-600 truncate">
+                    <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 truncate">
                       <span className="font-bold text-[#00AFF2]">{scheduledDishes[0].scheduledDate} à {scheduledDishes[0].scheduledTime}</span> : {scheduledDishes[0].dishName} ({scheduledDishes[0].restaurantName})
                     </p>
                   </div>
@@ -832,10 +832,10 @@ export default function ClicBouffePlatform() {
                 {scheduledDishes.map((item) => (
                   <div
                     key={item.id}
-                    className="bg-white rounded-2xl border border-slate-200/90 p-3.5 sm:p-4 shadow-xs hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                    className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-3.5 sm:p-4 shadow-xs hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden relative bg-slate-100 shrink-0">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden relative bg-slate-100 dark:bg-slate-800 shrink-0">
                         <Image
                           src={item.img}
                           alt={item.dishName}
@@ -853,22 +853,22 @@ export default function ClicBouffePlatform() {
                             {item.portions} portion(s)
                           </span>
                         </div>
-                        <h3 className="font-bold text-slate-900 text-sm sm:text-base mt-1">
+                        <h3 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-1">
                           {item.dishName}
                         </h3>
-                        <p className="text-xs text-slate-500">
-                          Restau : <span className="font-semibold text-slate-700">{item.restaurantName}</span>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          Restau : <span className="font-semibold text-slate-700 dark:text-slate-300">{item.restaurantName}</span>
                         </p>
                         {item.instructions && (
-                          <p className="text-[11px] text-slate-500 italic mt-0.5">
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 italic mt-0.5">
                             &ldquo;{item.instructions}&rdquo;
                           </p>
                         )}
                       </div>
                     </div>
 
-                    <div className="flex sm:flex-col items-center sm:items-end justify-between border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100 gap-2">
-                      <p className="text-sm sm:text-base font-bold text-slate-900">
+                    <div className="flex sm:flex-col items-center sm:items-end justify-between border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100 dark:border-slate-800 gap-2">
+                      <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
                         {item.price}
                       </p>
                       <div className="flex items-center gap-1.5">
@@ -877,7 +877,7 @@ export default function ClicBouffePlatform() {
                             hapticFeedback("light");
                             alert(`Créneau modifié avec succès pour ${item.dishName} !`);
                           }}
-                          className="px-2.5 py-1 text-xs font-semibold text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+                          className="px-2.5 py-1 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                         >
                           Modifier créneau
                         </button>
@@ -886,7 +886,7 @@ export default function ClicBouffePlatform() {
                             hapticFeedback("medium");
                             setScheduledDishes((prev) => prev.filter((d) => d.id !== item.id));
                           }}
-                          className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
+                          className="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors"
                           aria-label="Supprimer la programmation"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -898,13 +898,13 @@ export default function ClicBouffePlatform() {
               </div>
 
               {/* Rappel Grille de Livraison Officielle */}
-              <div className="bg-slate-100/80 rounded-2xl p-3.5 border border-slate-200 text-xs text-slate-600 flex items-start gap-2.5">
+              <div className="bg-slate-100/80 dark:bg-slate-900/80 rounded-2xl p-3.5 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300 flex items-start gap-2.5 transition-colors">
                 <Info className="w-4 h-4 text-[#00AFF2] shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-bold text-slate-800">
+                  <p className="font-bold text-slate-800 dark:text-slate-200">
                     Tarifs de livraison officiels pour vos commandes programmées :
                   </p>
-                  <p className="mt-0.5 text-slate-500">
+                  <p className="mt-0.5 text-slate-500 dark:text-slate-400">
                     1 à 2 plats = <strong>80 FCFA</strong> • 3 à 5 plats = <strong>130 FCFA</strong> • 6 à 10 plats = <strong>170 FCFA</strong> • Plus de 10 plats = <strong>Gratuit (0 FCFA)</strong>.
                   </p>
                 </div>
@@ -918,22 +918,22 @@ export default function ClicBouffePlatform() {
           {currentScreen === "abonnements" && (
             <main className="flex-1 w-full max-w-4xl mx-auto p-3 sm:p-6 space-y-4 pb-36 sm:pb-40">
               {/* En-tête */}
-              <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors">
                 <div>
                   <div className="flex items-center gap-1.5 text-xs font-bold text-[#00AFF2] uppercase tracking-wide">
                     <CalendarNavIcon active className="w-4 h-4" />
                     <span>Gestion des abonnements</span>
                   </div>
-                  <h2 className="text-lg sm:text-xl font-black text-slate-900 mt-0.5">
+                  <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white mt-0.5">
                     Mes Abonnements & Formules Repas
                   </h2>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Vos plats et restaurants réguliers livrés automatiquement à créneau fixe.
                   </p>
                 </div>
 
                 {/* Switcher Onglets Mes Abos vs Découvrir */}
-                <div className="flex items-center p-1 bg-slate-100 rounded-xl">
+                <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
                   <button
                     onClick={() => {
                       hapticFeedback("light");
@@ -941,8 +941,8 @@ export default function ClicBouffePlatform() {
                     }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                       activeSubTab === "active"
-                        ? "bg-white text-slate-900 shadow-xs"
-                        : "text-slate-600 hover:text-slate-900"
+                        ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                     }`}
                   >
                     Actifs ({subscriptions.filter((s) => s.status === "actif").length})
@@ -954,8 +954,8 @@ export default function ClicBouffePlatform() {
                     }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                       activeSubTab === "discover"
-                        ? "bg-white text-slate-900 shadow-xs"
-                        : "text-slate-600 hover:text-slate-900"
+                        ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs"
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                     }`}
                   >
                     Formules ({AVAILABLE_FORMULAS.length})
@@ -968,10 +968,10 @@ export default function ClicBouffePlatform() {
                   {subscriptions.map((sub) => (
                     <div
                       key={sub.id}
-                      className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-start justify-between gap-4"
+                      className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-4 shadow-xs hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-start justify-between gap-4"
                     >
                       <div className="flex items-start gap-3">
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden relative bg-slate-100 shrink-0">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden relative bg-slate-100 dark:bg-slate-800 shrink-0">
                           <Image
                             src={sub.img}
                             alt={sub.title}
@@ -984,8 +984,8 @@ export default function ClicBouffePlatform() {
                             <span
                               className={`px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1.5 ${
                                 sub.status === "actif"
-                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60"
-                                  : "bg-amber-50 text-amber-700 border border-amber-200/60"
+                                  ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800"
+                                  : "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800"
                               }`}
                             >
                               <span
@@ -995,24 +995,24 @@ export default function ClicBouffePlatform() {
                               />
                               <span>{sub.status === "actif" ? "Actif" : "En pause"}</span>
                             </span>
-                            <span className="text-[10px] text-slate-400 font-medium">
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
                               {sub.renewalDate}
                             </span>
                           </div>
-                          <h3 className="font-bold text-slate-900 text-sm sm:text-base mt-1">
+                          <h3 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base mt-1">
                             {sub.title}
                           </h3>
-                          <p className="text-xs font-semibold text-slate-700">
+                          <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                             {sub.targetName}
                           </p>
-                          <p className="text-xs text-slate-500 mt-0.5">
-                            Restau : <span className="font-semibold">{sub.providerName}</span> • Créneau : <span className="font-semibold text-slate-700">{sub.frequency} à {sub.scheduledTime}</span>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                            Restau : <span className="font-semibold text-slate-700 dark:text-slate-300">{sub.providerName}</span> • Créneau : <span className="font-semibold text-slate-700 dark:text-slate-300">{sub.frequency} à {sub.scheduledTime}</span>
                           </p>
 
                           {sub.benefits && (
                             <ul className="mt-2 space-y-0.5">
                               {sub.benefits.map((b) => (
-                                <li key={b} className="text-[11px] text-slate-600 flex items-center gap-1.5">
+                                <li key={b} className="text-[11px] text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
                                   <Check className="w-3 h-3 text-[#00AFF2]" />
                                   <span>{b}</span>
                                 </li>
@@ -1022,8 +1022,8 @@ export default function ClicBouffePlatform() {
                         </div>
                       </div>
 
-                      <div className="flex sm:flex-col items-center sm:items-end justify-between border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100 gap-3">
-                        <p className="text-sm sm:text-base font-bold text-slate-900">
+                      <div className="flex sm:flex-col items-center sm:items-end justify-between border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100 dark:border-slate-800 gap-3">
+                        <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
                           {sub.pricePerPeriod}
                         </p>
                         <div className="flex items-center gap-2">
@@ -1040,8 +1040,8 @@ export default function ClicBouffePlatform() {
                             }}
                             className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-colors ${
                               sub.status === "actif"
-                                ? "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200"
-                                : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200"
+                                ? "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200 dark:border-amber-800"
+                                : "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800"
                             }`}
                           >
                             {sub.status === "actif" ? "Mettre en pause" : "Reprendre"}
@@ -1051,7 +1051,7 @@ export default function ClicBouffePlatform() {
                               hapticFeedback("light");
                               alert(`Options d'abonnement pour ${sub.title} modifiées !`);
                             }}
-                            className="px-3 py-1.5 text-xs font-semibold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors"
+                            className="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                           >
                             Gérer
                           </button>
@@ -1065,22 +1065,22 @@ export default function ClicBouffePlatform() {
                   {AVAILABLE_FORMULAS.map((formula) => (
                     <div
                       key={formula.id}
-                      className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs hover:shadow-md hover:border-[#00AFF2] transition-all flex flex-col justify-between"
+                      className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-4 shadow-xs hover:shadow-md hover:border-[#00AFF2] dark:hover:border-[#00AFF2] transition-all flex flex-col justify-between"
                     >
                       <div>
-                        <span className="px-2 py-0.5 rounded-full bg-[#00AFF2]/10 text-[#00AFF2] text-[10px] font-bold">
+                        <span className="px-2 py-0.5 rounded-full bg-[#00AFF2]/10 dark:bg-[#00AFF2]/20 text-[#00AFF2] text-[10px] font-bold">
                           {formula.badge}
                         </span>
-                        <h3 className="font-bold text-slate-900 text-base mt-2">
+                        <h3 className="font-bold text-slate-900 dark:text-white text-base mt-2">
                           {formula.title}
                         </h3>
-                        <p className="text-xs text-slate-500 mt-1">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                           {formula.description}
                         </p>
-                        <p className="text-lg font-black text-slate-900 mt-3">
+                        <p className="text-lg font-black text-slate-900 dark:text-white mt-3">
                           {formula.price}
                         </p>
-                        <ul className="mt-3 space-y-1 text-xs text-slate-600">
+                        <ul className="mt-3 space-y-1 text-xs text-slate-600 dark:text-slate-300">
                           {formula.features.map((f) => (
                             <li key={f} className="flex items-center gap-1.5">
                               <Check className="w-3.5 h-3.5 text-[#00AFF2]" />
@@ -1229,22 +1229,22 @@ export default function ClicBouffePlatform() {
       {/* ============================================================== */}
       {showFreeFoodModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-white rounded-3xl w-full max-w-xs sm:max-w-sm p-6 relative shadow-2xl text-center animate-scaleUp">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-xs sm:max-w-sm p-6 relative shadow-2xl text-center animate-scaleUp border border-slate-100 dark:border-slate-800 text-slate-900 dark:text-white transition-colors">
             <button
               onClick={() => setShowFreeFoodModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
               aria-label="Fermer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h3 className="text-base font-black text-black tracking-wider uppercase mt-1">
+            <h3 className="text-base font-black text-black dark:text-white tracking-wider uppercase mt-1">
               BOUFFE GRATUITE
             </h3>
 
             <div className="my-5 flex flex-col items-center">
               <div className="relative w-28 h-24 flex items-center justify-center">
-                <div className="w-20 h-20 bg-sky-50 rounded-2xl flex items-center justify-center text-[#00AFF2] border border-sky-100">
+                <div className="w-20 h-20 bg-sky-50 dark:bg-sky-950/40 rounded-2xl flex items-center justify-center text-[#00AFF2] border border-sky-100 dark:border-sky-900/50">
                   <Gift className="w-12 h-12 stroke-[1.8]" />
                 </div>
                 <span className="absolute -top-1 -right-1 px-2.5 py-1 bg-[#00AFF2] text-white rounded-full text-[9px] font-black tracking-wide shadow-sm">
@@ -1253,7 +1253,7 @@ export default function ClicBouffePlatform() {
               </div>
             </div>
 
-            <p className="text-xs text-slate-600 leading-relaxed px-2">
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed px-2">
               Profitez d&apos;une bouffe 100% gratuite comme cadeau de bienvenu. Faites votre premier pas gratuitement dans un monde libre en civilisation culinaire.
             </p>
 
@@ -1275,24 +1275,24 @@ export default function ClicBouffePlatform() {
       {/* 5. ÉCRAN CHOIX BOUFFE GRATUITE (Captures 151956, 152219, 152403) */}
       {/* ============================================================== */}
       {currentScreen === "free_food" && (
-        <div className="min-h-screen w-full bg-white flex flex-col justify-between">
-          <header className="p-4 border-b border-slate-100 sticky top-0 bg-white z-20 pt-safe">
+        <div className="min-h-screen w-full bg-white dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col justify-between transition-colors">
+          <header className="p-4 border-b border-slate-100 dark:border-slate-800 sticky top-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md z-20 pt-safe transition-colors">
             <div className="max-w-4xl mx-auto flex items-center gap-3">
               <button
                 onClick={() => setScreen("home")}
-                className="p-1 text-black hover:text-[#00AFF2]"
+                className="p-1 text-black dark:text-white hover:text-[#00AFF2]"
                 aria-label="Retour"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
-              <h2 className="text-xs sm:text-sm font-black text-black uppercase tracking-tight">
+              <h2 className="text-xs sm:text-sm font-black text-black dark:text-white uppercase tracking-tight">
                 Choix de la bouffe gratuite
               </h2>
             </div>
           </header>
 
           <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 space-y-4 pb-36 sm:pb-40">
-            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
               Vous pouvez choisir une seule bouffe gratuite. Pour recevoir votre bouffe choisie, il ne vous suffira que de payer la livraison de cette dernière.{" "}
               <span
                 onClick={() => setShowDeliveryRatesModal(true)}
@@ -1324,12 +1324,12 @@ export default function ClicBouffePlatform() {
                       onClick={() => toggleSelectDish(dish)}
                       className={`rounded-2xl border p-2 flex flex-col items-center justify-between text-center cursor-pointer transition-all ${
                         isSelected
-                          ? "border-[#00AFF2] bg-sky-50/20 ring-2 ring-[#00AFF2]/30"
-                          : "border-slate-200 bg-white"
+                          ? "border-[#00AFF2] bg-sky-50/20 dark:bg-sky-950/30 ring-2 ring-[#00AFF2]/30"
+                          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
                       }`}
                     >
                       {dish.isFree && (
-                        <span className="text-[10px] text-slate-400 self-start ml-1 font-medium">
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 self-start ml-1 font-medium">
                           Gratuit
                         </span>
                       )}
@@ -1341,7 +1341,7 @@ export default function ClicBouffePlatform() {
                           setPreviewDish(dish);
                           setShowDishPreviewModal(true);
                         }}
-                        className="w-24 sm:w-28 h-24 sm:h-28 relative my-1 rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center"
+                        className="w-24 sm:w-28 h-24 sm:h-28 relative my-1 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex items-center justify-center"
                       >
                         {dish.img ? (
                           <Image
@@ -1351,7 +1351,7 @@ export default function ClicBouffePlatform() {
                             className="object-cover"
                           />
                         ) : (
-                          <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                          <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
                             <Utensils className="w-6 h-6" />
                           </div>
                         )}
@@ -1361,7 +1361,7 @@ export default function ClicBouffePlatform() {
                         className={`w-full py-1.5 px-1 rounded-b-xl transition-colors ${
                           isSelected
                             ? "bg-[#00AFF2] text-white"
-                            : "bg-transparent text-slate-900"
+                            : "bg-transparent text-slate-900 dark:text-white"
                         }`}
                       >
                         <p className="text-xs font-bold truncate">{dish.name}</p>
@@ -1401,7 +1401,7 @@ export default function ClicBouffePlatform() {
               className={`px-6 py-3 rounded-full font-bold text-xs sm:text-sm shadow-xl flex items-center gap-2 transition-all active:scale-95 ${
                 selectedDishes.length > 0
                   ? "bg-[#00AFF2] hover:bg-[#009bd6] text-white cursor-pointer shadow-[#00AFF2]/40"
-                  : "bg-slate-300 text-slate-500 cursor-not-allowed"
+                  : "bg-slate-300 dark:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-not-allowed"
               }`}
             >
               <span>
@@ -1420,35 +1420,35 @@ export default function ClicBouffePlatform() {
       {/* ============================================================== */}
       {showDeliveryRatesModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-white rounded-3xl w-full max-w-xs sm:max-w-sm p-6 relative shadow-2xl text-center animate-scaleUp">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-xs sm:max-w-sm p-6 relative shadow-2xl text-center animate-scaleUp border border-slate-100 dark:border-slate-800 text-slate-900 dark:text-white transition-colors">
             <button
               onClick={() => setShowDeliveryRatesModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
               aria-label="Fermer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h3 className="text-sm font-black text-black tracking-wider uppercase mb-5">
+            <h3 className="text-sm font-black text-black dark:text-white tracking-wider uppercase mb-5">
               TARIF DE LIVRAISON
             </h3>
 
-            <div className="divide-y divide-slate-100 text-xs sm:text-sm">
+            <div className="divide-y divide-slate-100 dark:divide-slate-800 text-xs sm:text-sm">
               <div className="py-2.5 flex justify-between">
-                <span className="text-slate-600">Entre 1F et 200F</span>
-                <span className="font-bold text-slate-900">80 F CFA</span>
+                <span className="text-slate-600 dark:text-slate-400">Entre 1F et 200F</span>
+                <span className="font-bold text-slate-900 dark:text-white">80 F CFA</span>
               </div>
               <div className="py-2.5 flex justify-between">
-                <span className="text-slate-600">Entre 03 et 05 plats</span>
-                <span className="font-bold text-slate-900">130 F CFA</span>
+                <span className="text-slate-600 dark:text-slate-400">Entre 03 et 05 plats</span>
+                <span className="font-bold text-slate-900 dark:text-white">130 F CFA</span>
               </div>
               <div className="py-2.5 flex justify-between">
-                <span className="text-slate-600">Entre 06 et 10 plats</span>
-                <span className="font-bold text-slate-900">170 F CFA</span>
+                <span className="text-slate-600 dark:text-slate-400">Entre 06 et 10 plats</span>
+                <span className="font-bold text-slate-900 dark:text-white">170 F CFA</span>
               </div>
               <div className="py-2.5 flex justify-between">
-                <span className="text-slate-600">Plus de 10 plats</span>
-                <span className="font-bold text-emerald-600">Gratuit</span>
+                <span className="text-slate-600 dark:text-slate-400">Plus de 10 plats</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">Gratuit</span>
               </div>
             </div>
 
@@ -1468,8 +1468,8 @@ export default function ClicBouffePlatform() {
       {/* ============================================================== */}
       {showDishPreviewModal && previewDish && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-white rounded-3xl w-full max-w-xs sm:max-w-sm overflow-hidden shadow-2xl animate-scaleUp">
-            <div className="relative h-52 bg-slate-100">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-xs sm:max-w-sm overflow-hidden shadow-2xl animate-scaleUp border border-slate-100 dark:border-slate-800 text-slate-900 dark:text-white transition-colors">
+            <div className="relative h-52 bg-slate-100 dark:bg-slate-800">
               {previewDish.img ? (
                 <Image
                   src={previewDish.img}
@@ -1497,9 +1497,9 @@ export default function ClicBouffePlatform() {
             </div>
 
             <div className="p-5 text-center">
-              <h3 className="text-lg font-black text-slate-900">{previewDish.name}</h3>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">{previewDish.name}</h3>
               <p className="text-base font-bold text-[#00AFF2] mt-1">{previewDish.price}</p>
-              <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
                 Préparé avec des ingrédients frais du terroir béninois selon la recette traditionnelle. Livré chaud et prêt à déguster chez vous à Akpakpa.
               </p>
 
@@ -1525,10 +1525,10 @@ export default function ClicBouffePlatform() {
       {/* ============================================================== */}
       {showScheduleModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-white rounded-3xl w-full max-w-sm sm:max-w-md p-5 relative shadow-2xl animate-scaleUp max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-sm sm:max-w-md p-5 relative shadow-2xl animate-scaleUp max-h-[90vh] overflow-y-auto border border-slate-100 dark:border-slate-800 text-slate-900 dark:text-white transition-colors">
             <button
               onClick={() => setShowScheduleModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
               aria-label="Fermer"
             >
               <X className="w-5 h-5" />
@@ -1536,18 +1536,18 @@ export default function ClicBouffePlatform() {
 
             <div className="flex items-center gap-2 text-[#00AFF2] mb-1">
               <ClockNavIcon active className="w-5 h-5" />
-              <h3 className="text-base font-black text-slate-900">
+              <h3 className="text-base font-black text-slate-900 dark:text-white">
                 Programmer un plat pour plus tard
               </h3>
             </div>
-            <p className="text-xs text-slate-500 mb-4">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
               Choisissez le plat et l&apos;heure à laquelle vous souhaitez être livré.
             </p>
 
             <div className="space-y-3.5 text-xs">
               {/* Choix du plat */}
               <div>
-                <label className="font-bold text-slate-700 block mb-1.5">
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
                   1. Sélectionner le plat :
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -1558,16 +1558,16 @@ export default function ClicBouffePlatform() {
                       onClick={() => setScheduleDishChoice(d)}
                       className={`p-2 rounded-xl border text-left flex items-center gap-2 transition-all ${
                         scheduleDishChoice.id === d.id
-                          ? "border-[#00AFF2] bg-sky-50 text-[#00AFF2] font-bold"
-                          : "border-slate-200 text-slate-700"
+                          ? "border-[#00AFF2] bg-sky-50 dark:bg-sky-950/40 text-[#00AFF2] font-bold"
+                          : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200"
                       }`}
                     >
-                      <div className="w-10 h-10 rounded-lg relative overflow-hidden bg-slate-100 shrink-0">
+                      <div className="w-10 h-10 rounded-lg relative overflow-hidden bg-slate-100 dark:bg-slate-700 shrink-0">
                         <Image src={d.img} alt={d.name} fill className="object-cover" />
                       </div>
                       <div className="truncate">
-                        <p className="text-xs truncate">{d.name}</p>
-                        <p className="text-[10px] text-slate-500">{d.price}</p>
+                        <p className="text-xs truncate text-slate-900 dark:text-white">{d.name}</p>
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400">{d.price}</p>
                       </div>
                     </button>
                   ))}
@@ -1576,7 +1576,7 @@ export default function ClicBouffePlatform() {
 
               {/* Choix du jour */}
               <div>
-                <label className="font-bold text-slate-700 block mb-1.5">
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
                   2. Jour de livraison :
                 </label>
                 <div className="flex items-center gap-2 overflow-x-auto pb-1">
@@ -1588,7 +1588,7 @@ export default function ClicBouffePlatform() {
                       className={`px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap transition-all ${
                         scheduleDay === day
                           ? "bg-[#00AFF2] text-white"
-                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
                       }`}
                     >
                       {day}
@@ -1599,7 +1599,7 @@ export default function ClicBouffePlatform() {
 
               {/* Choix de l'heure */}
               <div>
-                <label className="font-bold text-slate-700 block mb-1.5">
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
                   3. Heure souhaitée :
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -1611,7 +1611,7 @@ export default function ClicBouffePlatform() {
                       className={`py-1.5 px-2 rounded-lg font-semibold text-center transition-all ${
                         scheduleHour === h
                           ? "bg-[#00AFF2] text-white"
-                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
                       }`}
                     >
                       {h}
@@ -1622,22 +1622,22 @@ export default function ClicBouffePlatform() {
 
               {/* Portions */}
               <div>
-                <label className="font-bold text-slate-700 block mb-1.5">
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
                   4. Portions :
                 </label>
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
                     onClick={() => setSchedulePortions(Math.max(1, schedulePortions - 1))}
-                    className="w-8 h-8 rounded-lg bg-slate-100 font-bold text-slate-700 hover:bg-slate-200"
+                    className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700"
                   >
                     -
                   </button>
-                  <span className="font-bold text-sm">{schedulePortions}</span>
+                  <span className="font-bold text-sm text-slate-900 dark:text-white">{schedulePortions}</span>
                   <button
                     type="button"
                     onClick={() => setSchedulePortions(schedulePortions + 1)}
-                    className="w-8 h-8 rounded-lg bg-slate-100 font-bold text-slate-700 hover:bg-slate-200"
+                    className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700"
                   >
                     +
                   </button>
@@ -1646,7 +1646,7 @@ export default function ClicBouffePlatform() {
 
               {/* Instructions */}
               <div>
-                <label className="font-bold text-slate-700 block mb-1.5">
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
                   5. Instructions particulières (Optionnel) :
                 </label>
                 <input
@@ -1654,7 +1654,7 @@ export default function ClicBouffePlatform() {
                   placeholder="Ex : sans piment, sauce à part..."
                   value={scheduleNote}
                   onChange={(e) => setScheduleNote(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl outline-none focus:border-[#00AFF2]"
+                  className="w-full px-3 py-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-slate-900 dark:text-white focus:border-[#00AFF2]"
                 />
               </div>
 
@@ -1691,18 +1691,18 @@ export default function ClicBouffePlatform() {
       {/* 9. ÉCRAN COMPOSER SON PLAT (+ FAB) */}
       {/* ============================================================== */}
       {currentScreen === "compose_dish" && (
-        <div className="min-h-screen w-full bg-white flex flex-col justify-between">
-          <header className="p-4 border-b border-slate-100 sticky top-0 bg-white z-20 pt-safe">
+        <div className="min-h-screen w-full bg-white dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col justify-between transition-colors">
+          <header className="p-4 border-b border-slate-100 dark:border-slate-800 sticky top-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md z-20 pt-safe transition-colors">
             <div className="max-w-2xl mx-auto flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setScreen("home")}
-                  className="p-1 text-black hover:text-[#00AFF2]"
+                  className="p-1 text-black dark:text-white hover:text-[#00AFF2]"
                   aria-label="Retour"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </button>
-                <h2 className="text-sm sm:text-base font-bold text-black">Composer son plat</h2>
+                <h2 className="text-sm sm:text-base font-bold text-black dark:text-white">Composer son plat</h2>
               </div>
               <span className="text-xs font-bold text-[#00AFF2]">Sur-mesure</span>
             </div>
@@ -1711,7 +1711,7 @@ export default function ClicBouffePlatform() {
           <main className="flex-1 max-w-2xl w-full mx-auto p-4 sm:p-6 space-y-6 pb-36 sm:pb-40 text-xs sm:text-sm">
             {/* 1. Base */}
             <div>
-              <p className="font-bold text-slate-900 mb-2">1. Choisir votre pâte / base (Obligatoire)</p>
+              <p className="font-bold text-slate-900 dark:text-white mb-2">1. Choisir votre pâte / base (Obligatoire)</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {[
                   { name: "Pâte noire", price: 500 },
@@ -1730,12 +1730,12 @@ export default function ClicBouffePlatform() {
                     }}
                     className={`p-3 rounded-xl border flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${
                       composeBase === b.name
-                        ? "border-[#00AFF2] bg-sky-50 text-[#00AFF2] font-bold"
-                        : "border-slate-200"
+                        ? "border-[#00AFF2] bg-sky-50 dark:bg-sky-950/40 text-[#00AFF2] font-bold"
+                        : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200"
                     }`}
                   >
                     <span>{b.name}</span>
-                    <span className="text-[11px] text-slate-500 mt-0.5">{b.price} FCFA</span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{b.price} FCFA</span>
                   </div>
                 ))}
               </div>
@@ -1743,7 +1743,7 @@ export default function ClicBouffePlatform() {
 
             {/* 2. Sauce */}
             <div>
-              <p className="font-bold text-slate-900 mb-2">2. Choisir la sauce</p>
+              <p className="font-bold text-slate-900 dark:text-white mb-2">2. Choisir la sauce</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {["Sauce Gombo crincrin", "Sauce Graine", "Sauce Tomate pimentée", "Sauce Légume", "Sauce d'arachide"].map((s) => (
                   <div
@@ -1754,8 +1754,8 @@ export default function ClicBouffePlatform() {
                     }}
                     className={`p-2.5 rounded-xl border text-center cursor-pointer transition-colors ${
                       composeSauce === s
-                        ? "border-[#00AFF2] bg-sky-50 text-[#00AFF2] font-bold"
-                        : "border-slate-200"
+                        ? "border-[#00AFF2] bg-sky-50 dark:bg-sky-950/40 text-[#00AFF2] font-bold"
+                        : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200"
                     }`}
                   >
                     <span>{s}</span>
@@ -1766,7 +1766,7 @@ export default function ClicBouffePlatform() {
 
             {/* 3. Protéines */}
             <div>
-              <p className="font-bold text-slate-900 mb-2">3. Protéines / Garnitures</p>
+              <p className="font-bold text-slate-900 dark:text-white mb-2">3. Protéines / Garnitures</p>
               <div className="space-y-2">
                 {[
                   { name: "Poisson braisé", price: 500 },
@@ -1788,8 +1788,8 @@ export default function ClicBouffePlatform() {
                       }}
                       className={`p-3 rounded-xl border flex justify-between items-center cursor-pointer transition-colors ${
                         has
-                          ? "border-[#00AFF2] bg-sky-50/50 text-[#00AFF2] font-bold"
-                          : "border-slate-200"
+                          ? "border-[#00AFF2] bg-sky-50/50 dark:bg-sky-950/40 text-[#00AFF2] font-bold"
+                          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200"
                       }`}
                     >
                       <span>{p.name}</span>
@@ -1802,7 +1802,7 @@ export default function ClicBouffePlatform() {
 
             {/* 4. Suppléments */}
             <div>
-              <p className="font-bold text-slate-900 mb-2">4. Suppléments (Optionnel)</p>
+              <p className="font-bold text-slate-900 dark:text-white mb-2">4. Suppléments (Optionnel)</p>
               <div className="space-y-2">
                 {[
                   { name: "Alloco doré", price: 400 },
@@ -1823,8 +1823,8 @@ export default function ClicBouffePlatform() {
                       }}
                       className={`p-3 rounded-xl border flex justify-between items-center cursor-pointer transition-colors ${
                         has
-                          ? "border-[#00AFF2] bg-sky-50/50 text-[#00AFF2] font-bold"
-                          : "border-slate-200"
+                          ? "border-[#00AFF2] bg-sky-50/50 dark:bg-sky-950/40 text-[#00AFF2] font-bold"
+                          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200"
                       }`}
                     >
                       <span>{extra.name}</span>
@@ -1836,10 +1836,10 @@ export default function ClicBouffePlatform() {
             </div>
           </main>
 
-          <div className="fixed bottom-0 inset-x-0 p-3 bg-white border-t border-slate-200 z-20 pb-safe">
+          <div className="fixed bottom-0 inset-x-0 p-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-20 pb-safe transition-colors">
             <div className="max-w-2xl mx-auto flex items-center justify-between">
               <div>
-                <span className="text-[10px] sm:text-xs text-slate-500">Total estimé :</span>
+                <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">Total estimé :</span>
                 <p className="text-sm sm:text-base font-bold text-[#00AFF2]">
                   {composeTotal} FCFA
                 </p>
@@ -1872,20 +1872,20 @@ export default function ClicBouffePlatform() {
       {/* 10. ÉCRAN FINALISATION / CHECKOUT (Capture 152446.jpg) */}
       {/* ============================================================== */}
       {currentScreen === "checkout" && (
-        <div className="min-h-screen w-full bg-white flex flex-col justify-between">
-          <header className="p-4 border-b border-slate-100 sticky top-0 bg-white z-20 pt-safe">
+        <div className="min-h-screen w-full bg-white dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col justify-between transition-colors">
+          <header className="p-4 border-b border-slate-100 dark:border-slate-800 sticky top-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md z-20 pt-safe transition-colors">
             <div className="max-w-2xl mx-auto flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setScreen("free_food")}
-                  className="p-1 text-black hover:text-[#00AFF2]"
+                  className="p-1 text-slate-900 dark:text-white hover:text-[#00AFF2]"
                   aria-label="Retour"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </button>
-                <h2 className="text-sm sm:text-base font-bold text-black">Finalisation</h2>
+                <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Finalisation</h2>
               </div>
-              <span className="px-3 py-1 bg-sky-100 text-[#00AFF2] rounded-full text-xs font-bold flex items-center gap-1">
+              <span className="px-3 py-1 bg-sky-100 dark:bg-sky-950/50 text-[#00AFF2] rounded-full text-xs font-bold flex items-center gap-1">
                 <Plus className="w-3 h-3 stroke-[3]" />
                 <span>0 F</span>
               </span>
@@ -1894,7 +1894,7 @@ export default function ClicBouffePlatform() {
 
           <main className="flex-1 max-w-2xl w-full mx-auto p-4 sm:p-6 space-y-4 pb-36 sm:pb-40">
             {/* Étape 1 : Plats */}
-            <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
               <div
                 onClick={() => setExpandedStep(expandedStep === 1 ? 2 : 1)}
                 className="bg-[#00AFF2] text-white p-3 flex items-center justify-between text-xs sm:text-sm font-bold cursor-pointer"
@@ -1915,11 +1915,11 @@ export default function ClicBouffePlatform() {
               </div>
 
               {expandedStep === 1 && (
-                <div className="p-4 bg-white flex items-center gap-3 overflow-x-auto">
+                <div className="p-4 bg-white dark:bg-slate-900 flex items-center gap-3 overflow-x-auto">
                   {selectedDishes.map((dish) => (
                     <div
                       key={dish.id}
-                      className="relative w-28 shrink-0 rounded-xl border border-slate-200 overflow-hidden shadow-xs text-center p-1 bg-white"
+                      className="relative w-28 shrink-0 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs text-center p-1 bg-white dark:bg-slate-850"
                     >
                       <button
                         onClick={() => toggleSelectDish(dish)}
@@ -1928,7 +1928,7 @@ export default function ClicBouffePlatform() {
                       >
                         <X className="w-3 h-3" />
                       </button>
-                      <div className="w-full h-16 relative my-1 rounded-lg overflow-hidden bg-slate-100">
+                      <div className="w-full h-16 relative my-1 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800">
                         <Image
                           src={dish.img}
                           alt={dish.name}
@@ -1936,8 +1936,8 @@ export default function ClicBouffePlatform() {
                           className="object-cover"
                         />
                       </div>
-                      <p className="text-[11px] font-bold truncate">{dish.name}</p>
-                      <p className="text-[10px] text-slate-500">
+                      <p className="text-[11px] font-bold text-slate-900 dark:text-white truncate">{dish.name}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400">
                         {dish.isFree && selectedDishes.findIndex((d) => d.id === dish.id) === 0
                           ? "0 F CFA (Offert)"
                           : dish.price}
@@ -1946,7 +1946,7 @@ export default function ClicBouffePlatform() {
                   ))}
                   <button
                     onClick={() => setScreen("free_food")}
-                    className="w-20 h-24 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center text-slate-400 hover:border-[#00AFF2] hover:text-[#00AFF2] shrink-0 text-xs gap-1"
+                    className="w-20 h-24 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:border-[#00AFF2] hover:text-[#00AFF2] shrink-0 text-xs gap-1"
                   >
                     <Plus className="w-5 h-5" />
                     <span>Ajouter</span>
@@ -1956,13 +1956,13 @@ export default function ClicBouffePlatform() {
             </div>
 
             {/* Étape 2 : Destinataire */}
-            <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
               <div
                 onClick={() => setExpandedStep(expandedStep === 2 ? 3 : 2)}
-                className="bg-white text-slate-800 p-3 flex items-center justify-between text-xs sm:text-sm font-bold cursor-pointer border-b border-slate-100"
+                className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 p-3 flex items-center justify-between text-xs sm:text-sm font-bold cursor-pointer border-b border-slate-100 dark:border-slate-800"
               >
                 <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center text-[11px] font-black">
+                  <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center text-[11px] font-black">
                     2
                   </span>
                   <span>Destinataire : {recipient}</span>
@@ -1975,7 +1975,7 @@ export default function ClicBouffePlatform() {
               </div>
 
               {expandedStep === 2 && (
-                <div className="p-4 bg-white space-y-2 text-xs">
+                <div className="p-4 bg-white dark:bg-slate-900 space-y-2 text-xs">
                   {["Moi seul(e)", "Offrir à un proche", "Groupe d'amis"].map((r) => (
                     <div
                       key={r}
@@ -1985,8 +1985,8 @@ export default function ClicBouffePlatform() {
                       }}
                       className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer ${
                         recipient === r
-                          ? "border-[#00AFF2] bg-sky-50 text-[#00AFF2] font-bold"
-                          : "border-slate-200 text-slate-700"
+                          ? "border-[#00AFF2] bg-sky-50 dark:bg-sky-950/40 text-[#00AFF2] font-bold"
+                          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-850 text-slate-700 dark:text-slate-300"
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -2001,13 +2001,13 @@ export default function ClicBouffePlatform() {
             </div>
 
             {/* Étape 3 : Adresse & Paiement */}
-            <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
               <div
                 onClick={() => setExpandedStep(expandedStep === 3 ? 1 : 3)}
-                className="bg-white text-slate-800 p-3 flex items-center justify-between text-xs sm:text-sm font-bold cursor-pointer"
+                className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 p-3 flex items-center justify-between text-xs sm:text-sm font-bold cursor-pointer"
               >
                 <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center text-[11px] font-black">
+                  <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center text-[11px] font-black">
                     3
                   </span>
                   <span>Adresse & Mode de Paiement</span>
@@ -2020,31 +2020,31 @@ export default function ClicBouffePlatform() {
               </div>
 
               {expandedStep === 3 && (
-                <div className="p-4 bg-white space-y-4 text-xs">
+                <div className="p-4 bg-white dark:bg-slate-900 space-y-4 text-xs">
                   <div>
-                    <label className="font-bold text-slate-700 block mb-1">
+                    <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
                       Adresse de livraison à Akpakpa :
                     </label>
-                    <div className="flex items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                    <div className="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
                       <MapPin className="w-4 h-4 text-[#00AFF2]" />
-                      <span className="font-medium text-slate-800">{deliveryAddress}</span>
+                      <span className="font-medium text-slate-800 dark:text-slate-200">{deliveryAddress}</span>
                     </div>
                   </div>
 
                   <div>
-                    <label className="font-bold text-slate-700 block mb-1.5">
+                    <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
                       Mode de paiement sécurisé :
                     </label>
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="p-3 border-2 border-[#00AFF2] bg-sky-50/40 rounded-xl text-center font-bold text-slate-900 cursor-pointer">
+                      <div className="p-3 border-2 border-[#00AFF2] bg-sky-50/40 dark:bg-sky-950/40 rounded-xl text-center font-bold text-slate-900 dark:text-white cursor-pointer">
                         <p className="text-xs">MTN / Moov Money</p>
-                        <p className="text-[10px] text-emerald-600 font-semibold mt-0.5">
+                        <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">
                           Instantané (Bénin)
                         </p>
                       </div>
-                      <div className="p-3 border border-slate-200 rounded-xl text-center font-bold text-slate-500 hover:border-slate-300 cursor-pointer">
+                      <div className="p-3 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl text-center font-bold text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600 cursor-pointer">
                         <p className="text-xs">Paiement à la livraison</p>
-                        <p className="text-[10px] text-slate-400 mt-0.5">Espèces au livreur</p>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Espèces au livreur</p>
                       </div>
                     </div>
                   </div>
@@ -2053,12 +2053,12 @@ export default function ClicBouffePlatform() {
             </div>
 
             {/* Récapitulatif Tarifaire Officiel */}
-            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-2 text-xs">
-              <div className="flex justify-between text-slate-600">
+            <div className="bg-slate-50 dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
+              <div className="flex justify-between text-slate-600 dark:text-slate-400">
                 <span>Sous-total plats ({cartItemsCount})</span>
-                <span className="font-semibold text-slate-900">{formatFCFA(cartSubtotal)}</span>
+                <span className="font-semibold text-slate-900 dark:text-white">{formatFCFA(cartSubtotal)}</span>
               </div>
-              <div className="flex justify-between text-slate-600">
+              <div className="flex justify-between text-slate-600 dark:text-slate-400">
                 <span>
                   Frais de livraison (
                   {cartItemsCount <= 2
@@ -2070,11 +2070,11 @@ export default function ClicBouffePlatform() {
                     : ">10 plats"}
                   )
                 </span>
-                <span className="font-semibold text-slate-900">
+                <span className="font-semibold text-slate-900 dark:text-white">
                   {deliveryFee === 0 ? "Gratuit" : formatFCFA(deliveryFee)}
                 </span>
               </div>
-              <div className="border-t border-slate-200 pt-2 flex justify-between font-bold text-sm text-slate-900">
+              <div className="border-t border-slate-200 dark:border-slate-800 pt-2 flex justify-between font-bold text-sm text-slate-900 dark:text-white">
                 <span>Total à payer</span>
                 <span className="text-[#00AFF2] text-base font-black">
                   {formatFCFA(cartTotal)}
@@ -2083,10 +2083,10 @@ export default function ClicBouffePlatform() {
             </div>
           </main>
 
-          <div className="fixed bottom-0 inset-x-0 p-3 bg-white border-t border-slate-200 z-20 pb-safe">
+          <div className="fixed bottom-0 inset-x-0 p-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-20 pb-safe transition-colors">
             <div className="max-w-2xl mx-auto flex items-center justify-between">
               <div>
-                <span className="text-[10px] sm:text-xs text-slate-500">Montant net :</span>
+                <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">Montant net :</span>
                 <p className="text-sm sm:text-base font-black text-[#00AFF2]">
                   {formatFCFA(cartTotal)}
                 </p>
@@ -2108,21 +2108,21 @@ export default function ClicBouffePlatform() {
           {/* Modale Succès Commande */}
           {orderConfirmed && (
             <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fadeIn">
-              <div className="bg-white rounded-3xl w-full max-w-xs sm:max-w-sm p-6 text-center shadow-2xl animate-scaleUp">
-                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3">
+              <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-xs sm:max-w-sm p-6 text-center shadow-2xl animate-scaleUp border border-slate-100 dark:border-slate-800 text-slate-900 dark:text-white transition-colors">
+                <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-3">
                   <Sparkles className="w-8 h-8" />
                 </div>
-                <h3 className="text-lg font-black text-slate-900">
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">
                   Commande Confirmée !
                 </h3>
-                <p className="text-xs text-slate-600 mt-2 leading-relaxed">
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
                   Votre commande a été transmise aux restaurateurs partenaires d&apos;Akpakpa. Un livreur ClicBouffe se met en route dès que les plats sont chauds.
                 </p>
-                <div className="my-4 p-3 bg-slate-50 rounded-xl text-left text-xs space-y-1">
-                  <p className="font-semibold text-slate-800">
+                <div className="my-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl text-left text-xs space-y-1">
+                  <p className="font-semibold text-slate-800 dark:text-slate-200">
                     Livraison : {deliveryAddress}
                   </p>
-                  <p className="text-slate-600">Total : {formatFCFA(cartTotal)}</p>
+                  <p className="text-slate-600 dark:text-slate-400">Total : {formatFCFA(cartTotal)}</p>
                   <p className="text-[#00AFF2] font-bold">Délai estimé : 20 - 30 minutes</p>
                 </div>
                 <button
