@@ -15,7 +15,15 @@ export const metadata: Metadata = {
   description:
     "Commandez et composez vos plats favoris en quelques clics à Cotonou et partout au Bénin. Livraison rapide en FCFA.",
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.png", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
   },
 };
 

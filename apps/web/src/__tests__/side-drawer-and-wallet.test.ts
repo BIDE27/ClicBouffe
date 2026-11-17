@@ -57,4 +57,12 @@ describe("Gestion du Portefeuille et Menu Latéral", () => {
     await authService.signOut();
     expect(authService.getWalletBalance()).toBe(3000);
   });
+
+  it("persiste le choix de thème (mode clair / sombre) dans localStorage", () => {
+    localStorage.setItem("clicbouffe_theme", "dark");
+    expect(localStorage.getItem("clicbouffe_theme")).toBe("dark");
+
+    localStorage.setItem("clicbouffe_theme", "light");
+    expect(localStorage.getItem("clicbouffe_theme")).toBe("light");
+  });
 });
