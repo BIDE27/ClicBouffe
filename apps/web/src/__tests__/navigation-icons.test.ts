@@ -18,6 +18,7 @@ describe("Composants NavigationIcons (Pixel-Perfect & Découpe blanche d'arrièr
       const children = React.Children.toArray(element.props.children) as React.ReactElement<{
         d?: string;
         fill?: string;
+        className?: string;
       }>[];
       expect(children.length).toBe(2);
 
@@ -26,14 +27,18 @@ describe("Composants NavigationIcons (Pixel-Perfect & Découpe blanche d'arrièr
 
       // La porte intérieure doit être découpée à la couleur d'arrière-plan (blanc)
       expect(children[1].props.fill).toBe("white");
+      // Et contenir les classes Tailwind adaptatives mode clair / mode sombre (dark:fill-slate-900)
+      expect(children[1].props.className).toContain("dark:fill-slate-900");
     });
 
     it("supporte une couleur de découpe personnalisée si l'arrière-plan change", () => {
       const element = HomeNavIcon({ active: true, cutoutColor: "#F8FAFC" });
       const children = React.Children.toArray(element.props.children) as React.ReactElement<{
         fill?: string;
+        className?: string;
       }>[];
       expect(children[1].props.fill).toBe("#F8FAFC");
+      expect(children[1].props.className).toBeUndefined();
     });
 
     it("génère l'icône inactive en mode contour sans remplissage", () => {
@@ -48,9 +53,11 @@ describe("Composants NavigationIcons (Pixel-Perfect & Découpe blanche d'arrièr
       const element = ExplorerNavIcon({ active: true });
       const children = React.Children.toArray(element.props.children) as React.ReactElement<{
         fill?: string;
+        className?: string;
       }>[];
       expect(children[0].props.fill).toBe("#00AFF2");
       expect(children[1].props.fill).toBe("white");
+      expect(children[1].props.className).toContain("dark:fill-slate-900");
     });
 
     it("génère l'icône inactive en contour", () => {
@@ -66,10 +73,13 @@ describe("Composants NavigationIcons (Pixel-Perfect & Découpe blanche d'arrièr
       const children = React.Children.toArray(element.props.children) as React.ReactElement<{
         fill?: string;
         stroke?: string;
+        className?: string;
       }>[];
       expect(children[0].props.fill).toBe("#00AFF2");
       expect(children[1].props.stroke).toBe("white");
+      expect(children[1].props.className).toContain("dark:stroke-slate-900");
       expect(children[2].props.fill).toBe("white");
+      expect(children[2].props.className).toContain("dark:fill-slate-900");
     });
 
     it("génère l'icône inactive en contour", () => {
@@ -85,13 +95,17 @@ describe("Composants NavigationIcons (Pixel-Perfect & Découpe blanche d'arrièr
       const children = React.Children.toArray(element.props.children) as React.ReactElement<{
         fill?: string;
         stroke?: string;
+        className?: string;
       }>[];
       expect(children[0].props.fill).toBe("#00AFF2"); // Corps calendrier
       expect(children[1].props.stroke).toBe("white"); // Anneaux
+      expect(children[1].props.className).toContain("dark:stroke-slate-900");
       expect(children[2].props.stroke).toBe("white"); // Ligne de séparation
+      expect(children[2].props.className).toContain("dark:stroke-slate-900");
       // 6 points de date en blanc (exactement comme capture 4 de la maquette)
       for (let i = 3; i < 9; i++) {
         expect(children[i].props.fill).toBe("white");
+        expect(children[i].props.className).toContain("dark:fill-slate-900");
       }
     });
 

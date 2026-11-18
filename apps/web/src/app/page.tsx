@@ -1213,7 +1213,7 @@ export default function ClicBouffePlatform() {
                 />
                 <span
                   className={`text-[9px] transition-all ${
-                    activeNavTab === "abonnements" ? "font-bold text-[#00AFF2]" : "font-medium text-slate-600"
+                    activeNavTab === "abonnements" ? "font-bold text-[#00AFF2]" : "font-medium text-slate-600 dark:text-slate-400"
                   }`}
                 >
                   Abonnements

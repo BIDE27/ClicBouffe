@@ -8,7 +8,8 @@ interface NavIconProps {
 
 /**
  * Icône ACCUEIL Pixel-Perfect
- * - Actif : Maison remplie en bleu officiel (#00AFF2) avec porte découpée à la couleur d'arrière-plan (blanc).
+ * - Actif : Maison remplie en bleu officiel (#00AFF2) avec porte découpée à la couleur d'arrière-plan
+ *           (blanc en mode clair, dark:fill-slate-900 en mode sombre).
  * - Inactif : Contour épuré ardoise/gris (stroke 1.8-2).
  */
 export function HomeNavIcon({
@@ -17,6 +18,7 @@ export function HomeNavIcon({
   cutoutColor = "white",
 }: NavIconProps) {
   if (active) {
+    const isDefault = cutoutColor === "white";
     return (
       <svg
         className={className}
@@ -30,10 +32,11 @@ export function HomeNavIcon({
           d="M12 2.6L2.6 10.3a1 1 0 0 0-.25.7V20a2 2 0 0 0 2 2h15.3a2 2 0 0 0 2-2v-9a1 1 0 0 0-.25-.7L12 2.6z"
           fill="#00AFF2"
         />
-        {/* Porte intérieure découpée à la couleur d'arrière-plan (comme capture 2 de la maquette) */}
+        {/* Porte intérieure découpée à la couleur d'arrière-plan (adaptative clair / sombre) */}
         <path
           d="M9.5 22V13a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v9h-5z"
           fill={cutoutColor}
+          className={isDefault ? "fill-white dark:fill-slate-900 transition-colors" : undefined}
         />
       </svg>
     );
@@ -59,7 +62,8 @@ export function HomeNavIcon({
 
 /**
  * Icône EXPLORER Pixel-Perfect
- * - Actif : Disque rempli en bleu officiel (#00AFF2) avec aiguille de boussole découpée en blanc.
+ * - Actif : Disque rempli en bleu officiel (#00AFF2) avec aiguille de boussole découpée
+ *           (blanc en clair, dark:fill-slate-900 en sombre).
  * - Inactif : Contour boussole classique.
  */
 export function ExplorerNavIcon({
@@ -68,6 +72,7 @@ export function ExplorerNavIcon({
   cutoutColor = "white",
 }: NavIconProps) {
   if (active) {
+    const isDefault = cutoutColor === "white";
     return (
       <svg
         className={className}
@@ -78,10 +83,11 @@ export function ExplorerNavIcon({
       >
         {/* Disque boussole rempli en bleu */}
         <circle cx="12" cy="12" r="10" fill="#00AFF2" />
-        {/* Aiguille boussole en blanc */}
+        {/* Aiguille boussole en blanc ou fond sombre */}
         <polygon
           points="16.5 7.5 13.8 13.8 7.5 16.5 10.2 10.2 16.5 7.5"
           fill={cutoutColor}
+          className={isDefault ? "fill-white dark:fill-slate-900 transition-colors" : undefined}
         />
         {/* Pivot central bleu */}
         <circle cx="12" cy="12" r="1.4" fill="#00AFF2" />
@@ -109,7 +115,8 @@ export function ExplorerNavIcon({
 
 /**
  * Icône PLUS TARD (Horloge) Pixel-Perfect
- * - Actif : Cadran d'horloge rempli en bleu (#00AFF2) avec aiguilles découpées en blanc.
+ * - Actif : Cadran d'horloge rempli en bleu (#00AFF2) avec aiguilles découpées
+ *           (blanc en clair, dark:stroke-slate-900 en sombre).
  * - Inactif : Contour horloge classique.
  */
 export function ClockNavIcon({
@@ -118,6 +125,7 @@ export function ClockNavIcon({
   cutoutColor = "white",
 }: NavIconProps) {
   if (active) {
+    const isDefault = cutoutColor === "white";
     return (
       <svg
         className={className}
@@ -128,15 +136,22 @@ export function ClockNavIcon({
       >
         {/* Cadran d'horloge rempli en bleu */}
         <circle cx="12" cy="12" r="10" fill="#00AFF2" />
-        {/* Aiguilles d'horloge découpées en blanc */}
+        {/* Aiguilles d'horloge découpées en blanc ou fond sombre */}
         <path
           d="M12 6.5V12l3.5 2"
           stroke={cutoutColor}
           strokeWidth="2.2"
           strokeLinecap="round"
           strokeLinejoin="round"
+          className={isDefault ? "stroke-white dark:stroke-slate-900 transition-colors" : undefined}
         />
-        <circle cx="12" cy="12" r="1.2" fill={cutoutColor} />
+        <circle
+          cx="12"
+          cy="12"
+          r="1.2"
+          fill={cutoutColor}
+          className={isDefault ? "fill-white dark:fill-slate-900 transition-colors" : undefined}
+        />
       </svg>
     );
   }
@@ -161,7 +176,8 @@ export function ClockNavIcon({
 
 /**
  * Icône ABONNEMENTS (Calendrier) Pixel-Perfect
- * - Actif : Calendrier rempli en bleu (#00AFF2) avec anneaux, en-tête et grille de points en blanc (comme capture 4).
+ * - Actif : Calendrier rempli en bleu (#00AFF2) avec anneaux, en-tête et grille de points
+ *           (blanc en clair, dark:stroke-slate-900 / dark:fill-slate-900 en sombre).
  * - Inactif : Contour calendrier classique.
  */
 export function CalendarNavIcon({
@@ -170,6 +186,9 @@ export function CalendarNavIcon({
   cutoutColor = "white",
 }: NavIconProps) {
   if (active) {
+    const isDefault = cutoutColor === "white";
+    const fillClass = isDefault ? "fill-white dark:fill-slate-900 transition-colors" : undefined;
+    const strokeClass = isDefault ? "stroke-white dark:stroke-slate-900 transition-colors" : undefined;
     return (
       <svg
         className={className}
@@ -180,14 +199,15 @@ export function CalendarNavIcon({
       >
         {/* Corps du calendrier rempli en bleu */}
         <rect x="3" y="4.5" width="18" height="17" rx="3" fill="#00AFF2" />
-        {/* Anneaux de reliure supérieurs en blanc */}
+        {/* Anneaux de reliure supérieurs */}
         <path
           d="M8 2.5v4M16 2.5v4"
           stroke={cutoutColor}
           strokeWidth="2"
           strokeLinecap="round"
+          className={strokeClass}
         />
-        {/* Ligne d'en-tête en blanc */}
+        {/* Ligne d'en-tête */}
         <line
           x1="3"
           y1="9.5"
@@ -195,14 +215,15 @@ export function CalendarNavIcon({
           y2="9.5"
           stroke={cutoutColor}
           strokeWidth="1.5"
+          className={strokeClass}
         />
-        {/* Grille de points/jours en blanc (exactement comme capture 4 de la maquette) */}
-        <circle cx="7.5" cy="13" r="1" fill={cutoutColor} />
-        <circle cx="12" cy="13" r="1" fill={cutoutColor} />
-        <circle cx="16.5" cy="13" r="1" fill={cutoutColor} />
-        <circle cx="7.5" cy="17" r="1" fill={cutoutColor} />
-        <circle cx="12" cy="17" r="1" fill={cutoutColor} />
-        <circle cx="16.5" cy="17" r="1" fill={cutoutColor} />
+        {/* Grille de points/jours (adaptatifs clair / sombre) */}
+        <circle cx="7.5" cy="13" r="1" fill={cutoutColor} className={fillClass} />
+        <circle cx="12" cy="13" r="1" fill={cutoutColor} className={fillClass} />
+        <circle cx="16.5" cy="13" r="1" fill={cutoutColor} className={fillClass} />
+        <circle cx="7.5" cy="17" r="1" fill={cutoutColor} className={fillClass} />
+        <circle cx="12" cy="17" r="1" fill={cutoutColor} className={fillClass} />
+        <circle cx="16.5" cy="17" r="1" fill={cutoutColor} className={fillClass} />
       </svg>
     );
   }
