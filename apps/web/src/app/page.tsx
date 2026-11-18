@@ -412,7 +412,11 @@ export default function ClicBouffePlatform() {
         currentScreen === "explorer" ||
         currentScreen === "plus_tard" ||
         currentScreen === "abonnements") && (
-        <div className="min-h-screen w-full bg-white dark:bg-slate-950 flex flex-col justify-between transition-colors">
+        <div
+          className={`min-h-screen w-full bg-white dark:bg-slate-950 flex flex-col justify-between transition-all duration-200 ${
+            isFabMenuOpen ? "blur-xs select-none" : ""
+          }`}
+        >
           {/* Top Bar Responsive */}
           <header className="p-4 border-b border-slate-100 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md sticky top-0 z-30 pt-safe transition-colors">
             <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
@@ -1170,86 +1174,18 @@ export default function ClicBouffePlatform() {
                 </span>
               </button>
 
-              {/* Bouton central (+) sans texte avec Speed Dial interactif (Scanner QR & Composer) */}
+              {/* Bouton central (+) sans texte */}
               <div className="relative -top-5 flex flex-col items-center select-none">
-                {/* Menu déroulant Speed Dial (Animation fluide et stylée) */}
-                {isFabMenuOpen && (
-                  <>
-                    {/* Fond tamisé avec flou fermant le menu au clic extérieur */}
-                    <div
-                      className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 cursor-default animate-in fade-in duration-200"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsFabMenuOpen(false);
-                      }}
-                    />
-
-                    {/* Pile verticale des options au-dessus du bouton central */}
-                    <div className="absolute bottom-16 sm:bottom-18 flex flex-col items-center gap-3 z-50 pointer-events-auto">
-                      {/* Option 2 (Haut) : Composer */}
-                      <div
-                        className="relative flex items-center justify-center w-12 sm:w-14 cursor-pointer group animate-in slide-in-from-bottom-4 fade-in duration-200"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          hapticFeedback("medium");
-                          setIsFabMenuOpen(false);
-                          setScreen("compose_dish");
-                        }}
-                      >
-                        <span className="absolute right-full mr-3.5 bg-slate-900/95 dark:bg-slate-800 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl border border-slate-700/60 shadow-md whitespace-nowrap select-none group-hover:bg-slate-800 dark:group-hover:bg-slate-700 transition-colors">
-                          Composer
-                        </span>
-                        <div
-                          className="w-12 h-12 rounded-full bg-amber-500 hover:bg-amber-600 active:scale-95 text-white flex items-center justify-center shadow-md transition-transform shrink-0"
-                          title="Composer mon plat"
-                        >
-                          <ChefHat className="w-5 h-5 stroke-[2.2]" />
-                        </div>
-                      </div>
-
-                      {/* Option 1 (Bas) : Scanner QR */}
-                      <div
-                        className="relative flex items-center justify-center w-12 sm:w-14 cursor-pointer group animate-in slide-in-from-bottom-2 fade-in duration-150"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          hapticFeedback("medium");
-                          setIsFabMenuOpen(false);
-                          setShowQrScannerModal(true);
-                        }}
-                      >
-                        <span className="absolute right-full mr-3.5 bg-slate-900/95 dark:bg-slate-800 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl border border-slate-700/60 shadow-md whitespace-nowrap select-none group-hover:bg-slate-800 dark:group-hover:bg-slate-700 transition-colors">
-                          Scanner QR
-                        </span>
-                        <div
-                          className="w-12 h-12 rounded-full bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white flex items-center justify-center shadow-md transition-transform shrink-0"
-                          title="Scanner un QR code"
-                        >
-                          <QrCode className="w-5 h-5 stroke-[2.2]" />
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {/* Bouton FAB circulaire (sans libellé texte, sans lueur) */}
                 <button
                   type="button"
-                  aria-label={isFabMenuOpen ? "Fermer les actions rapides" : "Ouvrir les actions rapides"}
+                  aria-label="Ouvrir les actions rapides"
                   onClick={() => {
                     hapticFeedback("light");
-                    setIsFabMenuOpen(!isFabMenuOpen);
+                    setIsFabMenuOpen(true);
                   }}
-                  className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-white shadow-lg relative z-50 transition-all duration-200 active:scale-95 cursor-pointer ${
-                    isFabMenuOpen
-                      ? "bg-slate-700 dark:bg-slate-600 hover:bg-slate-600 text-slate-100"
-                      : "bg-[#00AFF2] hover:bg-[#009bd6]"
-                  }`}
+                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#00AFF2] hover:bg-[#009bd6] flex items-center justify-center text-white shadow-lg transition-transform active:scale-95 cursor-pointer"
                 >
-                  {isFabMenuOpen ? (
-                    <X className="w-6 h-6 sm:w-7 sm:h-7 stroke-[2.5]" />
-                  ) : (
-                    <Plus className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.5]" />
-                  )}
+                  <Plus className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.5]" />
                 </button>
               </div>
 
@@ -1300,6 +1236,82 @@ export default function ClicBouffePlatform() {
               </button>
             </div>
           </nav>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* MENU SPEED DIAL PLEIN ÉCRAN (Floutage complet de toute la page) */}
+      {/* ============================================================== */}
+      {isFabMenuOpen && (
+        <div className="fixed inset-0 z-40">
+          {/* Backdrop plein écran avec flou puissant recouvrant TOUTE la page */}
+          <div
+            className="fixed inset-0 bg-black/65 backdrop-blur-md cursor-pointer animate-in fade-in duration-200"
+            onClick={() => setIsFabMenuOpen(false)}
+          />
+
+          {/* Conteneur d'ancrage centré sur la barre de navigation du bas */}
+          <div className="fixed bottom-0 left-0 right-0 max-w-md sm:max-w-xl mx-auto pointer-events-none pb-safe z-50">
+            <div className="relative flex justify-center items-end h-16 sm:h-20 px-2 pb-2">
+              <div className="relative -top-5 flex flex-col items-center pointer-events-auto">
+                {/* Pile des options au-dessus du bouton central */}
+                <div className="absolute bottom-16 sm:bottom-18 flex flex-col items-center gap-3 z-50">
+                  {/* Option 2 (Haut) : Composer */}
+                  <div
+                    className="relative flex items-center justify-center w-12 sm:w-14 cursor-pointer group animate-in slide-in-from-bottom-4 fade-in duration-200"
+                    onClick={() => {
+                      hapticFeedback("medium");
+                      setIsFabMenuOpen(false);
+                      setScreen("compose_dish");
+                    }}
+                  >
+                    <span className="absolute right-full mr-3.5 bg-slate-900/95 dark:bg-slate-800 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl border border-slate-700/60 shadow-md whitespace-nowrap select-none group-hover:bg-slate-800 dark:group-hover:bg-slate-700 transition-colors">
+                      Composer
+                    </span>
+                    <div
+                      className="w-12 h-12 rounded-full bg-amber-500 hover:bg-amber-600 active:scale-95 text-white flex items-center justify-center shadow-md transition-transform shrink-0"
+                      title="Composer mon plat"
+                    >
+                      <ChefHat className="w-5 h-5 stroke-[2.2]" />
+                    </div>
+                  </div>
+
+                  {/* Option 1 (Bas) : Scanner QR */}
+                  <div
+                    className="relative flex items-center justify-center w-12 sm:w-14 cursor-pointer group animate-in slide-in-from-bottom-2 fade-in duration-150"
+                    onClick={() => {
+                      hapticFeedback("medium");
+                      setIsFabMenuOpen(false);
+                      setShowQrScannerModal(true);
+                    }}
+                  >
+                    <span className="absolute right-full mr-3.5 bg-slate-900/95 dark:bg-slate-800 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl border border-slate-700/60 shadow-md whitespace-nowrap select-none group-hover:bg-slate-800 dark:group-hover:bg-slate-700 transition-colors">
+                      Scanner QR
+                    </span>
+                    <div
+                      className="w-12 h-12 rounded-full bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white flex items-center justify-center shadow-md transition-transform shrink-0"
+                      title="Scanner un QR code"
+                    >
+                      <QrCode className="w-5 h-5 stroke-[2.2]" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bouton de fermeture X à l'emplacement exact du bouton central */}
+                <button
+                  type="button"
+                  aria-label="Fermer les actions rapides"
+                  onClick={() => {
+                    hapticFeedback("light");
+                    setIsFabMenuOpen(false);
+                  }}
+                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-slate-700 dark:bg-slate-600 hover:bg-slate-600 text-slate-100 shadow-lg flex items-center justify-center transition-all duration-200 active:scale-95 cursor-pointer"
+                >
+                  <X className="w-6 h-6 sm:w-7 sm:h-7 stroke-[2.5]" />
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
