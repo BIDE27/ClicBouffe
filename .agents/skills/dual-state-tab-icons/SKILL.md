@@ -1,16 +1,16 @@
 ---
 name: dual-state-tab-icons
 description: >-
-  Conception et implémentation d'icônes de navigation basse (Bottom Tab Bar) dual-state :
-  contour filaire (outline) pour l'état inactif, silhouette pleine (solid/filled) avec découpe
-  de contreforme en espace négatif (knockout cutout adaptatif clair/sombre : fill-white dark:fill-slate-900)
-  pour l'état actif, accompagnée du libellé en gras (font-bold). À activer dès qu'un utilisateur demande
-  des icônes de barre de navigation, des états actifs d'onglets, ou un rendu mobile-first natif pixel-perfect.
+  Conception et implémentation de la barre de navigation basse (Bottom Tab Bar) :
+  icônes dual-state (contour filaire / silhouette pleine à contreforme découpée adaptative clair/sombre),
+  bouton central flottant (FAB) épuré sans texte et sans lueur néon, morphing rotatif continu (+ vers X),
+  menu Speed Dial avec affichage progressif en cascade (Scanner QR, Composer), maintien visible
+  de la barre de navigation sous flou tamisé et conformité mobile-first native pixel-perfect.
 ---
 
-# Dual-State Bottom Tab Navigation Icons (Icônes à Contreforme & Espace Négatif Adaptatif)
+# Dual-State Bottom Tab Navigation & Speed Dial FAB (Architecture Mobile Native Pixel-Perfect)
 
-Ce skill enseigne à l'agent comment concevoir et implémenter des barres de navigation mobiles (Bottom Tab Bar) professionnelles au standard iOS / Android (SF Symbols & Material Design), avec support universel du mode clair et du mode sombre.
+Ce skill enseigne à l'agent comment concevoir et implémenter des barres de navigation mobiles (Bottom Tab Bar) professionnelles au standard iOS / Android (SF Symbols & Material 3), avec support universel du mode clair et du mode sombre, bouton central FAB à morphing rotatif et menu Speed Dial à affichage progressif.
 
 ---
 
@@ -30,6 +30,16 @@ Quand vous concevez ou décrivez ce composant, utilisez ces termes précis :
 5. **Typographie d'Accompagnement** :
    * Onglet actif : Libellé en **gras** (`font-bold`, couleur de marque `#00AFF2`).
    * Onglet inactif : Libellé en **graisse normale/moyenne** (`font-medium`, couleur ardoise/gris neutre `text-slate-600 dark:text-slate-400`).
+6. **Bouton Central Flottant (FAB) Épuré** :
+   * Disque circulaire central sans libellé texte en dessous, parfaitement centré dans la concavité de la barre de navigation basse.
+7. **Règle Zéro Lueur (No Neon Glow)** :
+   * Proscription stricte de toute lueur ou ombre saturée colorée (`shadow-[#00AFF2]/...`). Utilisation exclusive d'ombres douces, nettes et neutres (`shadow-md`, `shadow-lg`, `shadow-xl`).
+8. **Morphing Rotatif Continu (+ ↔ X)** :
+   * Le bouton central est un élément physique unique permanent qui pivote à 45° via une courbe de Bézier ressort `cubic-bezier(0.34, 1.56, 0.64, 1)` pour transformer le symbole `+` en un `X` géométriquement parfait, évitant tout saut, flash ou superposition de boutons.
+9. **Affichage Progressif en Cascade (Staggered Animation)** :
+   * Déploiement séquentiel dynamique des options Speed Dial depuis le bouton central (d'abord l'option inférieure, puis l'option supérieure) avec des délais échelonnés (`delay-75` puis `delay-150`).
+10. **Maintien Spatial de la Barre sous Flou Tamisé** :
+    * La barre de navigation ne disparaît jamais sous un voile noir opaque. Elle reste visible à sa position d'ancrage (`z-40`), ses 4 onglets inactifs subissant une transition douce vers un flou tamisé (`blur-[1.5px] opacity-35 scale-95 pointer-events-none`).
 
 ---
 
@@ -223,14 +233,19 @@ export function CalendarNavIcon({
 
 ---
 
-## 5. 📋 Structure du Bouton d'Onglet (React + Tailwind CSS)
+## 5. 📋 Structure du Bouton d'Onglet Réactif au Flou
+
+Chaque bouton d'onglet doit intégrer la transition de flou et d'opacité lorsque le menu central est ouvert :
 
 ```tsx
 <button
-  onClick={() => setActiveTab("home")}
-  className={`flex flex-col items-center gap-0.5 transition-colors ${
-    activeTab === "home" ? "text-[#00AFF2]" : "text-slate-600 dark:text-slate-400 hover:text-[#00AFF2]"
-  }`}
+  onClick={() => {
+    setActiveTab("home");
+    setScreen("home");
+  }}
+  className={`flex flex-col items-center gap-0.5 transition-all duration-300 ${
+    isFabMenuOpen ? "filter blur-[1.5px] opacity-35 pointer-events-none scale-95" : "filter-none opacity-100 scale-100"
+  } ${activeTab === "home" ? "text-[#00AFF2]" : "text-slate-600 dark:text-slate-400 hover:text-[#00AFF2]"}`}
 >
   <HomeNavIcon
     active={activeTab === "home"}
@@ -248,12 +263,147 @@ export function CalendarNavIcon({
 
 ---
 
-## 6. ✅ Checklist de Validation Obligatoire
+## 6. ⚡ Bouton Central FAB & Morphing Rotatif Continu (+ ↔ X)
+
+Le bouton central flottant utilise une rotation à 45° pour transformer géométriquement les bras perpendiculaires du symbole `Plus` en un `X` parfait, sans aucune substitution d'éléments dans le DOM :
+
+```tsx
+<div className="relative -top-5 flex flex-col items-center select-none z-50">
+  {/* Bouton FAB circulaire unique animé en continu */}
+  <button
+    type="button"
+    aria-label={isFabMenuOpen ? "Fermer les actions rapides" : "Ouvrir les actions rapides"}
+    onClick={(e) => {
+      e.stopPropagation();
+      hapticFeedback("light");
+      setIsFabMenuOpen(!isFabMenuOpen);
+    }}
+    className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-white shadow-xl relative z-50 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-90 cursor-pointer ${
+      isFabMenuOpen
+        ? "bg-slate-700 dark:bg-slate-600 hover:bg-slate-600 ring-4 ring-black/10 dark:ring-white/10 scale-105"
+        : "bg-[#00AFF2] hover:bg-[#009bd6] ring-0 scale-100"
+    }`}
+  >
+    <div
+      className={`transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+        isFabMenuOpen ? "rotate-45" : "rotate-0"
+      }`}
+    >
+      <Plus className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.6]" />
+    </div>
+  </button>
+</div>
+```
+
+---
+
+## 7. 🪜 Affichage Progressif en Cascade (Staggered Speed-Dial)
+
+Les options d'action se déploient au-dessus du bouton central avec des délais échelonnés pour une sensation d'animation physique native :
+
+```tsx
+<div
+  className={`absolute bottom-16 sm:bottom-18 flex flex-col items-center gap-3.5 z-50 transition-all duration-200 ${
+    isFabMenuOpen ? "pointer-events-auto" : "pointer-events-none"
+  }`}
+>
+  {/* Option 2 (Haut) : Composer - Apparition progressive (Stagger #2 : delay-150) */}
+  <div
+    className={`relative flex items-center justify-center w-12 sm:w-14 cursor-pointer group transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+      isFabMenuOpen
+        ? "translate-y-0 scale-100 opacity-100 delay-150"
+        : "translate-y-8 scale-50 opacity-0 delay-0 pointer-events-none"
+    }`}
+    onClick={(e) => {
+      e.stopPropagation();
+      hapticFeedback("medium");
+      setIsFabMenuOpen(false);
+      setScreen("compose_dish");
+    }}
+  >
+    <span
+      className={`absolute right-full mr-3.5 bg-slate-900/90 dark:bg-slate-800/95 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl border border-slate-700/60 shadow-lg whitespace-nowrap select-none group-hover:bg-slate-800 dark:group-hover:bg-slate-700 transition-all duration-300 ${
+        isFabMenuOpen ? "translate-x-0 opacity-100 delay-175" : "translate-x-3 opacity-0 delay-0"
+      }`}
+    >
+      Composer
+    </span>
+    <div
+      className="w-12 h-12 rounded-full bg-amber-500 hover:bg-amber-600 active:scale-95 text-white flex items-center justify-center shadow-lg transition-transform shrink-0"
+      title="Composer mon plat"
+    >
+      <ChefHat className="w-5 h-5 stroke-[2.2]" />
+    </div>
+  </div>
+
+  {/* Option 1 (Bas) : Scanner QR - Apparition progressive (Stagger #1 : delay-75) */}
+  <div
+    className={`relative flex items-center justify-center w-12 sm:w-14 cursor-pointer group transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+      isFabMenuOpen
+        ? "translate-y-0 scale-100 opacity-100 delay-75"
+        : "translate-y-4 scale-50 opacity-0 delay-0 pointer-events-none"
+    }`}
+    onClick={(e) => {
+      e.stopPropagation();
+      hapticFeedback("medium");
+      setIsFabMenuOpen(false);
+      setShowQrScannerModal(true);
+    }}
+  >
+    <span
+      className={`absolute right-full mr-3.5 bg-slate-900/90 dark:bg-slate-800/95 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl border border-slate-700/60 shadow-lg whitespace-nowrap select-none group-hover:bg-slate-800 dark:group-hover:bg-slate-700 transition-all duration-300 ${
+        isFabMenuOpen ? "translate-x-0 opacity-100 delay-100" : "translate-x-3 opacity-0 delay-0"
+      }`}
+    >
+      Scanner QR
+    </span>
+    <div
+      className="w-12 h-12 rounded-full bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white flex items-center justify-center shadow-lg transition-transform shrink-0"
+      title="Scanner un QR code"
+    >
+      <QrCode className="w-5 h-5 stroke-[2.2]" />
+    </div>
+  </div>
+</div>
+```
+
+---
+
+## 8. 🌫️ Gestion des Niveaux de Profondeur & Voile de Flou (Z-Index Hierarchy)
+
+Pour garantir que la barre reste visible mais floutée, et que l'écran soit élégamment tamisé :
+
+```
+[z-50] : Bouton FAB central (+ ↔ X) et options Speed Dial (Nets & Actifs)
+[z-40] : Barre de navigation basse (<nav>) avec onglets floutés (blur-[1.5px] opacity-35)
+[z-30] : Voile plein écran semi-transparent (bg-black/50 backdrop-blur-md cliquable)
+[z-20] : En-tête TopBar sticky (flouté blur-[2px] opacity-40)
+[z-10] : Contenu principal de la page (flouté blur-[2px] opacity-40)
+```
+
+---
+
+## 9. 📷 Intégration du Scanner QR Code
+
+Le scanner de QR code permet d'afficher directement un plat ou un menu complet de restaurant :
+* **Flux caméra en direct** avec `navigator.mediaDevices.getUserMedia` et bascule torche (`Flashlight`).
+* **Viseur laser animé** avec coins de visée en repère.
+* **Accès direct démo 1-clic** pour tester instantanément un restaurant (*Le Maquis du Port*) ou un plat (*Pâte noire*).
+* **Modale dédiée `ScannedRestaurantModal`** affichant la carte complète du restaurant avec tous ses prix en FCFA et boutons d'ajout au panier.
+
+---
+
+## 10. ✅ Checklist de Validation Obligatoire
 
 - [ ] L'icône active est remplie avec la couleur d'accentuation de la marque (`#00AFF2`).
 - [ ] Aucun tracé interne n'est bouché : toutes les contreformes (portes, aiguilles, points de calendrier) sont découpées.
-- [ ] **Support Dark Mode Obligatoire** : Les contreformes (portes, aiguilles, points) s'alignent automatiquement sur l'arrière-plan sombre via `fill-white dark:fill-slate-900` ou `stroke-white dark:stroke-slate-900` pour éliminer tout "trou blanc" parasite en mode sombre.
+- [ ] **Support Dark Mode Obligatoire** : Les contreformes s'alignent automatiquement sur l'arrière-plan sombre via `fill-white dark:fill-slate-900` ou `stroke-white dark:stroke-slate-900`.
 - [ ] L'icône inactive est en tracé filaire net (`stroke: 2`, `fill: none`).
 - [ ] Le libellé sous l'icône active est en **gras** (`font-bold`).
-- [ ] Zéro régression sur le linter (`npm run lint`).
-- [ ] Tests unitaires validés (vérification des attributs `fill`, `stroke` et classes adaptatives `dark:fill-slate-900`).
+- [ ] **Bouton central sans libellé texte** : le bouton central reste épuré sans texte "Composer plat".
+- [ ] **Zéro lueur colorée** : aucune classe `shadow-[#00AFF2]/...` sur les boutons ou icônes (ombres neutres uniquement).
+- [ ] **Morphing rotatif continu** : le bouton central pivote à 45° (`Plus` ↔ `X`) via `cubic-bezier(0.34, 1.56, 0.64, 1)` sans saut visuel.
+- [ ] **Affichage progressif en cascade** : apparition échelonnée des boutons Speed Dial (`delay-75` pour Scanner, `delay-150` pour Composer).
+- [ ] **Maintien visible de la barre de navigation** : la barre reste visible en bas sous un flou doux (`blur-[1.5px] opacity-35`).
+- [ ] **Zéro émoji** : utilisation exclusive d'icônes vectorielles professionnelles Lucide React.
+- [ ] Zéro régression sur les tests unitaires et le linter (`npm run test`, `npm run lint`).
