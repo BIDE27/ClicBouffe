@@ -412,12 +412,14 @@ export default function ClicBouffePlatform() {
         currentScreen === "explorer" ||
         currentScreen === "plus_tard" ||
         currentScreen === "abonnements") && (
-        <div
-          className={`min-h-screen w-full bg-white dark:bg-slate-950 flex flex-col justify-between transition-all duration-200 ${
-            isFabMenuOpen ? "blur-xs select-none" : ""
-          }`}
-        >
-          {/* Top Bar Responsive */}
+        <div className="min-h-screen w-full bg-white dark:bg-slate-950 flex flex-col justify-between transition-colors relative">
+          {/* Contenu principal de la page (flouté doucement à l'ouverture du menu FAB) */}
+          <div
+            className={`flex-1 flex flex-col transition-all duration-300 ease-out ${
+              isFabMenuOpen ? "filter blur-[2px] opacity-40 pointer-events-none select-none" : "filter-none opacity-100"
+            }`}
+          >
+            {/* Top Bar Responsive */}
           <header className="p-4 border-b border-slate-100 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md sticky top-0 z-30 pt-safe transition-colors">
             <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
               <div className="flex items-center gap-2.5">
@@ -1120,13 +1122,26 @@ export default function ClicBouffePlatform() {
           )}
           </>
           )}
+          </div>
 
-          {/* Barre Navigation Basse Pixel-Perfect avec FAB (+) Composer plat */}
+          {/* Barre Navigation Basse Pixel-Perfect avec FAB (+) morphing en (X) */}
           <nav
-            className={`fixed bottom-0 inset-x-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 h-16 flex items-center justify-around px-2 z-30 pb-safe transition-colors ${
+            className={`fixed bottom-0 inset-x-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 h-16 flex items-center justify-around px-2 z-40 pb-safe transition-all duration-300 ${
               currentViewMode === "kds" ? "hidden" : ""
             }`}
           >
+            {/* Zone de clic de fermeture sur la barre floutée */}
+            {isFabMenuOpen && (
+              <div
+                className="absolute inset-0 z-40 cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  hapticFeedback("light");
+                  setIsFabMenuOpen(false);
+                }}
+              />
+            )}
+
             <div className="max-w-lg w-full mx-auto flex items-center justify-around">
               {/* Accueil */}
               <button
@@ -1134,9 +1149,9 @@ export default function ClicBouffePlatform() {
                   setActiveNavTab("home");
                   setScreen("home");
                 }}
-                className={`flex flex-col items-center gap-0.5 transition-colors ${
-                  activeNavTab === "home" ? "text-[#00AFF2]" : "text-slate-600 dark:text-slate-400 hover:text-[#00AFF2]"
-                }`}
+                className={`flex flex-col items-center gap-0.5 transition-all duration-300 ${
+                  isFabMenuOpen ? "filter blur-[1.5px] opacity-35 pointer-events-none scale-95" : "filter-none opacity-100 scale-100"
+                } ${activeNavTab === "home" ? "text-[#00AFF2]" : "text-slate-600 dark:text-slate-400 hover:text-[#00AFF2]"}`}
               >
                 <HomeNavIcon
                   active={activeNavTab === "home"}
@@ -1157,9 +1172,9 @@ export default function ClicBouffePlatform() {
                   setActiveNavTab("explorer");
                   setScreen("explorer");
                 }}
-                className={`flex flex-col items-center gap-0.5 transition-colors ${
-                  activeNavTab === "explorer" ? "text-[#00AFF2]" : "text-slate-600 dark:text-slate-400 hover:text-[#00AFF2]"
-                }`}
+                className={`flex flex-col items-center gap-0.5 transition-all duration-300 ${
+                  isFabMenuOpen ? "filter blur-[1.5px] opacity-35 pointer-events-none scale-95" : "filter-none opacity-100 scale-100"
+                } ${activeNavTab === "explorer" ? "text-[#00AFF2]" : "text-slate-600 dark:text-slate-400 hover:text-[#00AFF2]"}`}
               >
                 <ExplorerNavIcon
                   active={activeNavTab === "explorer"}
@@ -1174,18 +1189,99 @@ export default function ClicBouffePlatform() {
                 </span>
               </button>
 
-              {/* Bouton central (+) sans texte */}
-              <div className="relative -top-5 flex flex-col items-center select-none">
+              {/* Bouton central (+) interactif avec morphing en (X) et Speed Dial progressif */}
+              <div className="relative -top-5 flex flex-col items-center select-none z-50">
+                {/* Options Speed Dial flottantes au-dessus du bouton central avec affichage progressif (Stagger) */}
+                <div
+                  className={`absolute bottom-16 sm:bottom-18 flex flex-col items-center gap-3.5 z-50 transition-all duration-200 ${
+                    isFabMenuOpen ? "pointer-events-auto" : "pointer-events-none"
+                  }`}
+                >
+                  {/* Option 2 (Haut) : Composer - Apparition progressive décalée (Stagger #2: 150ms) */}
+                  <div
+                    className={`relative flex items-center justify-center w-12 sm:w-14 cursor-pointer group transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+                      isFabMenuOpen
+                        ? "translate-y-0 scale-100 opacity-100 delay-150"
+                        : "translate-y-8 scale-50 opacity-0 delay-0 pointer-events-none"
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      hapticFeedback("medium");
+                      setIsFabMenuOpen(false);
+                      setScreen("compose_dish");
+                    }}
+                  >
+                    <span
+                      className={`absolute right-full mr-3.5 bg-slate-900/90 dark:bg-slate-800/95 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl border border-slate-700/60 shadow-lg whitespace-nowrap select-none group-hover:bg-slate-800 dark:group-hover:bg-slate-700 transition-all duration-300 ${
+                        isFabMenuOpen
+                          ? "translate-x-0 opacity-100 delay-175"
+                          : "translate-x-3 opacity-0 delay-0"
+                      }`}
+                    >
+                      Composer
+                    </span>
+                    <div
+                      className="w-12 h-12 rounded-full bg-amber-500 hover:bg-amber-600 active:scale-95 text-white flex items-center justify-center shadow-lg transition-transform shrink-0"
+                      title="Composer mon plat"
+                    >
+                      <ChefHat className="w-5 h-5 stroke-[2.2]" />
+                    </div>
+                  </div>
+
+                  {/* Option 1 (Bas) : Scanner QR - Apparition progressive immédiate (Stagger #1: 75ms) */}
+                  <div
+                    className={`relative flex items-center justify-center w-12 sm:w-14 cursor-pointer group transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+                      isFabMenuOpen
+                        ? "translate-y-0 scale-100 opacity-100 delay-75"
+                        : "translate-y-4 scale-50 opacity-0 delay-0 pointer-events-none"
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      hapticFeedback("medium");
+                      setIsFabMenuOpen(false);
+                      setShowQrScannerModal(true);
+                    }}
+                  >
+                    <span
+                      className={`absolute right-full mr-3.5 bg-slate-900/90 dark:bg-slate-800/95 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl border border-slate-700/60 shadow-lg whitespace-nowrap select-none group-hover:bg-slate-800 dark:group-hover:bg-slate-700 transition-all duration-300 ${
+                        isFabMenuOpen
+                          ? "translate-x-0 opacity-100 delay-100"
+                          : "translate-x-3 opacity-0 delay-0"
+                      }`}
+                    >
+                      Scanner QR
+                    </span>
+                    <div
+                      className="w-12 h-12 rounded-full bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white flex items-center justify-center shadow-lg transition-transform shrink-0"
+                      title="Scanner un QR code"
+                    >
+                      <QrCode className="w-5 h-5 stroke-[2.2]" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bouton FAB circulaire unique animé en continu (+ <-> X) */}
                 <button
                   type="button"
-                  aria-label="Ouvrir les actions rapides"
-                  onClick={() => {
+                  aria-label={isFabMenuOpen ? "Fermer les actions rapides" : "Ouvrir les actions rapides"}
+                  onClick={(e) => {
+                    e.stopPropagation();
                     hapticFeedback("light");
-                    setIsFabMenuOpen(true);
+                    setIsFabMenuOpen(!isFabMenuOpen);
                   }}
-                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#00AFF2] hover:bg-[#009bd6] flex items-center justify-center text-white shadow-lg transition-transform active:scale-95 cursor-pointer"
+                  className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-white shadow-xl relative z-50 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-90 cursor-pointer ${
+                    isFabMenuOpen
+                      ? "bg-slate-700 dark:bg-slate-600 hover:bg-slate-600 ring-4 ring-black/10 dark:ring-white/10 scale-105"
+                      : "bg-[#00AFF2] hover:bg-[#009bd6] ring-0 scale-100"
+                  }`}
                 >
-                  <Plus className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.5]" />
+                  <div
+                    className={`transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+                      isFabMenuOpen ? "rotate-45" : "rotate-0"
+                    }`}
+                  >
+                    <Plus className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.6]" />
+                  </div>
                 </button>
               </div>
 
@@ -1195,9 +1291,9 @@ export default function ClicBouffePlatform() {
                   setActiveNavTab("plus_tard");
                   setScreen("plus_tard");
                 }}
-                className={`flex flex-col items-center gap-0.5 transition-colors ${
-                  activeNavTab === "plus_tard" ? "text-[#00AFF2]" : "text-slate-600 dark:text-slate-400 hover:text-[#00AFF2]"
-                }`}
+                className={`flex flex-col items-center gap-0.5 transition-all duration-300 ${
+                  isFabMenuOpen ? "filter blur-[1.5px] opacity-35 pointer-events-none scale-95" : "filter-none opacity-100 scale-100"
+                } ${activeNavTab === "plus_tard" ? "text-[#00AFF2]" : "text-slate-600 dark:text-slate-400 hover:text-[#00AFF2]"}`}
               >
                 <ClockNavIcon
                   active={activeNavTab === "plus_tard"}
@@ -1218,9 +1314,9 @@ export default function ClicBouffePlatform() {
                   setActiveNavTab("abonnements");
                   setScreen("abonnements");
                 }}
-                className={`flex flex-col items-center gap-0.5 transition-colors ${
-                  activeNavTab === "abonnements" ? "text-[#00AFF2]" : "text-slate-600 dark:text-slate-400 hover:text-[#00AFF2]"
-                }`}
+                className={`flex flex-col items-center gap-0.5 transition-all duration-300 ${
+                  isFabMenuOpen ? "filter blur-[1.5px] opacity-35 pointer-events-none scale-95" : "filter-none opacity-100 scale-100"
+                } ${activeNavTab === "abonnements" ? "text-[#00AFF2]" : "text-slate-600 dark:text-slate-400 hover:text-[#00AFF2]"}`}
               >
                 <CalendarNavIcon
                   active={activeNavTab === "abonnements"}
@@ -1239,81 +1335,18 @@ export default function ClicBouffePlatform() {
         </div>
       )}
 
-      {/* ============================================================== */}
-      {/* MENU SPEED DIAL PLEIN ÉCRAN (Floutage complet de toute la page) */}
-      {/* ============================================================== */}
-      {isFabMenuOpen && (
-        <div className="fixed inset-0 z-40">
-          {/* Backdrop plein écran avec flou puissant recouvrant TOUTE la page */}
-          <div
-            className="fixed inset-0 bg-black/65 backdrop-blur-md cursor-pointer animate-in fade-in duration-200"
-            onClick={() => setIsFabMenuOpen(false)}
-          />
-
-          {/* Conteneur d'ancrage centré sur la barre de navigation du bas */}
-          <div className="fixed bottom-0 left-0 right-0 max-w-md sm:max-w-xl mx-auto pointer-events-none pb-safe z-50">
-            <div className="relative flex justify-center items-end h-16 sm:h-20 px-2 pb-2">
-              <div className="relative -top-5 flex flex-col items-center pointer-events-auto">
-                {/* Pile des options au-dessus du bouton central */}
-                <div className="absolute bottom-16 sm:bottom-18 flex flex-col items-center gap-3 z-50">
-                  {/* Option 2 (Haut) : Composer */}
-                  <div
-                    className="relative flex items-center justify-center w-12 sm:w-14 cursor-pointer group animate-in slide-in-from-bottom-4 fade-in duration-200"
-                    onClick={() => {
-                      hapticFeedback("medium");
-                      setIsFabMenuOpen(false);
-                      setScreen("compose_dish");
-                    }}
-                  >
-                    <span className="absolute right-full mr-3.5 bg-slate-900/95 dark:bg-slate-800 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl border border-slate-700/60 shadow-md whitespace-nowrap select-none group-hover:bg-slate-800 dark:group-hover:bg-slate-700 transition-colors">
-                      Composer
-                    </span>
-                    <div
-                      className="w-12 h-12 rounded-full bg-amber-500 hover:bg-amber-600 active:scale-95 text-white flex items-center justify-center shadow-md transition-transform shrink-0"
-                      title="Composer mon plat"
-                    >
-                      <ChefHat className="w-5 h-5 stroke-[2.2]" />
-                    </div>
-                  </div>
-
-                  {/* Option 1 (Bas) : Scanner QR */}
-                  <div
-                    className="relative flex items-center justify-center w-12 sm:w-14 cursor-pointer group animate-in slide-in-from-bottom-2 fade-in duration-150"
-                    onClick={() => {
-                      hapticFeedback("medium");
-                      setIsFabMenuOpen(false);
-                      setShowQrScannerModal(true);
-                    }}
-                  >
-                    <span className="absolute right-full mr-3.5 bg-slate-900/95 dark:bg-slate-800 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl border border-slate-700/60 shadow-md whitespace-nowrap select-none group-hover:bg-slate-800 dark:group-hover:bg-slate-700 transition-colors">
-                      Scanner QR
-                    </span>
-                    <div
-                      className="w-12 h-12 rounded-full bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white flex items-center justify-center shadow-md transition-transform shrink-0"
-                      title="Scanner un QR code"
-                    >
-                      <QrCode className="w-5 h-5 stroke-[2.2]" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bouton de fermeture X à l'emplacement exact du bouton central */}
-                <button
-                  type="button"
-                  aria-label="Fermer les actions rapides"
-                  onClick={() => {
-                    hapticFeedback("light");
-                    setIsFabMenuOpen(false);
-                  }}
-                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-slate-700 dark:bg-slate-600 hover:bg-slate-600 text-slate-100 shadow-lg flex items-center justify-center transition-all duration-200 active:scale-95 cursor-pointer"
-                >
-                  <X className="w-6 h-6 sm:w-7 sm:h-7 stroke-[2.5]" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Voile de flou plein écran (Floute tout le contenu de page tout en laissant la barre de navigation visible et floutée) */}
+      <div
+        className={`fixed inset-0 z-30 transition-all duration-300 ease-out ${
+          isFabMenuOpen
+            ? "bg-black/50 backdrop-blur-md opacity-100 pointer-events-auto"
+            : "bg-black/0 backdrop-blur-none opacity-0 pointer-events-none"
+        }`}
+        onClick={() => {
+          hapticFeedback("light");
+          setIsFabMenuOpen(false);
+        }}
+      />
 
       {/* ============================================================== */}
       {/* 4. MODALE BOUFFE GRATUITE (Capture 151714.jpg) */}

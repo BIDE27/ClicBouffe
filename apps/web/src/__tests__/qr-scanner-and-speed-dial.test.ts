@@ -49,8 +49,22 @@ describe("Speed Dial FAB, QR Scanner et Conformité Zéro Lueur", () => {
 
     it("propose un fond tamisé avec flou complet plein écran pour toute la page", () => {
       expect(pageContent).toContain("backdrop-blur-md");
-      expect(pageContent).toContain('isFabMenuOpen ? "blur-xs select-none" : ""');
+      expect(pageContent).toContain('isFabMenuOpen ? "filter blur-[2px] opacity-40 pointer-events-none select-none"');
       expect(pageContent).toContain("setIsFabMenuOpen(false)");
+    });
+
+    it("anime le bouton central avec morphing rotatif (+ vers X)", () => {
+      expect(pageContent).toContain('isFabMenuOpen ? "rotate-45" : "rotate-0"');
+      expect(pageContent).toContain("cubic-bezier(0.34,1.56,0.64,1)");
+    });
+
+    it("propose un affichage progressif en cascade (staggered delay) pour Scanner et Composer", () => {
+      expect(pageContent).toContain("delay-75");
+      expect(pageContent).toContain("delay-150");
+    });
+
+    it("maintient la barre de navigation visible avec flou doux sur ses onglets", () => {
+      expect(pageContent).toContain('isFabMenuOpen ? "filter blur-[1.5px] opacity-35 pointer-events-none scale-95"');
     });
   });
 
