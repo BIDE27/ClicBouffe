@@ -19,6 +19,7 @@ import {
   MapPin,
   Menu as MenuIcon,
   Plus,
+  QrCode,
   Sandwich,
   Search,
   Send,
@@ -37,6 +38,8 @@ import { PromoCarousel } from "@/components/home/promo-carousel";
 import { AuthModal } from "@/components/auth/auth-modal";
 import { SideDrawer } from "@/components/navigation/side-drawer";
 import { WalletModal } from "@/components/wallet/wallet-modal";
+import { QrScannerModal } from "@/components/qr/qr-scanner-modal";
+import { ScannedRestaurantModal } from "@/components/qr/scanned-restaurant-modal";
 import { RestaurantDashboard } from "@/components/restaurant-dashboard/restaurant-dashboard";
 import { authService } from "@/lib/services/auth-service";
 import { UserProfile } from "@/lib/types/database";
@@ -72,6 +75,7 @@ import {
   EXPLORER_CATEGORIES,
   PROMOTIONAL_CAROUSEL_SLIDES,
   DishItem,
+  Restaurant,
   ScheduledDish,
   MealSubscription,
 } from "@/lib/data/clicbouffe-data";
@@ -139,6 +143,12 @@ export default function ClicBouffePlatform() {
 
   // Onglet actif de navigation basse
   const [activeNavTab, setActiveNavTab] = useState<"home" | "explorer" | "plus_tard" | "abonnements">("home");
+
+  // État Menu Flottant (Speed Dial FAB) & Scanner QR
+  const [isFabMenuOpen, setIsFabMenuOpen] = useState(false);
+  const [showQrScannerModal, setShowQrScannerModal] = useState(false);
+  const [scannedRestaurant, setScannedRestaurant] = useState<Restaurant | null>(null);
+  const [showScannedRestaurantModal, setShowScannedRestaurantModal] = useState(false);
 
   // État Explorer
   const [selectedExplorerCategory, setSelectedExplorerCategory] = useState<"all" | "local" | "maquis" | "chawarma" | "burger">("all");
@@ -372,7 +382,7 @@ export default function ClicBouffePlatform() {
                 hapticFeedback("medium");
                 setScreen("home");
               }}
-              className="bg-[#00AFF2] hover:bg-[#009bd6] active:scale-95 text-white font-extrabold text-xs sm:text-sm tracking-wider px-8 py-2.5 rounded-lg shadow-sm shadow-[#00AFF2]/30 uppercase transition-all"
+              className="bg-[#00AFF2] hover:bg-[#009bd6] active:scale-95 text-white font-extrabold text-xs sm:text-sm tracking-wider px-8 py-2.5 rounded-lg shadow-sm uppercase transition-all"
             >
               SAUTER
             </button>
@@ -1160,18 +1170,87 @@ export default function ClicBouffePlatform() {
                 </span>
               </button>
 
-              {/* Bouton central (+) Composer plat */}
-              <div
-                className="relative -top-5 flex flex-col items-center cursor-pointer"
-                onClick={() => {
-                  hapticFeedback("medium");
-                  setScreen("compose_dish");
-                }}
-              >
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#00AFF2] rounded-full flex items-center justify-center text-white shadow-lg shadow-[#00AFF2]/40 hover:scale-105 active:scale-95 transition-transform">
-                  <Plus className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.5]" />
-                </div>
-                <span className="text-[9px] font-bold text-black dark:text-white mt-1">Composer plat</span>
+              {/* Bouton central (+) sans texte avec Speed Dial interactif (Scanner QR & Composer) */}
+              <div className="relative -top-5 flex flex-col items-center select-none">
+                {/* Menu déroulant Speed Dial (Animation fluide et stylée) */}
+                {isFabMenuOpen && (
+                  <>
+                    {/* Fond tamisé avec flou fermant le menu au clic extérieur */}
+                    <div
+                      className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 cursor-default animate-in fade-in duration-200"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsFabMenuOpen(false);
+                      }}
+                    />
+
+                    {/* Pile verticale des options au-dessus du bouton central */}
+                    <div className="absolute bottom-16 sm:bottom-18 flex flex-col items-center gap-3 z-50 pointer-events-auto">
+                      {/* Option 2 (Haut) : Composer */}
+                      <div
+                        className="relative flex items-center justify-center w-12 sm:w-14 cursor-pointer group animate-in slide-in-from-bottom-4 fade-in duration-200"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          hapticFeedback("medium");
+                          setIsFabMenuOpen(false);
+                          setScreen("compose_dish");
+                        }}
+                      >
+                        <span className="absolute right-full mr-3.5 bg-slate-900/95 dark:bg-slate-800 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl border border-slate-700/60 shadow-md whitespace-nowrap select-none group-hover:bg-slate-800 dark:group-hover:bg-slate-700 transition-colors">
+                          Composer
+                        </span>
+                        <div
+                          className="w-12 h-12 rounded-full bg-amber-500 hover:bg-amber-600 active:scale-95 text-white flex items-center justify-center shadow-md transition-transform shrink-0"
+                          title="Composer mon plat"
+                        >
+                          <ChefHat className="w-5 h-5 stroke-[2.2]" />
+                        </div>
+                      </div>
+
+                      {/* Option 1 (Bas) : Scanner QR */}
+                      <div
+                        className="relative flex items-center justify-center w-12 sm:w-14 cursor-pointer group animate-in slide-in-from-bottom-2 fade-in duration-150"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          hapticFeedback("medium");
+                          setIsFabMenuOpen(false);
+                          setShowQrScannerModal(true);
+                        }}
+                      >
+                        <span className="absolute right-full mr-3.5 bg-slate-900/95 dark:bg-slate-800 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl border border-slate-700/60 shadow-md whitespace-nowrap select-none group-hover:bg-slate-800 dark:group-hover:bg-slate-700 transition-colors">
+                          Scanner QR
+                        </span>
+                        <div
+                          className="w-12 h-12 rounded-full bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white flex items-center justify-center shadow-md transition-transform shrink-0"
+                          title="Scanner un QR code"
+                        >
+                          <QrCode className="w-5 h-5 stroke-[2.2]" />
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Bouton FAB circulaire (sans libellé texte, sans lueur) */}
+                <button
+                  type="button"
+                  aria-label={isFabMenuOpen ? "Fermer les actions rapides" : "Ouvrir les actions rapides"}
+                  onClick={() => {
+                    hapticFeedback("light");
+                    setIsFabMenuOpen(!isFabMenuOpen);
+                  }}
+                  className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-white shadow-lg relative z-50 transition-all duration-200 active:scale-95 cursor-pointer ${
+                    isFabMenuOpen
+                      ? "bg-slate-700 dark:bg-slate-600 hover:bg-slate-600 text-slate-100"
+                      : "bg-[#00AFF2] hover:bg-[#009bd6]"
+                  }`}
+                >
+                  {isFabMenuOpen ? (
+                    <X className="w-6 h-6 sm:w-7 sm:h-7 stroke-[2.5]" />
+                  ) : (
+                    <Plus className="w-7 h-7 sm:w-8 sm:h-8 stroke-[2.5]" />
+                  )}
+                </button>
               </div>
 
               {/* Plus tard */}
@@ -1263,7 +1342,7 @@ export default function ClicBouffePlatform() {
                 setShowFreeFoodModal(false);
                 setScreen("free_food");
               }}
-              className="mt-6 w-full bg-[#00AFF2] hover:bg-[#009bd6] active:scale-95 text-white py-3 rounded-xl text-xs font-bold transition-all shadow-md shadow-[#00AFF2]/30 uppercase tracking-wider"
+              className="mt-6 w-full bg-[#00AFF2] hover:bg-[#009bd6] active:scale-95 text-white py-3 rounded-xl text-xs font-bold transition-all shadow-md uppercase tracking-wider"
             >
               Profiter
             </button>
@@ -1400,7 +1479,7 @@ export default function ClicBouffePlatform() {
               disabled={selectedDishes.length === 0}
               className={`px-6 py-3 rounded-full font-bold text-xs sm:text-sm shadow-xl flex items-center gap-2 transition-all active:scale-95 ${
                 selectedDishes.length > 0
-                  ? "bg-[#00AFF2] hover:bg-[#009bd6] text-white cursor-pointer shadow-[#00AFF2]/40"
+                  ? "bg-[#00AFF2] hover:bg-[#009bd6] text-white cursor-pointer"
                   : "bg-slate-300 dark:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-not-allowed"
               }`}
             >
@@ -1509,7 +1588,7 @@ export default function ClicBouffePlatform() {
                   toggleSelectDish(previewDish);
                   setShowDishPreviewModal(false);
                 }}
-                className="mt-5 w-full py-3 bg-[#00AFF2] hover:bg-[#009bd6] active:scale-95 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-[#00AFF2]/30"
+                className="mt-5 w-full py-3 bg-[#00AFF2] hover:bg-[#009bd6] active:scale-95 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-md"
               >
                 {selectedDishes.some((d) => d.id === previewDish.id)
                   ? "Retirer du panier"
@@ -1678,7 +1757,7 @@ export default function ClicBouffePlatform() {
                   setScheduledDishes([newScheduled, ...scheduledDishes]);
                   setShowScheduleModal(false);
                 }}
-                className="w-full py-3 bg-[#00AFF2] text-white font-bold rounded-xl mt-3 hover:bg-[#0098d4] transition-all shadow-md shadow-[#00AFF2]/30 uppercase tracking-wider text-xs"
+                className="w-full py-3 bg-[#00AFF2] text-white font-bold rounded-xl mt-3 hover:bg-[#0098d4] transition-all shadow-md uppercase tracking-wider text-xs"
               >
                 Confirmer la programmation
               </button>
@@ -1859,7 +1938,7 @@ export default function ClicBouffePlatform() {
                   ]);
                   setScreen("checkout");
                 }}
-                className="bg-[#00AFF2] hover:bg-[#009bd6] active:scale-95 text-white px-6 py-2.5 rounded-xl font-bold text-xs uppercase shadow-md shadow-[#00AFF2]/30"
+                className="bg-[#00AFF2] hover:bg-[#009bd6] active:scale-95 text-white px-6 py-2.5 rounded-xl font-bold text-xs uppercase shadow-md"
               >
                 Commander
               </button>
@@ -2097,7 +2176,7 @@ export default function ClicBouffePlatform() {
                   setOrderConfirmed(true);
                 }}
                 disabled={selectedDishes.length === 0}
-                className="bg-[#00AFF2] hover:bg-[#009bd6] active:scale-95 text-white px-8 py-3 rounded-xl font-bold text-xs uppercase shadow-md shadow-[#00AFF2]/30 flex items-center gap-2"
+                className="bg-[#00AFF2] hover:bg-[#009bd6] active:scale-95 text-white px-8 py-3 rounded-xl font-bold text-xs uppercase shadow-md flex items-center gap-2"
               >
                 <span>Confirmer commande</span>
                 <Check className="w-4 h-4 stroke-[3]" />
@@ -2183,6 +2262,33 @@ export default function ClicBouffePlatform() {
         onClose={() => setShowWalletModal(false)}
         walletBalance={walletBalance}
         onBalanceUpdated={(newBal) => setWalletBalance(newBal)}
+      />
+
+      {/* Modale Scanner QR Code (Table ou Plat) */}
+      <QrScannerModal
+        isOpen={showQrScannerModal}
+        onClose={() => setShowQrScannerModal(false)}
+        onScanDish={(dish) => {
+          setPreviewDish(dish);
+          setShowDishPreviewModal(true);
+        }}
+        onScanRestaurant={(restaurant) => {
+          setScannedRestaurant(restaurant);
+          setShowScannedRestaurantModal(true);
+        }}
+      />
+
+      {/* Modale Menu Restaurant Scanné par QR Code */}
+      <ScannedRestaurantModal
+        isOpen={showScannedRestaurantModal}
+        restaurant={scannedRestaurant}
+        onClose={() => setShowScannedRestaurantModal(false)}
+        selectedDishes={selectedDishes}
+        onToggleDish={toggleSelectDish}
+        onGoToExplorer={() => {
+          setActiveNavTab("explorer");
+          setScreen("explorer");
+        }}
       />
     </div>
   );
