@@ -23,6 +23,9 @@ if (typeof (globalThis as unknown as { window?: unknown }).window === "undefined
 }
 
 import { authService } from "../lib/services/auth-service";
+import React from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { SideDrawer } from "../components/navigation/side-drawer";
 
 describe("Gestion du Portefeuille et Menu Latéral", () => {
   beforeEach(() => {
@@ -64,5 +67,49 @@ describe("Gestion du Portefeuille et Menu Latéral", () => {
 
     localStorage.setItem("clicbouffe_theme", "light");
     expect(localStorage.getItem("clicbouffe_theme")).toBe("light");
+  });
+
+  describe("Animations douces et progressives du Menu Latéral (SideDrawer)", () => {
+    it("ne rend rien dans le DOM lorsque isOpen est false", () => {
+      const markup = renderToStaticMarkup(
+        React.createElement(SideDrawer, {
+          isOpen: false,
+          onClose: () => {},
+          currentUser: null,
+          walletBalance: 0,
+          onOpenAuth: () => {},
+          onSignOut: () => {},
+          onOpenWallet: () => {},
+          onOpenDeliveryRates: () => {},
+          onNavigateToScreen: () => {},
+          theme: "light",
+          onToggleTheme: () => {},
+        })
+      );
+      expect(markup).toBe("");
+    });
+
+    it("rend le menu latéral avec classes d'animation douce (drawer-backdrop et drawer-panel)", () => {
+      const markup = renderToStaticMarkup(
+        React.createElement(SideDrawer, {
+          isOpen: true,
+          onClose: () => {},
+          currentUser: null,
+          walletBalance: 2000,
+          onOpenAuth: () => {},
+          onSignOut: () => {},
+          onOpenWallet: () => {},
+          onOpenDeliveryRates: () => {},
+          onNavigateToScreen: () => {},
+          theme: "light",
+          onToggleTheme: () => {},
+        })
+      );
+      expect(markup).toContain('aria-label="Menu latéral"');
+      expect(markup).toContain("drawer-backdrop");
+      expect(markup).toContain("drawer-panel");
+      expect(markup).toContain("Mon Portefeuille");
+      expect(markup).toContain("2 000 FCFA");
+    });
   });
 });

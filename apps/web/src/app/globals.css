@@ -126,3 +126,19 @@ svg,
 .animate-search-shortcuts {
   animation: searchShortcutsFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.08s backwards;
 }
+
+/* Animations d'ouverture et fermeture progressive et douce du Menu Latéral (SideDrawer) */
+.drawer-backdrop {
+  transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity;
+}
+
+.drawer-panel {
+  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.drawer-panel-exit {
+  transition: transform 0.3s cubic-bezier(0.32, 0, 0.67, 0);
+  will-change: transform;
+}

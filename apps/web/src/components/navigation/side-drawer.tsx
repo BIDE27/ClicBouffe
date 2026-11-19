@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   X,
   User,
@@ -19,9 +19,9 @@ import {
   ChevronRight,
   ShieldCheck,
 } from "lucide-react";
-import { UserProfile } from "@/lib/types/database";
-import { hapticFeedback } from "@/lib/native/haptics";
-import { LogoMarmite } from "@/components/ui/logo-marmite";
+import { UserProfile } from "../../lib/types/database";
+import { hapticFeedback } from "../../lib/native/haptics";
+import { LogoMarmite } from "../ui/logo-marmite";
 
 interface SideDrawerProps {
   isOpen: boolean;
@@ -58,23 +58,93 @@ export function SideDrawer({
   currentViewMode = "marketplace",
   onToggleViewMode,
 }: SideDrawerProps) {
-  if (!isOpen) return null;
+  // États de cycle de vie d'animation (maintien dans le DOM pendant la fermeture douce)
+  const [isRendered, setIsRendered] = useState(isOpen);
+  const [isVisible, setIsVisible] = useState(isOpen);
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  const closingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Synchronisation sécurisée pendant le cycle de rendu sans cascading renders
+  if (prevIsOpen !== isOpen) {
+    setPrevIsOpen(isOpen);
+    if (isOpen) {
+      setIsRendered(true);
+    } else {
+      setIsVisible(false);
+    }
+  }
+
+  // Animation progressive et douce d'ouverture / fermeture
+  useEffect(() => {
+    if (isOpen) {
+      if (closingTimeoutRef.current) {
+        clearTimeout(closingTimeoutRef.current);
+        closingTimeoutRef.current = null;
+      }
+      const raf = requestAnimationFrame(() => {
+        setIsVisible(true);
+      });
+      return () => cancelAnimationFrame(raf);
+    } else {
+      closingTimeoutRef.current = setTimeout(() => {
+        setIsRendered(false);
+      }, 340);
+      return () => {
+        if (closingTimeoutRef.current) {
+          clearTimeout(closingTimeoutRef.current);
+        }
+      };
+    }
+  }, [isOpen]);
+
+  // Fermeture douce avec déclenchement de callback après glisse
+  const handleClose = (callback?: () => void) => {
+    hapticFeedback("light");
+    setIsVisible(false);
+    closingTimeoutRef.current = setTimeout(() => {
+      callback?.();
+      onClose();
+    }, 300);
+  };
+
+  // Interception de la touche Échap
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        hapticFeedback("light");
+        setIsVisible(false);
+        closingTimeoutRef.current = setTimeout(() => {
+          onClose();
+        }, 300);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
+  if (!isRendered) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end animate-in fade-in duration-200">
-      {/* Arrière-plan assombri (Backdrop) */}
+    <div
+      className={`fixed inset-0 z-50 flex justify-end ${
+        isVisible ? "pointer-events-auto" : "pointer-events-none"
+      }`}
+    >
+      {/* Arrière-plan assombri (Backdrop) avec transition progressive et douce */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
-        onClick={() => {
-          hapticFeedback("light");
-          onClose();
-        }}
+        className={`fixed inset-0 bg-black/60 backdrop-blur-xs drawer-backdrop ${
+          isVisible ? "opacity-100" : "opacity-0"
+        }`}
+        onClick={() => handleClose()}
         aria-hidden="true"
       />
 
-      {/* Tiroir latéral (Sliding Drawer) */}
+      {/* Tiroir latéral (Sliding Drawer) avec transition fluide et accélération matérielle GPU */}
       <aside
-        className="relative w-full max-w-xs sm:max-w-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 h-full shadow-2xl flex flex-col z-10 animate-in slide-in-from-right duration-300 overflow-y-auto border-l border-slate-100 dark:border-slate-800"
+        className={`relative w-full max-w-xs sm:max-w-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 h-full shadow-2xl flex flex-col z-10 overflow-y-auto border-l border-slate-100 dark:border-slate-800 ${
+          isVisible ? "drawer-panel translate-x-0" : "drawer-panel-exit translate-x-full"
+        }`}
         role="dialog"
         aria-label="Menu latéral"
       >
@@ -91,10 +161,7 @@ export function SideDrawer({
             </div>
           </div>
           <button
-            onClick={() => {
-              hapticFeedback("light");
-              onClose();
-            }}
+            onClick={() => handleClose()}
             className="w-8 h-8 rounded-full bg-slate-200/80 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition-colors"
             aria-label="Fermer le menu"
           >
@@ -108,67 +175,65 @@ export function SideDrawer({
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#00AFF2] to-sky-400 text-white flex items-center justify-center font-black text-lg shadow-md shrink-0">
-                  {currentUser.full_name?.charAt(0) || "U"}
+                  {currentUser.full_name ? currentUser.full_name.charAt(0).toUpperCase() : "U"}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <p className="text-sm font-black text-slate-900 dark:text-white truncate">
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white truncate">
                       {currentUser.full_name}
-                    </p>
+                    </h3>
                     <ShieldCheck className="w-4 h-4 text-[#00AFF2] shrink-0" />
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{currentUser.email}</p>
-                  <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 dark:bg-sky-900/60 text-[#00AFF2]">
+                  <span className="inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950/60 text-[#00AFF2] border border-sky-200 dark:border-sky-800">
                     {currentUser.role === "restaurant_owner" ? "Restaurateur Partenaire" : "Client Gourmet"}
                   </span>
                 </div>
               </div>
 
-              {/* Si restaurateur, bouton de bascule vers le KDS */}
+              {/* Si restaurateur, bouton rapide de bascule Marketplace / KDS */}
               {currentUser.role === "restaurant_owner" && onToggleViewMode && (
                 <button
                   onClick={() => {
-                    hapticFeedback("medium");
-                    onToggleViewMode();
-                    onClose();
+                    handleClose(() => {
+                      onToggleViewMode();
+                    });
                   }}
                   className="w-full py-2 px-3 bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-xl text-xs font-bold flex items-center justify-between transition-all shadow-xs"
                 >
-                  <span className="flex items-center gap-2">
+                  <div className="flex items-center gap-2">
                     <ChefHat className="w-4 h-4 text-amber-300" />
-                    <span>{currentViewMode === "kds" ? "Retour Boutique Client" : "Ouvrir Espace KDS"}</span>
-                  </span>
-                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                    <span>Mode : {currentViewMode === "kds" ? "Espace KDS Cuisine" : "Marketplace Client"}</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4" />
                 </button>
               )}
 
-              {/* Carte Portefeuille intégrée dans le profil */}
+              {/* Solde Portefeuille ClicBouffe */}
               <div
                 onClick={() => {
-                  hapticFeedback("light");
-                  onOpenWallet();
-                  onClose();
+                  handleClose(() => {
+                    onOpenWallet();
+                  });
                 }}
                 className="p-3 rounded-2xl bg-white dark:bg-slate-800/80 border border-sky-200/80 dark:border-slate-700 shadow-xs hover:border-[#00AFF2] transition-all cursor-pointer group"
               >
-                <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1.5">
-                    <Wallet className="w-3.5 h-3.5 text-[#00AFF2]" />
-                    Solde Portefeuille
-                  </span>
-                  <span className="text-[10px] font-bold text-[#00AFF2] group-hover:underline">
-                    Recharger +
-                  </span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Wallet className="w-4 h-4 text-[#00AFF2]" />
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Solde Portefeuille</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-[#00AFF2] group-hover:underline">Recharger +</span>
                 </div>
-                <p className="text-lg font-black text-slate-900 dark:text-white group-hover:text-[#00AFF2] transition-colors">
+                <p className="text-xl font-black text-slate-900 dark:text-white mt-1">
                   {formatFCFA(walletBalance)}
                 </p>
               </div>
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-sky-100 dark:bg-sky-950/60 text-[#00AFF2] flex items-center justify-center shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center font-bold text-base shrink-0">
                   <User className="w-5 h-5" />
                 </div>
                 <div>
@@ -180,27 +245,27 @@ export function SideDrawer({
               </div>
               <button
                 onClick={() => {
-                  hapticFeedback("medium");
-                  onClose();
-                  onOpenAuth();
+                  handleClose(() => {
+                    onOpenAuth();
+                  });
                 }}
-                className="w-full py-2.5 bg-[#00AFF2] hover:bg-[#0098d4] text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-all active:scale-95"
+                className="w-full py-2.5 bg-[#00AFF2] hover:bg-[#0098d4] text-white rounded-xl text-xs font-bold transition-all shadow-xs active:scale-95 flex items-center justify-center gap-1.5"
               >
-                <User className="w-4 h-4" />
-                <span>Se connecter / S&apos;inscrire</span>
+                <User className="w-3.5 h-3.5" />
+                <span>Se connecter / Créer un compte</span>
               </button>
             </div>
           )}
         </div>
 
-        {/* Liste des Liens de Navigation */}
-        <div className="flex-1 p-3 sm:p-4 space-y-1">
-          {/* Portefeuille */}
+        {/* Section Navigation & Liens Principaux */}
+        <div className="p-3 sm:p-4 space-y-1 flex-1">
+          {/* Mon Portefeuille */}
           <button
             onClick={() => {
-              hapticFeedback("light");
-              onOpenWallet();
-              onClose();
+              handleClose(() => {
+                onOpenWallet();
+              });
             }}
             className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300 transition-colors group"
           >
@@ -213,17 +278,17 @@ export function SideDrawer({
                 <p className="text-[10px] text-slate-400 dark:text-slate-500">Paiements 1-clic & recharges</p>
               </div>
             </div>
-            <span className="text-xs font-black text-[#00AFF2] bg-sky-50 dark:bg-sky-950/60 px-2 py-0.5 rounded-lg border border-sky-100 dark:border-sky-900">
+            <span className="text-xs font-black text-[#00AFF2] bg-sky-50 dark:bg-sky-950/60 px-2 py-0.5 rounded-full border border-sky-100 dark:border-sky-900">
               {formatFCFA(walletBalance)}
             </span>
           </button>
 
-          {/* Favoris */}
+          {/* Mes Favoris */}
           <button
             onClick={() => {
-              hapticFeedback("light");
-              onNavigateToScreen("home");
-              onClose();
+              handleClose(() => {
+                onNavigateToScreen("home");
+              });
             }}
             className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300 transition-colors group"
           >
@@ -242,9 +307,9 @@ export function SideDrawer({
           {/* Mes Commandes */}
           <button
             onClick={() => {
-              hapticFeedback("light");
-              onNavigateToScreen("home");
-              onClose();
+              handleClose(() => {
+                onNavigateToScreen("home");
+              });
             }}
             className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300 transition-colors group"
           >
@@ -260,12 +325,12 @@ export function SideDrawer({
             <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500" />
           </button>
 
-          {/* Abonnements aux Restaus */}
+          {/* Mes Abonnements */}
           <button
             onClick={() => {
-              hapticFeedback("light");
-              onNavigateToScreen("abonnements");
-              onClose();
+              handleClose(() => {
+                onNavigateToScreen("abonnements");
+              });
             }}
             className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300 transition-colors group"
           >
@@ -281,17 +346,17 @@ export function SideDrawer({
             <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500" />
           </button>
 
-          {/* Plats pour plus tard */}
+          {/* Commandes Plus Tard */}
           <button
             onClick={() => {
-              hapticFeedback("light");
-              onNavigateToScreen("plus_tard");
-              onClose();
+              handleClose(() => {
+                onNavigateToScreen("plus_tard");
+              });
             }}
             className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300 transition-colors group"
           >
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 flex items-center justify-center group-hover:bg-indigo-500 group-hover:text-white transition-colors">
+              <div className="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 flex items-center justify-center group-hover:bg-purple-500 group-hover:text-white transition-colors">
                 <Clock className="w-4 h-4" />
               </div>
               <div className="text-left">
@@ -302,17 +367,17 @@ export function SideDrawer({
             <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500" />
           </button>
 
-          {/* Tarifs de livraison */}
+          {/* Grille Tarifs de Livraison */}
           <button
             onClick={() => {
-              hapticFeedback("light");
-              onOpenDeliveryRates();
-              onClose();
+              handleClose(() => {
+                onOpenDeliveryRates();
+              });
             }}
             className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300 transition-colors group"
           >
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-cyan-50 dark:bg-cyan-950/40 text-[#00AFF2] flex items-center justify-center group-hover:bg-[#00AFF2] group-hover:text-white transition-colors">
+              <div className="w-9 h-9 rounded-xl bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 flex items-center justify-center group-hover:bg-cyan-500 group-hover:text-white transition-colors">
                 <Truck className="w-4 h-4" />
               </div>
               <div className="text-left">
@@ -323,58 +388,49 @@ export function SideDrawer({
             <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500" />
           </button>
 
-          {/* Bascule Thème Clair / Sombre Fonctionnelle (Capture 2) */}
-          <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-800">
+          {/* Séparateur */}
+          <div className="pt-2 pb-1 border-t border-slate-100 dark:border-slate-800/80 my-2" />
+
+          {/* Mode Sombre / Mode Clair (Bascule interactive) */}
+          <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/40">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 flex items-center justify-center shadow-2xs">
+              <div className="w-9 h-9 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center shadow-2xs">
                 {theme === "dark" ? (
-                  <Moon className="w-4 h-4 text-sky-400" />
+                  <Moon className="w-4 h-4 text-[#00AFF2]" />
                 ) : (
                   <Sun className="w-4 h-4 text-amber-500" />
                 )}
               </div>
               <div>
-                <p className="text-xs font-bold text-slate-800 dark:text-white">
+                <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
                   {theme === "dark" ? "Mode Sombre" : "Mode Clair"}
                 </p>
-                <p className="text-[10px] text-slate-400 dark:text-slate-400">
-                  {theme === "dark" ? "Thème sombre activé" : "Confort visuel jour/nuit"}
+                <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                  {theme === "dark" ? "Thème sombre actif" : "Thème clair actif"}
                 </p>
               </div>
             </div>
-
-            {/* Interrupteur à bascule interactif & tactile */}
             <button
-              type="button"
               onClick={() => {
                 hapticFeedback("light");
                 onToggleTheme();
               }}
-              className={`w-12 h-6 rounded-full transition-all duration-300 p-0.5 flex items-center cursor-pointer shadow-inner ${
-                theme === "dark" ? "bg-[#00AFF2]" : "bg-slate-300"
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                theme === "dark" ? "bg-[#00AFF2]" : "bg-slate-300 dark:bg-slate-700"
               }`}
-              aria-label="Basculer thème clair et sombre"
+              aria-label="Basculer le thème"
             >
-              <div
-                className={`w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 flex items-center justify-center ${
-                  theme === "dark" ? "translate-x-6" : "translate-x-0"
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  theme === "dark" ? "translate-x-6" : "translate-x-1"
                 }`}
-              >
-                {theme === "dark" ? (
-                  <Moon className="w-3 h-3 text-[#00AFF2]" />
-                ) : (
-                  <Sun className="w-3 h-3 text-amber-500" />
-                )}
-              </div>
+              />
             </button>
           </div>
 
-          {/* Paramètres */}
+          {/* Paramètres & Sécurité */}
           <button
-            onClick={() => {
-              hapticFeedback("light");
-              onClose();
-            }}
+            onClick={() => handleClose()}
             className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300 transition-colors group"
           >
             <div className="flex items-center gap-3">
@@ -392,11 +448,10 @@ export function SideDrawer({
           {/* Support WhatsApp */}
           <button
             onClick={() => {
-              hapticFeedback("light");
               if (typeof window !== "undefined") {
                 window.open("https://wa.me/22997000000?text=Bonjour%20ClicBouffe", "_blank");
               }
-              onClose();
+              handleClose();
             }}
             className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300 transition-colors group"
           >
@@ -418,9 +473,9 @@ export function SideDrawer({
           {currentUser ? (
             <button
               onClick={() => {
-                hapticFeedback("medium");
-                onSignOut();
-                onClose();
+                handleClose(() => {
+                  onSignOut();
+                });
               }}
               className="w-full py-2.5 px-3 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/70 dark:bg-rose-950/30 hover:bg-rose-100/90 dark:hover:bg-rose-950/60 text-rose-600 dark:text-rose-400 font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-95 shadow-2xs"
             >
