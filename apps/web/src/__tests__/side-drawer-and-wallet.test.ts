@@ -107,7 +107,9 @@ describe("Gestion du Portefeuille et Menu Latéral", () => {
       );
       expect(markup).toContain('aria-label="Menu latéral"');
       expect(markup).toContain("drawer-backdrop");
+      expect(markup).toContain("drawer-backdrop-in");
       expect(markup).toContain("drawer-panel");
+      expect(markup).toContain("drawer-panel-in");
       expect(markup).toContain("Mon Portefeuille");
       expect(markup).toContain("2 000 FCFA");
     });

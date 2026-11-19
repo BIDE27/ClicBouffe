@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   X,
   User,
@@ -58,92 +58,100 @@ export function SideDrawer({
   currentViewMode = "marketplace",
   onToggleViewMode,
 }: SideDrawerProps) {
-  // États de cycle de vie d'animation (maintien dans le DOM pendant la fermeture douce)
+  // Machine d'états d'animation (maintien dans le DOM pendant la fermeture douce)
   const [isRendered, setIsRendered] = useState(isOpen);
-  const [isVisible, setIsVisible] = useState(isOpen);
+  const [isClosing, setIsClosing] = useState(false);
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
   const closingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Synchronisation sécurisée pendant le cycle de rendu sans cascading renders
+  // Synchronisation lors des changements de props
   if (prevIsOpen !== isOpen) {
     setPrevIsOpen(isOpen);
     if (isOpen) {
       setIsRendered(true);
+      setIsClosing(false);
     } else {
-      setIsVisible(false);
+      setIsClosing(true);
     }
   }
 
-  // Animation progressive et douce d'ouverture / fermeture
+  // Fermeture automatique en fin d'animation de sortie (300ms)
   useEffect(() => {
-    if (isOpen) {
-      if (closingTimeoutRef.current) {
-        clearTimeout(closingTimeoutRef.current);
-        closingTimeoutRef.current = null;
-      }
-      const raf = requestAnimationFrame(() => {
-        setIsVisible(true);
-      });
-      return () => cancelAnimationFrame(raf);
-    } else {
+    if (isClosing) {
       closingTimeoutRef.current = setTimeout(() => {
         setIsRendered(false);
-      }, 340);
+        setIsClosing(false);
+      }, 300);
       return () => {
         if (closingTimeoutRef.current) {
           clearTimeout(closingTimeoutRef.current);
+          closingTimeoutRef.current = null;
         }
       };
     }
-  }, [isOpen]);
+  }, [isClosing]);
 
-  // Fermeture douce avec déclenchement de callback après glisse
-  const handleClose = (callback?: () => void) => {
-    hapticFeedback("light");
-    setIsVisible(false);
-    closingTimeoutRef.current = setTimeout(() => {
-      callback?.();
-      onClose();
-    }, 300);
-  };
+  // Nettoyage au démontage
+  useEffect(() => {
+    return () => {
+      if (closingTimeoutRef.current) {
+        clearTimeout(closingTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Déclencheur unifié de fermeture douce avec animation fluide
+  const handleClose = useCallback(
+    (callback?: () => void) => {
+      hapticFeedback("light");
+      if (isClosing) return;
+      setIsClosing(true);
+      if (closingTimeoutRef.current) {
+        clearTimeout(closingTimeoutRef.current);
+      }
+      closingTimeoutRef.current = setTimeout(() => {
+        callback?.();
+        onClose();
+        setIsRendered(false);
+        setIsClosing(false);
+      }, 300);
+    },
+    [isClosing, onClose]
+  );
 
   // Interception de la touche Échap
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || isClosing) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        hapticFeedback("light");
-        setIsVisible(false);
-        closingTimeoutRef.current = setTimeout(() => {
-          onClose();
-        }, 300);
+        handleClose();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, isClosing, handleClose]);
 
   if (!isRendered) return null;
 
   return (
     <div
       className={`fixed inset-0 z-50 flex justify-end ${
-        isVisible ? "pointer-events-auto" : "pointer-events-none"
+        isClosing ? "pointer-events-none" : "pointer-events-auto"
       }`}
     >
-      {/* Arrière-plan assombri (Backdrop) avec transition progressive et douce */}
+      {/* Arrière-plan assombri (Backdrop) avec fondu progressif et doux */}
       <div
         className={`fixed inset-0 bg-black/60 backdrop-blur-xs drawer-backdrop ${
-          isVisible ? "opacity-100" : "opacity-0"
+          isClosing ? "drawer-backdrop-out" : "drawer-backdrop-in"
         }`}
         onClick={() => handleClose()}
         aria-hidden="true"
       />
 
-      {/* Tiroir latéral (Sliding Drawer) avec transition fluide et accélération matérielle GPU */}
+      {/* Tiroir latéral (Sliding Drawer) avec glissement fluide et accélération matérielle GPU */}
       <aside
-        className={`relative w-full max-w-xs sm:max-w-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 h-full shadow-2xl flex flex-col z-10 overflow-y-auto border-l border-slate-100 dark:border-slate-800 ${
-          isVisible ? "drawer-panel translate-x-0" : "drawer-panel-exit translate-x-full"
+        className={`relative w-full max-w-xs sm:max-w-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 h-full shadow-2xl flex flex-col z-10 overflow-y-auto border-l border-slate-100 dark:border-slate-800 drawer-panel ${
+          isClosing ? "drawer-panel-out" : "drawer-panel-in"
         }`}
         role="dialog"
         aria-label="Menu latéral"
