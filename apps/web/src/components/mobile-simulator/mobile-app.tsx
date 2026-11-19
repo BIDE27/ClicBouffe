@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import { LogoMarmite } from "@/components/ui/logo-marmite";
 import {
   ArrowLeft,
   Beef,
@@ -212,13 +213,9 @@ export default function MobileApp({
         >
           <div className="flex flex-col items-center justify-center animate-fadeIn">
             <div className="relative w-44 h-40 flex items-center justify-center">
-              <Image
-                src="/images/logo_splash.png"
-                alt="Logo ClicBouffe"
-                width={190}
-                height={170}
-                priority
-                className="object-contain drop-shadow-md"
+              <LogoMarmite
+                className="w-full h-full object-contain drop-shadow-md"
+                withBackground={false}
               />
             </div>
             <h1 className="text-white text-3xl font-extrabold tracking-tight mt-3">

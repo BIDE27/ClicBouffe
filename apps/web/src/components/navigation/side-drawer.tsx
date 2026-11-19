@@ -82,7 +82,7 @@ export function SideDrawer({
         <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-900/90 pt-safe">
           <div className="flex items-center gap-2.5">
             {/* Logo officiel ClicBouffe : Marmite avec curseur à l'intérieur */}
-            <LogoMarmite className="w-8 h-8 rounded-xl shadow-xs shrink-0" size={32} withBackground />
+            <LogoMarmite className="w-8 h-8 shrink-0 shadow-xs" size={32} withBackground shape="circle" />
             <div>
               <h2 className="text-base font-black text-slate-900 dark:text-white tracking-tight leading-tight">
                 ClicBouffe

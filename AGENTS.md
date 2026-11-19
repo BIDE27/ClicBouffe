@@ -122,10 +122,11 @@ Pour garantir un niveau de qualité logiciel d'excellence, chaque lot de travail
    * Cet espace est réservé à la promotion des restaurants partenaires et des créations culinaires d'utilisateurs vendeurs de la marketplace.
 
 3. **Logo Officiel Unique et Permanent de ClicBouffe (Marmite avec Curseur de Clic Intérieur)** :
-   * **Emblème Visuel Obligatoire** : Le logo officiel et permanent de ClicBouffe est strictement constitué de **la marmite (avec ses deux poignées latérales, son couvercle et sa couronne supérieure) contenant le curseur de clic avec ses rayons d'impact à l'intérieur** (identique à l'emblème officiel du splash screen de chargement issu des maquettes d'origine).
+   * **Emblème Visuel Obligatoire** : Le logo officiel et permanent de ClicBouffe est strictement constitué de **la marmite (avec ses deux poignées latérales, son couvercle et sa couronne supérieure) contenant le curseur de clic avec ses rayons d'impact à l'intérieur** (issu directement du fichier vectoriel source de référence `assets/icones/logo.svg`).
+   * **Composant Vectoriel Dédié** : Composant React pur `@/components/ui/logo-marmite` (`LogoMarmite`) garantissant une netteté vectorielle 100% pixel-perfect sans aucun artefact raster ou boîte de fond.
    * **Emplacements d'Application Obligatoires** : Cette icône de marque doit être systématiquement et universellement appliquée pour :
-     - L'écran de chargement (Splash Screen).
-     - L'icône officielle du Menu Latéral (SideDrawer) en remplacement de toute abréviation temporaire 'CB'.
+     - L'écran de chargement (Splash Screen) en SVG vectoriel pur avec fond transparent sur bleu marque `#00AFF2`.
+     - L'icône officielle du Menu Latéral (SideDrawer) en SVG vectoriel avec badge circulaire bleu marque `#00AFF2`.
      - Le Favicon officiel du site Web (`/favicon.ico`, `/favicon.png`, `/favicon.svg`).
      - L'icône d'application mobile Apple (`/apple-touch-icon.png`) et Android / Web Manifest (`/icon.png`).
      *(Remarque : Dans la barre supérieure TopBar, le logo reste typographique et épuré avec l'intitulé 'ClicBouffe' sans icône marmite juxtaposée).*

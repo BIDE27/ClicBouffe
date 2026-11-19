@@ -41,6 +41,7 @@ import { WalletModal } from "@/components/wallet/wallet-modal";
 import { QrScannerModal } from "@/components/qr/qr-scanner-modal";
 import { ScannedRestaurantModal } from "@/components/qr/scanned-restaurant-modal";
 import { RestaurantDashboard } from "@/components/restaurant-dashboard/restaurant-dashboard";
+import { LogoMarmite } from "@/components/ui/logo-marmite";
 import { authService } from "@/lib/services/auth-service";
 import { UserProfile } from "@/lib/types/database";
 import { hapticFeedback } from "@/lib/native/haptics";
@@ -288,13 +289,9 @@ export default function ClicBouffePlatform() {
         >
           <div className="flex flex-col items-center justify-center animate-fadeIn">
             <div className="relative w-48 sm:w-60 h-44 sm:h-56 flex items-center justify-center">
-              <Image
-                src="/images/logo_splash.png"
-                alt="Logo ClicBouffe marmite avec curseur"
-                width={220}
-                height={200}
-                priority
-                className="object-contain drop-shadow-md"
+              <LogoMarmite
+                className="w-full h-full object-contain drop-shadow-md"
+                withBackground={false}
               />
             </div>
             <h1 className="text-white text-3xl sm:text-4xl font-extrabold tracking-tight mt-4 drop-shadow-sm font-sans">

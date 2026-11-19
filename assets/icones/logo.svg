@@ -1,0 +1,29 @@
+<svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+	<style>
+		.s0 { fill: none;stroke: #ffffff;stroke-linecap: round;stroke-width: 32 } 
+		.s1 { fill: #ffffff } 
+		.s2 { fill: #ffffff;stroke: #ffffff;stroke-linejoin: round;stroke-width: 10 } 
+		.s3 { fill: #00b0f0;stroke: #00b0f0;stroke-linejoin: round;stroke-width: 14 } 
+		.s4 { fill: #000000;stroke: #00b0f0;stroke-linecap: round;stroke-width: 16 } 
+	</style>
+	<g id="Arriere-plan">
+	</g>
+	<g id="Anses">
+		<path fill-rule="evenodd" class="s0" d="m192 408c-90 22-90 232 0 254"/>
+		<path fill-rule="evenodd" class="s0" d="m832 408c90 22 90 232 0 254"/>
+	</g>
+	<g id="Marmite">
+		<path class="s1" d="m186 365h652v330c0 100-68 165-163 165h-326c-95 0-163-65-163-165z"/>
+	</g>
+	<g id="Couvercle-et-Couronne">
+		<path class="s2" d="m148 372c72-99.7 172-150.82 276-161.9l-8-47.72 50 17.04 46-49.42 46 49.42 50-17.04-8 47.72c104 11.08 204 62.2 276 161.9z"/>
+	</g>
+	<g id="Curseur">
+		<path class="s3" d="m444 492l44 144 36-34 38 46 32-28-38-46 42-32z"/>
+		<path fill-rule="evenodd" class="s4" d="m398 492h24"/>
+		<path fill-rule="evenodd" class="s4" d="m408 456l18 18"/>
+		<path fill-rule="evenodd" class="s4" d="m444 444v24"/>
+		<path fill-rule="evenodd" class="s4" d="m480 456l-18 18"/>
+		<path fill-rule="evenodd" class="s4" d="m408 528l18-18"/>
+	</g>
+</svg>
