@@ -32,6 +32,7 @@ import { hapticFeedback } from "@/lib/native/haptics";
 
 interface RestaurantDashboardProps {
   ownerId?: string;
+  initialRestaurant?: RestaurantEntity | null;
   onSwitchToClientMode?: () => void;
   onSignOut?: () => void;
 }
@@ -47,11 +48,12 @@ function formatOrderTime(createdAt: string): string {
 
 export function RestaurantDashboard({
   ownerId = "user-resto-001",
+  initialRestaurant,
   onSwitchToClientMode,
   onSignOut,
 }: RestaurantDashboardProps) {
   const [activeTab, setActiveTab] = useState<"kds" | "menu" | "stats" | "settings">("kds");
-  const [restaurant, setRestaurant] = useState<RestaurantEntity | null>(null);
+  const [restaurant, setRestaurant] = useState<RestaurantEntity | null>(initialRestaurant || null);
   const [dishes, setDishes] = useState<DishEntity[]>([]);
   const [orders, setOrders] = useState<OrderEntity[]>([]);
   const [selectedOrderStatus, setSelectedOrderStatus] = useState<OrderStatus | "all">("all");
@@ -70,7 +72,7 @@ export function RestaurantDashboard({
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const resto = await restaurantService.getRestaurantByOwner(ownerId);
+      const resto = initialRestaurant || (await restaurantService.getRestaurantByOwner(ownerId));
       setRestaurant(resto);
       const [dishesData, ordersData] = await Promise.all([
         restaurantService.getDishes(resto.id),
@@ -89,7 +91,7 @@ export function RestaurantDashboard({
     let isMounted = true;
     const initData = async () => {
       try {
-        const resto = await restaurantService.getRestaurantByOwner(ownerId);
+        const resto = initialRestaurant || (await restaurantService.getRestaurantByOwner(ownerId));
         if (!isMounted) return;
         setRestaurant(resto);
         const [dishesData, ordersData] = await Promise.all([
@@ -111,7 +113,7 @@ export function RestaurantDashboard({
     return () => {
       isMounted = false;
     };
-  }, [ownerId]);
+  }, [ownerId, initialRestaurant]);
 
   if (isLoading || !restaurant) {
     return (

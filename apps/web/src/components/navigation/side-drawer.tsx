@@ -18,8 +18,10 @@ import {
   LogOut,
   ChevronRight,
   ShieldCheck,
+  Store,
+  Plus,
 } from "lucide-react";
-import { UserProfile } from "../../lib/types/database";
+import { UserProfile, RestaurantEntity } from "../../lib/types/database";
 import { hapticFeedback } from "../../lib/native/haptics";
 import { LogoMarmite } from "../ui/logo-marmite";
 
@@ -28,6 +30,7 @@ interface SideDrawerProps {
   onClose: () => void;
   currentUser: UserProfile | null;
   walletBalance: number;
+  userRestaurants?: RestaurantEntity[];
   onOpenAuth: () => void;
   onSignOut: () => void;
   onOpenWallet: () => void;
@@ -37,6 +40,8 @@ interface SideDrawerProps {
   onToggleTheme: () => void;
   currentViewMode?: "marketplace" | "kds";
   onToggleViewMode?: () => void;
+  onOpenCreateRestaurant?: () => void;
+  onSelectRestaurantForKDS?: (restaurant: RestaurantEntity) => void;
 }
 
 function formatFCFA(amount: number): string {
@@ -48,6 +53,7 @@ export function SideDrawer({
   onClose,
   currentUser,
   walletBalance,
+  userRestaurants = [],
   onOpenAuth,
   onSignOut,
   onOpenWallet,
@@ -57,6 +63,8 @@ export function SideDrawer({
   onToggleTheme,
   currentViewMode = "marketplace",
   onToggleViewMode,
+  onOpenCreateRestaurant,
+  onSelectRestaurantForKDS,
 }: SideDrawerProps) {
   // Machine d'états d'animation (maintien dans le DOM pendant la fermeture douce)
   const [isRendered, setIsRendered] = useState(isOpen);
@@ -194,20 +202,86 @@ export function SideDrawer({
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{currentUser.email}</p>
                   <span className="inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950/60 text-[#00AFF2] border border-sky-200 dark:border-sky-800">
-                    {currentUser.role === "restaurant_owner" ? "Restaurateur Partenaire" : "Client Gourmet"}
+                    {userRestaurants.length > 0
+                      ? `Vendeur Partenaire (${userRestaurants.length} restaurant${userRestaurants.length > 1 ? "s" : ""})`
+                      : "Membre ClicBouffe"}
                   </span>
                 </div>
               </div>
 
-              {/* Si restaurateur, bouton rapide de bascule Marketplace / KDS */}
-              {currentUser.role === "restaurant_owner" && onToggleViewMode && (
+              {/* Section Mes Restaurants (Modèle Facebook Page) */}
+              {userRestaurants.length > 0 ? (
+                <div className="space-y-2 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Store className="w-3.5 h-3.5 text-[#00AFF2]" />
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        Mes Restaurants ({userRestaurants.length})
+                      </span>
+                    </div>
+                    {onOpenCreateRestaurant && (
+                      <button
+                        onClick={() => handleClose(() => onOpenCreateRestaurant())}
+                        className="text-[11px] font-bold text-[#00AFF2] hover:underline cursor-pointer"
+                      >
+                        + Ajouter
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                    {userRestaurants.map((resto) => (
+                      <div
+                        key={resto.id}
+                        className="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/60"
+                      >
+                        <div className="min-w-0 flex-1 pr-2">
+                          <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{resto.name}</p>
+                          <p className="text-[10px] text-slate-400 truncate">{resto.category || resto.address}</p>
+                        </div>
+                        {onSelectRestaurantForKDS && (
+                          <button
+                            onClick={() => handleClose(() => onSelectRestaurantForKDS(resto))}
+                            className="px-2.5 py-1 bg-[#00AFF2] hover:bg-[#0098d4] text-white rounded-lg text-[10px] font-bold flex items-center gap-1 shrink-0 transition-colors cursor-pointer"
+                          >
+                            <ChefHat className="w-3 h-3" />
+                            <span>Gérer KDS</span>
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3 rounded-2xl bg-gradient-to-r from-sky-500/10 to-transparent border border-sky-200/60 dark:border-sky-900/40 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Store className="w-4 h-4 text-[#00AFF2]" />
+                    <span className="text-xs font-bold text-slate-900 dark:text-white">Ouvrir un restaurant</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
+                    Comme sur Facebook, créez votre page restaurant et commencez à vendre vos plats sur ClicBouffe.
+                  </p>
+                  {onOpenCreateRestaurant && (
+                    <button
+                      onClick={() => handleClose(() => onOpenCreateRestaurant())}
+                      className="w-full py-1.5 px-3 bg-[#00AFF2] hover:bg-[#0098d4] text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Créer mon restaurant</span>
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Si restaurateur avec vue KDS active, bascule rapide Marketplace / KDS */}
+              {userRestaurants.length > 0 && onToggleViewMode && (
                 <button
                   onClick={() => {
                     handleClose(() => {
                       onToggleViewMode();
                     });
                   }}
-                  className="w-full py-2 px-3 bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-xl text-xs font-bold flex items-center justify-between transition-all shadow-xs"
+                  className="w-full py-2 px-3 bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-xl text-xs font-bold flex items-center justify-between transition-all shadow-xs cursor-pointer"
                 >
                   <div className="flex items-center gap-2">
                     <ChefHat className="w-4 h-4 text-amber-300" />
@@ -247,7 +321,7 @@ export function SideDrawer({
                 <div>
                   <h3 className="text-sm font-bold text-slate-900 dark:text-white">Bienvenue sur ClicBouffe</h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Connectez-vous pour suivre vos commandes et recharger votre portefeuille.
+                    Connectez-vous pour passer vos commandes, recharger votre solde ou ouvrir un restaurant.
                   </p>
                 </div>
               </div>
@@ -257,7 +331,7 @@ export function SideDrawer({
                     onOpenAuth();
                   });
                 }}
-                className="w-full py-2.5 bg-[#00AFF2] hover:bg-[#0098d4] text-white rounded-xl text-xs font-bold transition-all shadow-xs active:scale-95 flex items-center justify-center gap-1.5"
+                className="w-full py-2.5 bg-[#00AFF2] hover:bg-[#0098d4] text-white rounded-xl text-xs font-bold transition-all shadow-xs active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <User className="w-3.5 h-3.5" />
                 <span>Se connecter / Créer un compte</span>

@@ -33,6 +33,19 @@ export interface RestaurantEntity {
   created_at: string;
 }
 
+export interface CreateRestaurantParams {
+  ownerId: string;
+  name: string;
+  category: string;
+  address: string;
+  phoneNumber: string;
+  description?: string;
+  openTime?: string;
+  closeTime?: string;
+  logoUrl?: string;
+  bannerUrl?: string;
+}
+
 export interface DishEntity {
   id: string;
   restaurant_id: string;

@@ -4,51 +4,20 @@ import { createClient } from "../supabase/client";
 import { UserProfile, UserRole } from "../types/database";
 
 const LOCAL_STORAGE_USER_KEY = "clicbouffe_user_profile";
-
-export const DEMO_PROFILES: Record<string, UserProfile> = {
-  customer: {
-    id: "user-cust-001",
-    email: "client@clicbouffe.bj",
-    full_name: "Koffi Mensah",
-    phone_number: "+229 97 12 34 56",
-    role: "customer",
-    avatar_url: "/images/avatar_client.png",
-    created_at: new Date().toISOString(),
-  },
-  restaurant_owner: {
-    id: "user-resto-001",
-    email: "maquis@clicbouffe.bj",
-    full_name: "Maman Akofa",
-    phone_number: "+229 95 88 77 66",
-    role: "restaurant_owner",
-    avatar_url: "/images/avatar_chef.png",
-    created_at: new Date().toISOString(),
-  },
-  burger_owner: {
-    id: "user-resto-002",
-    email: "burger@clicbouffe.bj",
-    full_name: "Arnaud Dossou",
-    phone_number: "+229 96 44 33 22",
-    role: "restaurant_owner",
-    avatar_url: "/images/avatar_chef.png",
-    created_at: new Date().toISOString(),
-  },
-};
+const LOCAL_STORAGE_WALLET_PREFIX = "clicbouffe_wallet_";
 
 export interface SignUpParams {
   email: string;
   password?: string;
   fullName: string;
-  phone: string;
-  role: UserRole;
-  restaurantName?: string;
-  restaurantCategory?: string;
-  restaurantAddress?: string;
+  phone?: string;
+  role?: UserRole;
 }
 
 export const authService = {
   /**
-   * Récupère le profil actuellement connecté (Supabase ou Session Locale)
+   * Récupère le profil actuellement connecté depuis Supabase
+   * Retourne null si aucun utilisateur n'est connecté (aucun profil démo par défaut).
    */
   async getCurrentProfile(): Promise<UserProfile | null> {
     if (typeof window === "undefined") return null;
@@ -56,15 +25,17 @@ export const authService = {
     if (process.env.NODE_ENV !== "test") {
       try {
         const supabase = createClient();
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
 
         if (session?.user) {
-          // Tente de récupérer le profil depuis Supabase
+          // Récupération du profil depuis la table profiles
           const { data: profile } = await supabase
             .from("profiles")
             .select("*")
             .eq("id", session.user.id)
-            .single();
+            .maybeSingle();
 
           if (profile) {
             const loaded: UserProfile = {
@@ -72,20 +43,54 @@ export const authService = {
               email: session.user.email || "",
               full_name: profile.full_name,
               phone_number: profile.phone_number,
-              role: profile.role as UserRole,
+              role: (profile.role as UserRole) || "customer",
               avatar_url: profile.avatar_url,
               created_at: profile.created_at,
             };
             localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(loaded));
             return loaded;
           }
+
+          // Si le profil n'existe pas encore dans la table (ex: trigger n'a pas tourné)
+          const fallbackName =
+            (session.user.user_metadata?.full_name as string) ||
+            session.user.email?.split("@")[0] ||
+            "Utilisateur";
+          const fallbackPhone = (session.user.user_metadata?.phone as string) || undefined;
+
+          const createdProfile: UserProfile = {
+            id: session.user.id,
+            email: session.user.email || "",
+            full_name: fallbackName,
+            phone_number: fallbackPhone,
+            role: "customer",
+            created_at: new Date().toISOString(),
+          };
+
+          try {
+            await supabase.from("profiles").upsert({
+              id: session.user.id,
+              full_name: fallbackName,
+              phone_number: fallbackPhone,
+              role: "customer",
+            });
+          } catch {
+            // Tolérance
+          }
+
+          localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(createdProfile));
+          return createdProfile;
         }
+
+        // Pas de session Supabase active : on nettoie le cache local si obsolète
+        localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
+        return null;
       } catch {
-        // Supabase non joignable ou mode hors-ligne
+        // En cas d'erreur de connexion à Supabase, vérifie le cache local
       }
     }
 
-    // Repli sur le stockage local persistant
+    // Repli sur le stockage local persistant (tests ou hors-ligne avec session active)
     const cached = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
     if (cached) {
       try {
@@ -99,146 +104,209 @@ export const authService = {
   },
 
   /**
-   * Inscription d'un nouveau compte (Client ou Restaurateur)
+   * Inscription d'un nouveau compte utilisateur universel (type unique).
+   * Tout le monde démarre comme utilisateur standard ClicBouffe.
    */
   async signUp(params: SignUpParams): Promise<{ profile: UserProfile | null; error: string | null }> {
-    const userId = `user-${Date.now()}`;
-    const newProfile: UserProfile = {
-      id: userId,
-      email: params.email,
-      full_name: params.fullName,
-      phone_number: params.phone,
-      role: params.role,
-      avatar_url: params.role === "restaurant_owner" ? "/images/avatar_chef.png" : undefined,
-      created_at: new Date().toISOString(),
-    };
+    const trimmedEmail = params.email.trim().toLowerCase();
+    const fullName = params.fullName.trim();
+    const phone = params.phone?.trim();
+    const password = params.password || "ClicBouffe2026!";
+
+    if (!trimmedEmail) {
+      return { profile: null, error: "Veuillez renseigner une adresse email valide." };
+    }
+    if (!fullName) {
+      return { profile: null, error: "Veuillez renseigner votre nom complet." };
+    }
+    if (password.length < 6) {
+      return { profile: null, error: "Le mot de passe doit contenir au moins 6 caractères." };
+    }
 
     if (process.env.NODE_ENV !== "test") {
       try {
         const supabase = createClient();
         const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: params.email,
-          password: params.password || "ClicBouffe2026!",
+          email: trimmedEmail,
+          password,
           options: {
             data: {
-              full_name: params.fullName,
-              role: params.role,
-              phone: params.phone,
-              restaurant_name: params.restaurantName,
+              full_name: fullName,
+              phone: phone || "",
+              role: "customer",
             },
           },
         });
 
-        if (authData.user) {
-          newProfile.id = authData.user.id;
+        if (authError) {
+          const msg = authError.message.toLowerCase();
+          if (msg.includes("already registered") || msg.includes("already in use")) {
+            return { profile: null, error: "Un compte existe déjà avec cette adresse email." };
+          }
+          return { profile: null, error: authError.message };
         }
 
-        // Si restaurateur, enregistre les infos de son restaurant
-        if (params.role === "restaurant_owner" && params.restaurantName) {
+        if (authData.user) {
+          const userProfile: UserProfile = {
+            id: authData.user.id,
+            email: trimmedEmail,
+            full_name: fullName,
+            phone_number: phone,
+            role: "customer",
+            created_at: new Date().toISOString(),
+          };
+
+          // Synchronisation immédiate dans la table public.profiles
           try {
-            await supabase.from("restaurants").insert({
-              owner_id: newProfile.id,
-              name: params.restaurantName,
-              slug: params.restaurantName.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-              address: params.restaurantAddress || "Akpakpa, Cotonou",
-              phone_number: params.phone,
-              category: params.restaurantCategory || "Cuisine Locale & Grillades",
-              is_active: true,
-              is_verified: true,
+            await supabase.from("profiles").upsert({
+              id: authData.user.id,
+              full_name: fullName,
+              phone_number: phone || null,
+              role: "customer",
             });
           } catch {
-            // Fallback géré localement
+            // Le trigger PostgreSQL s'en charge en secours
           }
-        }
 
-        if (typeof window !== "undefined") {
-          localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(newProfile));
-        }
+          if (typeof window !== "undefined") {
+            localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(userProfile));
+          }
 
-        if (authError && !authData.user) {
-          return { profile: newProfile, error: null };
+          return { profile: userProfile, error: null };
         }
-
-        return { profile: newProfile, error: null };
-      } catch {
-        // En cas d'erreur de réseau, bascule sur la persistance locale
+      } catch (err: unknown) {
+        return {
+          profile: null,
+          error: (err as Error)?.message || "Impossible de contacter le serveur d'authentification.",
+        };
       }
     }
 
+    // Environnement de test local
+    const testProfile: UserProfile = {
+      id: `user-${Date.now()}`,
+      email: trimmedEmail,
+      full_name: fullName,
+      phone_number: phone,
+      role: params.role || "customer",
+      created_at: new Date().toISOString(),
+    };
     if (typeof window !== "undefined") {
-      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(newProfile));
+      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(testProfile));
     }
-    return { profile: newProfile, error: null };
+    return { profile: testProfile, error: null };
   },
 
   /**
    * Connexion avec Email et Mot de passe
    */
   async signIn(email: string, password?: string): Promise<{ profile: UserProfile | null; error: string | null }> {
-    // Vérification des comptes démo rapides
-    const lowerEmail = email.toLowerCase().trim();
-    if (lowerEmail.includes("maquis") || lowerEmail.includes("resto") || lowerEmail.includes("chef")) {
-      const profile = DEMO_PROFILES.restaurant_owner;
-      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(profile));
-      return { profile, error: null };
+    const trimmedEmail = email.trim().toLowerCase();
+    const cleanPassword = password || "ClicBouffe2026!";
+
+    if (!trimmedEmail) {
+      return { profile: null, error: "Veuillez renseigner votre adresse email." };
+    }
+    if (!cleanPassword) {
+      return { profile: null, error: "Veuillez renseigner votre mot de passe." };
     }
 
-    if (lowerEmail.includes("burger")) {
-      const profile = DEMO_PROFILES.burger_owner;
-      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(profile));
-      return { profile, error: null };
-    }
+    if (process.env.NODE_ENV !== "test") {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: trimmedEmail,
+          password: cleanPassword,
+        });
 
-    if (lowerEmail.includes("client") || lowerEmail.includes("koffi")) {
-      const profile = DEMO_PROFILES.customer;
-      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(profile));
-      return { profile, error: null };
-    }
+        if (error) {
+          const msg = error.message.toLowerCase();
+          if (msg.includes("invalid login credentials") || msg.includes("invalid_grant")) {
+            return { profile: null, error: "Adresse email ou mot de passe incorrect." };
+          }
+          return { profile: null, error: error.message };
+        }
 
-    try {
-      const supabase = createClient();
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password: password || "ClicBouffe2026!",
-      });
+        if (data.user) {
+          // Récupération du profil synchronisé
+          let profile: UserProfile | null = null;
+          const { data: profileRow } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", data.user.id)
+            .maybeSingle();
 
-      if (error) {
-        // Si l'utilisateur n'existe pas encore ou erreur auth, création automatique d'un profil client
-        const autoProfile: UserProfile = {
-          id: `user-${Date.now()}`,
-          email,
-          full_name: email.split("@")[0],
-          role: "customer",
-          created_at: new Date().toISOString(),
+          if (profileRow) {
+            profile = {
+              id: profileRow.id,
+              email: data.user.email || trimmedEmail,
+              full_name: profileRow.full_name,
+              phone_number: profileRow.phone_number,
+              role: (profileRow.role as UserRole) || "customer",
+              avatar_url: profileRow.avatar_url,
+              created_at: profileRow.created_at,
+            };
+          } else {
+            profile = {
+              id: data.user.id,
+              email: data.user.email || trimmedEmail,
+              full_name: (data.user.user_metadata?.full_name as string) || trimmedEmail.split("@")[0],
+              phone_number: data.user.user_metadata?.phone as string,
+              role: "customer",
+              created_at: new Date().toISOString(),
+            };
+            try {
+              await supabase.from("profiles").upsert({
+                id: data.user.id,
+                full_name: profile.full_name,
+                phone_number: profile.phone_number || null,
+                role: "customer",
+              });
+            } catch {
+              // Tolérance
+            }
+          }
+
+          if (typeof window !== "undefined") {
+            localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(profile));
+          }
+
+          return { profile, error: null };
+        }
+      } catch (err: unknown) {
+        return {
+          profile: null,
+          error: (err as Error)?.message || "Erreur de connexion au service d'authentification.",
         };
-        localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(autoProfile));
-        return { profile: autoProfile, error: null };
       }
-
-      if (data.user) {
-        const profile = await this.getCurrentProfile();
-        return { profile, error: null };
-      }
-    } catch {
-      // Mode hors-ligne
     }
 
+    // Environnement de test local
     const fallbackProfile: UserProfile = {
       id: `user-${Date.now()}`,
-      email,
-      full_name: email.split("@")[0],
+      email: trimmedEmail,
+      full_name: trimmedEmail.split("@")[0],
       role: "customer",
       created_at: new Date().toISOString(),
     };
-    localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(fallbackProfile));
+    if (typeof window !== "undefined") {
+      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(fallbackProfile));
+    }
     return { profile: fallbackProfile, error: null };
   },
 
   /**
-   * Connexion Démo Rapide en 1 clic
+   * Connexion Démo réservée aux tests automatisés
    */
-  loginDemo(role: "customer" | "restaurant_owner"): UserProfile {
-    const profile = role === "restaurant_owner" ? DEMO_PROFILES.restaurant_owner : DEMO_PROFILES.customer;
+  loginDemo(role: "customer" | "restaurant_owner" = "customer"): UserProfile {
+    const profile: UserProfile = {
+      id: role === "restaurant_owner" ? "user-resto-001" : "user-cust-001",
+      email: role === "restaurant_owner" ? "resto@test.bj" : "client@test.bj",
+      full_name: role === "restaurant_owner" ? "Chef Propriétaire" : "Client ClicBouffe",
+      phone_number: "+229 97 00 00 00",
+      role,
+      created_at: new Date().toISOString(),
+    };
     if (typeof window !== "undefined") {
       localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(profile));
     }
@@ -246,11 +314,12 @@ export const authService = {
   },
 
   /**
-   * Récupère le solde du portefeuille (0 FCFA par défaut tant que non rechargé)
+   * Récupère le solde du portefeuille (0 FCFA par défaut pour tout vrai utilisateur)
    */
-  getWalletBalance(): number {
+  getWalletBalance(userId?: string): number {
     if (typeof window === "undefined") return 0;
-    const stored = localStorage.getItem("clicbouffe_wallet_balance");
+    const key = userId ? `${LOCAL_STORAGE_WALLET_PREFIX}${userId}` : "clicbouffe_wallet_balance";
+    const stored = localStorage.getItem(key);
     if (!stored) return 0;
     const parsed = parseInt(stored, 10);
     return isNaN(parsed) ? 0 : parsed;
@@ -259,28 +328,19 @@ export const authService = {
   /**
    * Recharge le portefeuille de l'utilisateur
    */
-  rechargeWallet(amount: number): number {
-    const current = this.getWalletBalance();
+  rechargeWallet(amount: number, userId?: string): number {
+    const current = this.getWalletBalance(userId);
     const newBalance = current + amount;
     if (typeof window !== "undefined") {
+      const key = userId ? `${LOCAL_STORAGE_WALLET_PREFIX}${userId}` : "clicbouffe_wallet_balance";
+      localStorage.setItem(key, newBalance.toString());
       localStorage.setItem("clicbouffe_wallet_balance", newBalance.toString());
-      // Mise à jour du profil en cache si existant
-      const cached = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
-      if (cached) {
-        try {
-          const profile = JSON.parse(cached) as UserProfile;
-          profile.wallet_balance = newBalance;
-          localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(profile));
-        } catch {
-          // Ignoré
-        }
-      }
     }
     return newBalance;
   },
 
   /**
-   * Déconnexion
+   * Déconnexion sécurisée (Supabase Auth + Nettoyage local)
    */
   async signOut(): Promise<void> {
     if (process.env.NODE_ENV !== "test") {

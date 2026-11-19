@@ -7,6 +7,7 @@ import {
   OrderEntity,
   OrderStatus,
   RestaurantKPIs,
+  CreateRestaurantParams,
 } from "../types/database";
 
 const LOCAL_STORAGE_RESTO_KEY = "clicbouffe_restaurants";
@@ -245,22 +246,25 @@ export const INITIAL_DEMO_ORDERS: OrderEntity[] = [
 
 export const restaurantService = {
   /**
-   * Récupère le restaurant assigné à un propriétaire
+   * Récupère tous les restaurants créés par un utilisateur (Modèle Pages Facebook)
    */
-  async getRestaurantByOwner(ownerId: string): Promise<RestaurantEntity> {
-    if (typeof window === "undefined") return INITIAL_DEMO_RESTAURANTS[0];
+  async getRestaurantsByOwner(ownerId: string): Promise<RestaurantEntity[]> {
+    if (typeof window === "undefined") return [];
 
     if (process.env.NODE_ENV !== "test") {
       try {
         const supabase = createClient();
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("restaurants")
           .select("*")
           .eq("owner_id", ownerId)
-          .single();
-        if (data) return data as RestaurantEntity;
+          .order("created_at", { ascending: false });
+
+        if (!error && data && data.length > 0) {
+          return data as RestaurantEntity[];
+        }
       } catch {
-        // Fallback
+        // Fallback local en cas de problème réseau
       }
     }
 
@@ -268,13 +272,129 @@ export const restaurantService = {
     if (cached) {
       try {
         const list = JSON.parse(cached) as RestaurantEntity[];
-        const found = list.find((r) => r.owner_id === ownerId);
-        if (found) return found;
+        return list.filter((r) => r.owner_id === ownerId);
       } catch {
-        // Ignoré
+        return [];
       }
     }
 
+    return [];
+  },
+
+  /**
+   * Crée un nouveau restaurant pour un utilisateur connecté (Page Vendeur)
+   */
+  async createRestaurant(
+    params: CreateRestaurantParams
+  ): Promise<{ restaurant: RestaurantEntity | null; error: string | null }> {
+    const cleanName = params.name.trim();
+    if (!cleanName) {
+      return { restaurant: null, error: "Veuillez renseigner le nom du restaurant." };
+    }
+    if (!params.address.trim()) {
+      return { restaurant: null, error: "Veuillez renseigner l'adresse ou le quartier à Cotonou." };
+    }
+    if (!params.phoneNumber.trim()) {
+      return { restaurant: null, error: "Veuillez renseigner un numéro de téléphone de contact." };
+    }
+
+    const slug =
+      cleanName
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "") +
+      "-" +
+      Date.now().toString(36);
+
+    const newResto: RestaurantEntity = {
+      id: `resto-${Date.now()}`,
+      owner_id: params.ownerId,
+      name: cleanName,
+      slug,
+      description:
+        params.description?.trim() ||
+        "Cuisine authentique et fraîche préparée avec passion et livrée rapidement.",
+      logo_url: params.logoUrl || "/images/restau_maquis.jpg",
+      banner_url: params.bannerUrl || "/images/restau_maquis.jpg",
+      phone_number: params.phoneNumber.trim(),
+      address: params.address.trim(),
+      category: params.category || "Cuisine Locale & Grillades",
+      rating: 5.0,
+      reviews_count: 0,
+      delivery_time: "15-30 min",
+      delivery_fee_base: "80 FCFA",
+      is_open: true,
+      is_verified: true,
+      open_time: params.openTime || "09:00",
+      close_time: params.closeTime || "23:00",
+      created_at: new Date().toISOString(),
+    };
+
+    if (process.env.NODE_ENV !== "test") {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("restaurants")
+          .insert({
+            owner_id: newResto.owner_id,
+            name: newResto.name,
+            slug: newResto.slug,
+            description: newResto.description,
+            logo_url: newResto.logo_url,
+            banner_url: newResto.banner_url,
+            phone_number: newResto.phone_number,
+            address: newResto.address,
+            is_active: true,
+            is_verified: true,
+          })
+          .select()
+          .single();
+
+        if (error) {
+          return { restaurant: null, error: error.message };
+        }
+
+        if (data) {
+          newResto.id = data.id;
+          newResto.created_at = data.created_at || newResto.created_at;
+        }
+
+        // Met à jour le rôle de l'utilisateur en restaurant_owner dans public.profiles si nécessaire
+        try {
+          await supabase
+            .from("profiles")
+            .update({ role: "restaurant_owner" })
+            .eq("id", params.ownerId);
+        } catch {
+          // Non bloquant
+        }
+      } catch (err: unknown) {
+        return {
+          restaurant: null,
+          error: (err as Error)?.message || "Impossible d'enregistrer le restaurant dans la base de données.",
+        };
+      }
+    }
+
+    if (typeof window !== "undefined") {
+      const cached = localStorage.getItem(LOCAL_STORAGE_RESTO_KEY);
+      const list: RestaurantEntity[] = cached ? JSON.parse(cached) : INITIAL_DEMO_RESTAURANTS;
+      localStorage.setItem(LOCAL_STORAGE_RESTO_KEY, JSON.stringify([newResto, ...list]));
+    }
+
+    return { restaurant: newResto, error: null };
+  },
+
+  /**
+   * Récupère le restaurant actif ou principal assigné à un propriétaire
+   */
+  async getRestaurantByOwner(ownerId: string): Promise<RestaurantEntity> {
+    const userRestos = await this.getRestaurantsByOwner(ownerId);
+    if (userRestos.length > 0) {
+      return userRestos[0];
+    }
     return INITIAL_DEMO_RESTAURANTS[0];
   },
 

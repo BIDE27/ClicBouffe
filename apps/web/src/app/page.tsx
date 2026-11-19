@@ -43,8 +43,10 @@ import { ScannedRestaurantModal } from "@/components/qr/scanned-restaurant-modal
 import { RestaurantDashboard } from "@/components/restaurant-dashboard/restaurant-dashboard";
 import { LogoMarmite } from "@/components/ui/logo-marmite";
 import { GoogleSearchView } from "@/components/search/google-search-view";
+import { CreateRestaurantModal } from "@/components/restaurant/create-restaurant-modal";
 import { authService } from "@/lib/services/auth-service";
-import { UserProfile } from "@/lib/types/database";
+import { restaurantService } from "@/lib/services/restaurant-service";
+import { UserProfile, RestaurantEntity } from "@/lib/types/database";
 import { hapticFeedback } from "@/lib/native/haptics";
 import {
   HomeNavIcon,
@@ -86,9 +88,12 @@ export default function ClicBouffePlatform() {
   const [currentScreen, setCurrentScreen] = useState<Screen>("splash");
   const [onboardingIndex, setOnboardingIndex] = useState(0);
 
-  // État Authentification, Portefeuille & Espace Restaurateur Dynamique
+  // État Authentification, Portefeuille & Espace Restaurateur Dynamique (Modèle Facebook Page)
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [userRestaurants, setUserRestaurants] = useState<RestaurantEntity[]>([]);
+  const [activeRestaurant, setActiveRestaurant] = useState<RestaurantEntity | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showCreateRestaurantModal, setShowCreateRestaurantModal] = useState(false);
   const [currentViewMode, setCurrentViewMode] = useState<"marketplace" | "kds">("marketplace");
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [showSideDrawer, setShowSideDrawer] = useState(false);
@@ -103,9 +108,21 @@ export default function ClicBouffePlatform() {
   });
 
   useEffect(() => {
-    authService.getCurrentProfile().then((profile) => {
-      if (profile) setCurrentUser(profile);
-      setWalletBalance(authService.getWalletBalance());
+    authService.getCurrentProfile().then(async (profile) => {
+      if (profile) {
+        setCurrentUser(profile);
+        const restos = await restaurantService.getRestaurantsByOwner(profile.id);
+        setUserRestaurants(restos);
+        if (restos.length > 0) {
+          setActiveRestaurant(restos[0]);
+        }
+        setWalletBalance(authService.getWalletBalance(profile.id));
+      } else {
+        setCurrentUser(null);
+        setUserRestaurants([]);
+        setActiveRestaurant(null);
+        setWalletBalance(0);
+      }
     });
   }, []);
 
@@ -485,8 +502,8 @@ export default function ClicBouffePlatform() {
                   </span>
                 </button>
 
-                {/* Si restaurateur, bouton rapide d'accès KDS */}
-                {currentUser?.role === "restaurant_owner" && (
+                {/* Si propriétaire de restaurant(s), bouton rapide d'accès KDS */}
+                {userRestaurants.length > 0 && (
                   <button
                     onClick={() => {
                       hapticFeedback("light");
@@ -563,6 +580,7 @@ export default function ClicBouffePlatform() {
             <div className="flex-1 w-full">
               <RestaurantDashboard
                 ownerId={currentUser?.id}
+                initialRestaurant={activeRestaurant}
                 onSwitchToClientMode={() => setCurrentViewMode("marketplace")}
                 onSignOut={() => {
                   authService.signOut();
@@ -2287,11 +2305,14 @@ export default function ClicBouffePlatform() {
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
-        onSuccess={(profile) => {
+        onSuccess={async (profile) => {
           setCurrentUser(profile);
-          if (profile.role === "restaurant_owner") {
-            setCurrentViewMode("kds");
+          const restos = await restaurantService.getRestaurantsByOwner(profile.id);
+          setUserRestaurants(restos);
+          if (restos.length > 0) {
+            setActiveRestaurant(restos[0]);
           }
+          setWalletBalance(authService.getWalletBalance(profile.id));
         }}
       />
 
@@ -2301,11 +2322,15 @@ export default function ClicBouffePlatform() {
         onClose={() => setShowSideDrawer(false)}
         currentUser={currentUser}
         walletBalance={walletBalance}
+        userRestaurants={userRestaurants}
         onOpenAuth={() => setShowAuthModal(true)}
-        onSignOut={() => {
-          authService.signOut();
+        onSignOut={async () => {
+          await authService.signOut();
           setCurrentUser(null);
+          setUserRestaurants([]);
+          setActiveRestaurant(null);
           setCurrentViewMode("marketplace");
+          setWalletBalance(0);
         }}
         onOpenWallet={() => setShowWalletModal(true)}
         onOpenDeliveryRates={() => setShowDeliveryRatesModal(true)}
@@ -2316,7 +2341,32 @@ export default function ClicBouffePlatform() {
         onToggleViewMode={() =>
           setCurrentViewMode((prev) => (prev === "marketplace" ? "kds" : "marketplace"))
         }
+        onOpenCreateRestaurant={() => {
+          if (!currentUser) {
+            setShowAuthModal(true);
+          } else {
+            setShowCreateRestaurantModal(true);
+          }
+        }}
+        onSelectRestaurantForKDS={(resto) => {
+          setActiveRestaurant(resto);
+          setCurrentViewMode("kds");
+        }}
       />
+
+      {/* Modale Créer un Restaurant (Modèle Facebook Page) */}
+      {showCreateRestaurantModal && currentUser && (
+        <CreateRestaurantModal
+          isOpen={showCreateRestaurantModal}
+          onClose={() => setShowCreateRestaurantModal(false)}
+          currentUserId={currentUser.id}
+          onSuccess={(newResto) => {
+            setUserRestaurants((prev) => [newResto, ...prev]);
+            setActiveRestaurant(newResto);
+            setCurrentViewMode("kds");
+          }}
+        />
+      )}
 
       {/* Modale de Recharge Portefeuille */}
       <WalletModal

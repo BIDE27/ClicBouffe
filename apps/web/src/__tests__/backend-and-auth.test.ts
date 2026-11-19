@@ -35,41 +35,31 @@ describe("Services Backend & Authentification ClicBouffe", () => {
   });
 
   describe("Service d'authentification (authService)", () => {
-    it("génère des profils démo valides pour Client et Restaurateur", () => {
+    it("génère des profils démo valides pour les tests", () => {
       const client = authService.loginDemo("customer");
       expect(client.role).toBe("customer");
-      expect(client.full_name).toBe("Koffi Mensah");
-      expect(client.email).toBe("client@clicbouffe.bj");
+      expect(client.full_name).toBe("Client ClicBouffe");
+      expect(client.email).toBe("client@test.bj");
 
       const resto = authService.loginDemo("restaurant_owner");
       expect(resto.role).toBe("restaurant_owner");
-      expect(resto.full_name).toBe("Maman Akofa");
-      expect(resto.email).toBe("maquis@clicbouffe.bj");
+      expect(resto.full_name).toBe("Chef Propriétaire");
+      expect(resto.email).toBe("resto@test.bj");
     });
 
-    it("permet l'inscription d'un client et d'un restaurateur", async () => {
-      const clientSignup = await authService.signUp({
+    it("permet l'inscription d'un utilisateur avec compte unique universel", async () => {
+      const userSignup = await authService.signUp({
         email: "nouveau.client@test.bj",
         fullName: "Ablavi Lawson",
         phone: "+229 97 44 55 66",
-        role: "customer",
+        password: "MonMotDePasse123",
       });
 
-      expect(clientSignup.error).toBeNull();
-      expect(clientSignup.profile).not.toBeNull();
-      expect(clientSignup.profile?.role).toBe("customer");
-
-      const restoSignup = await authService.signUp({
-        email: "nouveau.resto@test.bj",
-        fullName: "Chef Bio",
-        phone: "+229 95 33 22 11",
-        role: "restaurant_owner",
-        restaurantName: "Saveurs du Terroir",
-        restaurantAddress: "Akpakpa Zico",
-      });
-
-      expect(restoSignup.error).toBeNull();
-      expect(restoSignup.profile?.role).toBe("restaurant_owner");
+      expect(userSignup.error).toBeNull();
+      expect(userSignup.profile).not.toBeNull();
+      expect(userSignup.profile?.full_name).toBe("Ablavi Lawson");
+      expect(userSignup.profile?.email).toBe("nouveau.client@test.bj");
+      expect(userSignup.profile?.role).toBe("customer");
     });
 
     it("la déconnexion purge la session utilisateur", async () => {
@@ -82,6 +72,44 @@ describe("Services Backend & Authentification ClicBouffe", () => {
   });
 
   describe("Service Restaurateur & KDS Cuisine (restaurantService)", () => {
+    it("permet à un utilisateur de créer plusieurs pages de restaurant (Modèle Facebook)", async () => {
+      const signupRes = await authService.signUp({
+        email: "vendeur@test.bj",
+        fullName: "Bio Sika",
+        phone: "+229 95 33 22 11",
+      });
+      const user = signupRes.profile!;
+
+      // Création premier restaurant
+      const resto1 = await restaurantService.createRestaurant({
+        ownerId: user.id,
+        name: "Saveurs d'Akpakpa",
+        category: "Cuisine Locale & Pâtes",
+        address: "Terrain Zico, Akpakpa",
+        phoneNumber: "+229 95 33 22 11",
+      });
+      expect(resto1.error).toBeNull();
+      expect(resto1.restaurant?.name).toBe("Saveurs d'Akpakpa");
+      expect(resto1.restaurant?.owner_id).toBe(user.id);
+
+      // Création deuxième restaurant par le même utilisateur
+      const resto2 = await restaurantService.createRestaurant({
+        ownerId: user.id,
+        name: "Grillades du Port",
+        category: "Maquis & Grillades",
+        address: "Zone Portuaire",
+        phoneNumber: "+229 97 11 22 33",
+      });
+      expect(resto2.error).toBeNull();
+      expect(resto2.restaurant?.name).toBe("Grillades du Port");
+      expect(resto2.restaurant?.owner_id).toBe(user.id);
+
+      // Vérification que les 2 restaurants sont rattachés au même profil utilisateur
+      const userRestos = await restaurantService.getRestaurantsByOwner(user.id);
+      expect(userRestos.length).toBe(2);
+      expect(userRestos.some((r) => r.name === "Saveurs d'Akpakpa")).toBe(true);
+      expect(userRestos.some((r) => r.name === "Grillades du Port")).toBe(true);
+    });
     it("récupère le restaurant du propriétaire et ses plats", async () => {
       const resto = await restaurantService.getRestaurantByOwner("user-resto-001");
       expect(resto.name).toBe("Le Maquis du Port");
