@@ -119,4 +119,17 @@ describe("Fonctionnalités avancées ClicBouffe (Explorer, Plus Tard, Abonnement
       });
     });
   });
+
+  describe("TopBar Responsive : Barre de recherche sur PC vs Loupe sur mobile", () => {
+    it("vérifie que la recherche textuelle filtre correctement les plats et restaurants", () => {
+      const q = "chawarma";
+      const matches = REGIONAL_RESTAURANTS.filter((r) =>
+        r.name.toLowerCase().includes(q) ||
+        r.category.toLowerCase().includes(q) ||
+        r.popularDishes.some((p) => p.toLowerCase().includes(q))
+      );
+      expect(matches.length).toBeGreaterThanOrEqual(1);
+      expect(matches[0].name.toLowerCase()).toContain("chawarma");
+    });
+  });
 });

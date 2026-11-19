@@ -512,10 +512,10 @@ export default function ClicBouffePlatform() {
                   <span className="w-2 h-2 rounded-full bg-[#00AFF2] absolute top-1.5 right-1.5" />
                 </button>
 
-                {/* Recherche */}
+                {/* Recherche (Uniquement sur mobile, la barre de recherche étant affichée sur PC) */}
                 <button
                   onClick={() => setScreen("free_food")}
-                  className="p-1.5 hover:text-[#00AFF2] transition-colors"
+                  className="md:hidden p-1.5 hover:text-[#00AFF2] transition-colors"
                   aria-label="Recherche"
                 >
                   <Search className="w-5 h-5 stroke-[1.8]" />
