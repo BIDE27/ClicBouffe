@@ -29,6 +29,12 @@ export function LogoMarmite({
   backgroundColor = "#00AFF2",
   title = "ClicBouffe",
 }: LogoMarmiteProps) {
+  const shapeClass = withBackground
+    ? shape === "circle"
+      ? "rounded-full overflow-hidden"
+      : "rounded-2xl overflow-hidden"
+    : "";
+
   return (
     <svg
       version="1.2"
@@ -36,7 +42,7 @@ export function LogoMarmite({
       viewBox="0 0 1024 1024"
       width={size}
       height={size}
-      className={className}
+      className={`${shapeClass} ${className}`.trim()}
       aria-label={title}
       role="img"
     >

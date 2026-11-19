@@ -293,10 +293,11 @@ export function GoogleSearchView({
         <div className="flex flex-col items-center justify-center text-center mb-6 sm:mb-8 animate-fadeIn">
           <div className="mb-3 transform hover:scale-105 transition-transform duration-300 cursor-pointer">
             <LogoMarmite
-              size={64}
-              withBackground
-              shape="circle"
-              className="w-14 h-14 sm:w-16 sm:h-16 shadow-md"
+              size={76}
+              withBackground={false}
+              potColor={theme === "dark" ? "#ffffff" : "#00AFF2"}
+              cursorColor={theme === "dark" ? "#00AFF2" : "#ffffff"}
+              className="w-16 h-16 sm:w-20 sm:h-20 drop-shadow-sm"
             />
           </div>
           <h1 className="text-3xl sm:text-5xl font-black text-[#00AFF2] tracking-tight leading-none">

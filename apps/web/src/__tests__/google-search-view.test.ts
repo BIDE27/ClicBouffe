@@ -68,4 +68,28 @@ describe("Composant GoogleSearchView (Recherche Immersive Style Google)", () => 
     expect(markup).toContain("Aucun résultat pour cette recherche");
     expect(markup).toContain("Réinitialiser la recherche");
   });
+
+  it("adapte les couleurs de l'icône SVG du logo selon le thème sans aucun arrière-plan carré", () => {
+    // Mode Clair : Marmite cyan #00AFF2, curseur blanc #ffffff, fond transparent
+    const lightMarkup = renderToStaticMarkup(
+      React.createElement(GoogleSearchView, {
+        isOpen: true,
+        onClose: () => {},
+        theme: "light",
+      })
+    );
+    expect(lightMarkup).toContain('id="Marmite"');
+    expect(lightMarkup).toContain('fill="#00AFF2"');
+
+    // Mode Sombre : Marmite blanche #ffffff, curseur cyan #00AFF2, fond transparent
+    const darkMarkup = renderToStaticMarkup(
+      React.createElement(GoogleSearchView, {
+        isOpen: true,
+        onClose: () => {},
+        theme: "dark",
+      })
+    );
+    expect(darkMarkup).toContain('id="Marmite"');
+    expect(darkMarkup).toContain('fill="#ffffff"');
+  });
 });
