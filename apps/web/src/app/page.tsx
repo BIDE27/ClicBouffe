@@ -42,6 +42,7 @@ import { QrScannerModal } from "@/components/qr/qr-scanner-modal";
 import { ScannedRestaurantModal } from "@/components/qr/scanned-restaurant-modal";
 import { RestaurantDashboard } from "@/components/restaurant-dashboard/restaurant-dashboard";
 import { LogoMarmite } from "@/components/ui/logo-marmite";
+import { GoogleSearchView } from "@/components/search/google-search-view";
 import { authService } from "@/lib/services/auth-service";
 import { UserProfile } from "@/lib/types/database";
 import { hapticFeedback } from "@/lib/native/haptics";
@@ -137,6 +138,7 @@ export default function ClicBouffePlatform() {
 
   // Recherche & Plats
   const [searchQuery, setSearchQuery] = useState("");
+  const [showGoogleSearchPage, setShowGoogleSearchPage] = useState(false);
   const [selectedDishes, setSelectedDishes] = useState<DishItem[]>([
     INITIAL_GRID_DISHES[0], // Pâte noire sélectionnée par défaut
   ]);
@@ -434,15 +436,30 @@ export default function ClicBouffePlatform() {
                 </div>
               </div>
 
-              {/* Barre de recherche responsive */}
-              <div className="hidden md:flex flex-1 max-w-sm relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              {/* Barre de recherche responsive (Cliquez pour ouvrir la grande recherche Google) */}
+              <div
+                onClick={() => {
+                  hapticFeedback("light");
+                  setShowGoogleSearchPage(true);
+                }}
+                className="hidden md:flex flex-1 max-w-sm relative cursor-pointer group"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    setShowGoogleSearchPage(true);
+                  }
+                }}
+                aria-label="Ouvrir la recherche complète ClicBouffe"
+              >
+                <Search className="w-4 h-4 text-slate-400 group-hover:text-[#00AFF2] absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors" />
                 <input
                   type="text"
                   placeholder="Rechercher un plat, un restaurant..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 text-xs rounded-full border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:border-[#00AFF2] focus:bg-white dark:focus:bg-slate-900 outline-none transition-all"
+                  readOnly
+                  tabIndex={-1}
+                  className="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 text-xs rounded-full border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 group-hover:border-[#00AFF2] focus:border-[#00AFF2] outline-none transition-all cursor-pointer pointer-events-none select-none"
                 />
               </div>
 
@@ -512,11 +529,14 @@ export default function ClicBouffePlatform() {
                   <span className="w-2 h-2 rounded-full bg-[#00AFF2] absolute top-1.5 right-1.5" />
                 </button>
 
-                {/* Recherche (Uniquement sur mobile, la barre de recherche étant affichée sur PC) */}
+                {/* Recherche (Uniquement sur mobile, ouvre la grande recherche Google) */}
                 <button
-                  onClick={() => setScreen("free_food")}
+                  onClick={() => {
+                    hapticFeedback("light");
+                    setShowGoogleSearchPage(true);
+                  }}
                   className="md:hidden p-1.5 hover:text-[#00AFF2] transition-colors"
-                  aria-label="Recherche"
+                  aria-label="Ouvrir la recherche ClicBouffe"
                 >
                   <Search className="w-5 h-5 stroke-[1.8]" />
                 </button>
@@ -2328,6 +2348,29 @@ export default function ClicBouffePlatform() {
         selectedDishes={selectedDishes}
         onToggleDish={toggleSelectDish}
         onGoToExplorer={() => {
+          setActiveNavTab("explorer");
+          setScreen("explorer");
+        }}
+      />
+
+      {/* Page / Vue de Recherche Complète Style Google */}
+      <GoogleSearchView
+        isOpen={showGoogleSearchPage}
+        onClose={() => setShowGoogleSearchPage(false)}
+        initialQuery={searchQuery}
+        onQueryChange={(q) => setSearchQuery(q)}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
+        walletBalance={walletBalance}
+        onOpenWallet={() => {
+          setShowGoogleSearchPage(false);
+          setShowWalletModal(true);
+        }}
+        deliveryAddress={deliveryAddress}
+        onSelectDish={toggleSelectDish}
+        onSelectRestaurant={(restaurant) => {
+          setShowGoogleSearchPage(false);
+          setSelectedExplorerCategory(restaurant.categoryId);
           setActiveNavTab("explorer");
           setScreen("explorer");
         }}

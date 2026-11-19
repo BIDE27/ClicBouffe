@@ -80,3 +80,49 @@ svg,
   transform: scale(0.97);
   transition: transform 0.1s ease-out;
 }
+
+/* Animation d'ouverture immersive de la page de recherche Google-style */
+@keyframes searchPageFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.98) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-search-enter {
+  animation: searchPageFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes searchBarExpand {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-search-bar {
+  animation: searchBarExpand 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes searchShortcutsFade {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-search-shortcuts {
+  animation: searchShortcutsFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.08s backwards;
+}
