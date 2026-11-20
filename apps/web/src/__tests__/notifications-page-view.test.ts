@@ -14,11 +14,36 @@ describe("NotificationsPageView (Page Plein Écran des Notifications)", () => {
     expect(markup).toBe("");
   });
 
-  it("affiche la page des notifications avec son titre, l'état vide et le bouton Retour si isOpen est vrai", () => {
+  it("affiche le bouton Se connecter et l'invitation à la connexion si l'utilisateur n'est pas connecté", () => {
     const markup = renderToStaticMarkup(
       React.createElement(NotificationsPageView, {
         isOpen: true,
         onClose: () => {},
+        currentUser: null,
+      })
+    );
+
+    expect(markup).toContain("Notifications");
+    expect(markup).toContain("Retour");
+    expect(markup).toContain("Aucune notification pour le moment");
+    expect(markup).toContain("Connectez-vous à votre compte ClicBouffe");
+    expect(markup).toContain("Se connecter");
+    expect(markup).not.toContain("Découvrir les plats");
+  });
+
+  it("affiche le bouton Découvrir les plats si l'utilisateur est connecté", () => {
+    const markup = renderToStaticMarkup(
+      React.createElement(NotificationsPageView, {
+        isOpen: true,
+        onClose: () => {},
+        currentUser: {
+          id: "user-123",
+          email: "koffi@clicbouffe.bj",
+          full_name: "Koffi Mensah",
+          phone_number: "+22997001122",
+          role: "customer",
+          created_at: "2026-01-01T00:00:00Z",
+        },
       })
     );
 
@@ -27,6 +52,7 @@ describe("NotificationsPageView (Page Plein Écran des Notifications)", () => {
     expect(markup).toContain("Aucune notification pour le moment");
     expect(markup).toContain("alertes de commandes");
     expect(markup).toContain("Découvrir les plats");
+    expect(markup).not.toContain("Connectez-vous à votre compte");
   });
 
   it("gère l'attribut dialog accessible et les classes de dark mode", () => {

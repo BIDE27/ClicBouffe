@@ -1,12 +1,15 @@
 "use client";
 
 import React from "react";
-import { ArrowLeft, BellOff, X, Sun, Moon, ArrowRight } from "lucide-react";
+import { ArrowLeft, BellOff, X, Sun, Moon, ArrowRight, User } from "lucide-react";
+import { UserProfile } from "../../lib/types/database";
 import { hapticFeedback } from "../../lib/native/haptics";
 
 export interface NotificationsPageViewProps {
   isOpen: boolean;
   onClose: () => void;
+  currentUser?: UserProfile | null;
+  onOpenAuth?: () => void;
   theme?: "light" | "dark";
   onToggleTheme?: () => void;
 }
@@ -14,6 +17,8 @@ export interface NotificationsPageViewProps {
 export function NotificationsPageView({
   isOpen,
   onClose,
+  currentUser,
+  onOpenAuth,
   theme = "dark",
   onToggleTheme,
 }: NotificationsPageViewProps) {
@@ -90,19 +95,37 @@ export function NotificationsPageView({
         </h2>
 
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-6 max-w-xs">
-          Vos alertes de commandes, réductions exclusives, statuts de livraison et actualités de vos restaurants préférés apparaîtront ici dès qu&apos;elles seront disponibles.
+          {currentUser
+            ? "Vos alertes de commandes, réductions exclusives, statuts de livraison et actualités de vos restaurants préférés apparaîtront ici dès qu'elles seront disponibles."
+            : "Connectez-vous à votre compte ClicBouffe pour suivre vos commandes en temps réel, profiter de réductions exclusives et recevoir vos alertes personnalisées."}
         </p>
 
-        <button
-          onClick={() => {
-            hapticFeedback("light");
-            onClose();
-          }}
-          className="px-5 py-2.5 rounded-xl bg-[#00AFF2] hover:bg-[#0098d4] text-white font-bold text-xs sm:text-sm shadow-md active:scale-95 transition-all flex items-center gap-2"
-        >
-          <span>Découvrir les plats</span>
-          <ArrowRight className="w-4 h-4" />
-        </button>
+        {currentUser ? (
+          <button
+            onClick={() => {
+              hapticFeedback("light");
+              onClose();
+            }}
+            className="px-5 py-2.5 rounded-xl bg-[#00AFF2] hover:bg-[#0098d4] text-white font-bold text-xs sm:text-sm shadow-md active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
+          >
+            <span>Découvrir les plats</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        ) : (
+          <button
+            onClick={() => {
+              hapticFeedback("light");
+              onClose();
+              if (onOpenAuth) {
+                onOpenAuth();
+              }
+            }}
+            className="px-5 py-2.5 rounded-xl bg-[#00AFF2] hover:bg-[#0098d4] text-white font-bold text-xs sm:text-sm shadow-md active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
+          >
+            <User className="w-4 h-4" />
+            <span>Se connecter</span>
+          </button>
+        )}
       </main>
     </div>
   );

@@ -2456,6 +2456,8 @@ export default function ClicBouffePlatform() {
       <NotificationsPageView
         isOpen={showNotificationsPage}
         onClose={() => setShowNotificationsPage(false)}
+        currentUser={currentUser}
+        onOpenAuth={() => setShowAuthModal(true)}
         theme={theme}
         onToggleTheme={handleToggleTheme}
       />
