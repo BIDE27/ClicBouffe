@@ -127,6 +127,26 @@ export function SideDrawer({
     [isClosing, onClose]
   );
 
+  // Verrouillage strict du défilement d'arrière-plan (Body Scroll Lock) lorsque le tiroir est ouvert
+  useEffect(() => {
+    if (!isOpen || !isRendered) return;
+
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+    const originalBodyOverscroll = document.body.style.overscrollBehavior;
+
+    // Verrouiller le défilement de l'arrière-plan
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overscrollBehavior = "none";
+
+    return () => {
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+      document.body.style.overscrollBehavior = originalBodyOverscroll;
+    };
+  }, [isOpen, isRendered]);
+
   // Interception de la touche Échap
   useEffect(() => {
     if (!isOpen || isClosing) return;
@@ -146,26 +166,29 @@ export function SideDrawer({
       className={`fixed inset-0 z-50 flex justify-end ${
         isClosing ? "pointer-events-none" : "pointer-events-auto"
       }`}
+      onWheel={(e) => e.stopPropagation()}
     >
-      {/* Arrière-plan assombri (Backdrop) avec fondu progressif et doux */}
+      {/* Arrière-plan assombri (Backdrop) avec fondu progressif et blocage du défilement d'arrière-plan */}
       <div
         className={`fixed inset-0 bg-black/60 backdrop-blur-xs drawer-backdrop ${
           isClosing ? "drawer-backdrop-out" : "drawer-backdrop-in"
         }`}
         onClick={() => handleClose()}
+        onTouchMove={(e) => e.preventDefault()}
+        onWheel={(e) => e.stopPropagation()}
         aria-hidden="true"
       />
 
       {/* Tiroir latéral (Sliding Drawer) avec glissement fluide et accélération matérielle GPU */}
       <aside
-        className={`relative w-full max-w-xs sm:max-w-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 h-full shadow-2xl flex flex-col z-10 overflow-y-auto border-l border-slate-100 dark:border-slate-800 drawer-panel ${
+        className={`relative w-full max-w-xs sm:max-w-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 h-full shadow-2xl flex flex-col z-10 overflow-hidden border-l border-slate-100 dark:border-slate-800 drawer-panel ${
           isClosing ? "drawer-panel-out" : "drawer-panel-in"
         }`}
         role="dialog"
         aria-label="Menu latéral"
       >
-        {/* En-tête du tiroir avec Logo Authentique (Marmite + Curseur) et bouton Fermer */}
-        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-900/90 pt-safe">
+        {/* En-tête FIXE / IMMOBILE du tiroir avec Logo Authentique (Marmite + Curseur) et bouton Fermer */}
+        <div className="shrink-0 p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md pt-safe z-20">
           <div className="flex items-center gap-2.5">
             {/* Logo officiel ClicBouffe : Marmite avec curseur à l'intérieur */}
             <LogoMarmite className="w-8 h-8 shrink-0 shadow-xs" size={32} withBackground shape="circle" />
@@ -178,15 +201,18 @@ export function SideDrawer({
           </div>
           <button
             onClick={() => handleClose()}
-            className="w-8 h-8 rounded-full bg-slate-200/80 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition-colors"
+            className="w-8 h-8 rounded-full bg-slate-200/80 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition-colors cursor-pointer"
             aria-label="Fermer le menu"
           >
             <X className="w-4 h-4 stroke-[2.5]" />
           </button>
         </div>
 
-        {/* Section Profil Utilisateur ou Bouton Connexion */}
-        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 bg-linear-to-b from-sky-50/50 dark:from-sky-950/20 to-transparent">
+        {/* Corps déroulant (Scrollable Body) avec défilement fluide et overscroll-contain */}
+        <div className="flex-1 overflow-y-auto overscroll-contain flex flex-col justify-between">
+          <div>
+            {/* Section Profil Utilisateur ou Bouton Connexion */}
+            <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 bg-linear-to-b from-sky-50/50 dark:from-sky-950/20 to-transparent">
           {currentUser ? (
             <div className="space-y-3">
               <div
@@ -553,43 +579,45 @@ export function SideDrawer({
             <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500" />
           </button>
         </div>
+      </div>
 
-        {/* Pied du tiroir : Déconnexion ou Version */}
-        <div className="p-4 sm:p-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 pb-safe">
-          {currentUser ? (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  handleClose(() => {
-                    onOpenAuth();
-                  });
-                }}
-                className="flex-1 py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-2xs cursor-pointer"
-              >
-                <User className="w-3.5 h-3.5" />
-                <span>Mon Compte</span>
-              </button>
-              <button
-                onClick={() => {
-                  handleClose(() => {
-                    onSignOut();
-                  });
-                }}
-                className="py-2.5 px-3 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/70 dark:bg-rose-950/30 hover:bg-rose-100/90 dark:hover:bg-rose-950/60 text-rose-600 dark:text-rose-400 font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-2xs cursor-pointer"
-                title="Déconnexion directe"
-              >
-                <LogOut className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>Déconnexion</span>
-              </button>
-            </div>
-          ) : (
-            <div className="text-center text-[10px] text-slate-400 dark:text-slate-500">
-              <p className="font-bold text-slate-600 dark:text-slate-300">ClicBouffe Marketplace</p>
-              <p>Livraison express • Cotonou, Bénin</p>
-            </div>
-          )}
-        </div>
-      </aside>
+      {/* Pied du tiroir : Déconnexion ou Version (intégré en fin de flux ou poussé en bas) */}
+      <div className="shrink-0 p-4 sm:p-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 pb-safe">
+        {currentUser ? (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                handleClose(() => {
+                  onOpenAuth();
+                });
+              }}
+              className="flex-1 py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-2xs cursor-pointer"
+            >
+              <User className="w-3.5 h-3.5" />
+              <span>Mon Compte</span>
+            </button>
+            <button
+              onClick={() => {
+                handleClose(() => {
+                  onSignOut();
+                });
+              }}
+              className="py-2.5 px-3 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/70 dark:bg-rose-950/30 hover:bg-rose-100/90 dark:hover:bg-rose-950/60 text-rose-600 dark:text-rose-400 font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-2xs cursor-pointer"
+              title="Déconnexion directe"
+            >
+              <LogOut className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Déconnexion</span>
+            </button>
+          </div>
+        ) : (
+          <div className="text-center text-[10px] text-slate-400 dark:text-slate-500">
+            <p className="font-bold text-slate-600 dark:text-slate-300">ClicBouffe Marketplace</p>
+            <p>Livraison express • Cotonou, Bénin</p>
+          </div>
+        )}
+      </div>
     </div>
+  </aside>
+</div>
   );
 }

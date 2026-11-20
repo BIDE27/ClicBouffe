@@ -113,5 +113,31 @@ describe("Gestion du Portefeuille et Menu Latéral", () => {
       expect(markup).toContain("Mon Portefeuille");
       expect(markup).toContain("2 000 FCFA");
     });
+
+    it("sépare l'en-tête fixe du corps déroulant avec overscroll-contain", () => {
+      const markup = renderToStaticMarkup(
+        React.createElement(SideDrawer, {
+          isOpen: true,
+          onClose: () => {},
+          currentUser: null,
+          walletBalance: 0,
+          onOpenAuth: () => {},
+          onSignOut: () => {},
+          onOpenWallet: () => {},
+          onOpenDeliveryRates: () => {},
+          onNavigateToScreen: () => {},
+          theme: "dark",
+          onToggleTheme: () => {},
+        })
+      );
+
+      // L'en-tête ne défile pas (shrink-0, sticky/fixe en haut)
+      expect(markup).toContain("Menu Principal");
+      expect(markup).toContain("shrink-0");
+
+      // Le corps de menu possède sa propre zone déroulante avec overscroll-contain
+      expect(markup).toContain("overflow-y-auto");
+      expect(markup).toContain("overscroll-contain");
+    });
   });
 });

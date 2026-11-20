@@ -31,10 +31,14 @@ Quand vous concevez, déboguez ou référencez ce composant, utilisez ces termes
    * Courbe de Bézier `cubic-bezier(0.32, 0, 0.67, 0)` pour la fermeture (300 ms) : accélération fluide de départ pour une sensation de réactivité immédiate.
 7. **Coordination `handleClose`** :
    * Fonction unifiée qui déclenche d'abord l'animation de sortie visuelle (`isClosing = true`), puis exécute le rappel d'action (`callback`) et notifie le parent (`onClose()`) après achèvement complet de l'animation.
+8. **En-tête Immobile Découplé (Decoupled Pinned Header)** :
+   * Structure Flexbox où l'en-tête (`shrink-0 z-20`) est découplé du conteneur de défilement, maintenant le logo et le bouton de fermeture (`X`) 100% fixes et cliquables à tout moment.
+9. **Verrouillage du Défilement d'Arrière-Plan (Body Scroll Lock & Anti-Leak)** :
+   * Combinaison de `document.body.style.overflow = "hidden"` au montage et de la propriété CSS `overscroll-contain` sur le corps du tiroir, interdisant tout mouvement de la page sous-jacente.
 
 ---
 
-## 2. ⚠️ Les Deux Pièges Majeurs (Pourquoi les tiroirs "sautent" sans animation)
+## 2. ⚠️ Les Quatre Pièges Majeurs (Pourquoi les tiroirs "sautent" ou défilent mal)
 
 ### Piège A : L'Évolution du Moteur Tailwind CSS v4 (`translate` vs `transform`)
 * **Le problème** : Dans Tailwind CSS v3, `translate-x-full` manipulait `--tw-translate-x` appliqué à la propriété `transform`. Une transition `transition: transform` fonctionnait donc naturellement.
@@ -48,6 +52,17 @@ Quand vous concevez, déboguez ou référencez ce composant, utilisez ces termes
 * **La solution obligatoire** : 
   1. Utiliser `@keyframes` : une animation CSS appliquée dès le montage s'exécute **dès la frame 0** sans aucun risque de batching.
   2. Maintenir `isRendered = true` pendant toute la durée de la fermeture (`setTimeout` de 300 ms) et n'appliquer `isRendered = false` qu'une fois l'animation de sortie achevée.
+
+### Piège C : L'En-Tête Embarqué dans le Défilement Global
+* **Le problème** : Si la classe `overflow-y-auto` est posée directement sur le conteneur `<aside>`, l'en-tête avec le logo et la croix `X` disparaît vers le haut dès que l'utilisateur commence à parcourir le menu.
+* **La solution obligatoire** : Poser `overflow-hidden flex flex-col` sur `<aside>`, placer l'en-tête en premier enfant avec `shrink-0 sticky top-0 z-20`, et n'appliquer `overflow-y-auto overscroll-contain` que sur le corps de contenu (`flex-1`).
+
+### Piège D : La Fuite de Défilement vers l'Arrière-Plan (Scroll Leak / Chaining)
+* **Le problème** : En scrollant dans le menu, arriver en fin de liste transmet l'inertie du geste à la page sous-jacente (l'arrière-plan commence à défiler sous le voile sombre).
+* **La solution obligatoire** :
+  1. Verrouiller le body en React : `document.body.style.overflow = "hidden"` et `document.documentElement.style.overflow = "hidden"` tant que le tiroir est visible.
+  2. Ajouter `overscroll-contain` sur la zone déroulante du tiroir pour couper la chaîne de propagation.
+  3. Ajouter `onTouchMove={(e) => e.preventDefault()}` et `onWheel={(e) => e.stopPropagation()}` sur le voile d'arrière-plan (*Backdrop*).
 
 ---
 
@@ -200,6 +215,22 @@ export function SideDrawer({ isOpen, onClose, children }: SideDrawerProps) {
     [isClosing, onClose]
   );
 
+  // Verrouillage strict du défilement d'arrière-plan (Body Scroll Lock)
+  useEffect(() => {
+    if (!isOpen || !isRendered) return;
+
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+    };
+  }, [isOpen, isRendered]);
+
   // Interception de la touche Échap
   useEffect(() => {
     if (!isOpen || isClosing) return;
@@ -219,38 +250,41 @@ export function SideDrawer({ isOpen, onClose, children }: SideDrawerProps) {
       className={`fixed inset-0 z-50 flex justify-end ${
         isClosing ? "pointer-events-none" : "pointer-events-auto"
       }`}
+      onWheel={(e) => e.stopPropagation()}
     >
-      {/* Arrière-plan assombri (Backdrop) avec fondu progressif et doux */}
+      {/* Arrière-plan assombri (Backdrop) avec blocage tactile et molette */}
       <div
         className={`fixed inset-0 bg-black/60 backdrop-blur-xs drawer-backdrop ${
           isClosing ? "drawer-backdrop-out" : "drawer-backdrop-in"
         }`}
         onClick={() => handleClose()}
+        onTouchMove={(e) => e.preventDefault()}
+        onWheel={(e) => e.stopPropagation()}
         aria-hidden="true"
       />
 
-      {/* Tiroir latéral (Sliding Drawer) avec glissement fluide et accélération matérielle GPU */}
+      {/* Tiroir latéral (Sliding Drawer) avec en-tête fixe et corps déroulant */}
       <aside
-        className={`relative w-full max-w-xs sm:max-w-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 h-full shadow-2xl flex flex-col z-10 overflow-y-auto border-l border-slate-100 dark:border-slate-800 drawer-panel ${
+        className={`relative w-full max-w-xs sm:max-w-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 h-full shadow-2xl flex flex-col z-10 overflow-hidden border-l border-slate-100 dark:border-slate-800 drawer-panel ${
           isClosing ? "drawer-panel-out" : "drawer-panel-in"
         }`}
         role="dialog"
         aria-label="Menu latéral"
       >
-        {/* En-tête avec bouton fermer */}
-        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-900/90 pt-safe">
+        {/* En-tête FIXE / IMMOBILE (ne défile jamais avec le reste du menu) */}
+        <div className="shrink-0 p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md pt-safe z-20">
           <h2 className="text-base font-black text-slate-900 dark:text-white">Menu</h2>
           <button
             onClick={() => handleClose()}
-            className="w-8 h-8 rounded-full bg-slate-200/80 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition-colors"
+            className="w-8 h-8 rounded-full bg-slate-200/80 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition-colors cursor-pointer"
             aria-label="Fermer le menu"
           >
             <X className="w-4 h-4 stroke-[2.5]" />
           </button>
         </div>
 
-        {/* Contenu défilable */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Contenu défilable avec overscroll-contain pour stopper la chaîne de défilement */}
+        <div className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-4">
           {children}
         </div>
       </aside>
