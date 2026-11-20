@@ -410,9 +410,18 @@ export function PromoCarousel({
         })}
       </div>
 
-      {/* Flèches de navigation et indicateurs */}
-      <div className="flex items-center justify-between mt-2 px-1">
-        <div className="flex items-center gap-1.5">
+      {/* Flèches de navigation et indicateurs (adaptatif Mobile-First) */}
+      <div
+        className={`flex items-center ${
+          variant === "mobile" ? "justify-center" : "justify-center sm:justify-between"
+        } mt-2.5 px-1`}
+      >
+        {/* Contrôles manuels : masqués sur mobile (swipe naturel), visibles sur desktop */}
+        <div
+          className={`${
+            variant === "mobile" ? "hidden" : "hidden sm:flex"
+          } items-center gap-1.5`}
+        >
           <button
             onClick={() => {
               hapticFeedback("light");
@@ -438,8 +447,8 @@ export function PromoCarousel({
           </span>
         </div>
 
-        {/* Indicateurs dots interactifs */}
-        <div className="flex items-center gap-1.5">
+        {/* Indicateurs dots interactifs : parfaitement centrés sur mobile */}
+        <div className="flex items-center justify-center gap-1.5 py-0.5">
           {slides.map((_, idx) => {
             const isActive = idx === currentIndex;
             return (

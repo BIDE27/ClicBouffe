@@ -345,8 +345,17 @@ export function PromoCarousel({
       </div>
 
       {/* Flèches de navigation manuelles et indicateurs */}
-      <div className="flex items-center justify-between mt-2 px-1">
-        <div className="flex items-center gap-1.5">
+      <div
+        className={`flex items-center ${
+          variant === "mobile" ? "justify-center" : "justify-center sm:justify-between"
+        } mt-2.5 px-1`}
+      >
+        {/* Contrôles de navigation (flèches et compteur) : masqués sur mobile, affichés sur desktop */}
+        <div
+          className={`${
+            variant === "mobile" ? "hidden" : "hidden sm:flex"
+          } items-center gap-1.5`}
+        >
           <button
             onClick={() => {
               hapticFeedback("light");
@@ -372,8 +381,8 @@ export function PromoCarousel({
           </span>
         </div>
 
-        {/* Indicateurs dots/pills interactifs */}
-        <div className="flex items-center gap-1.5">
+        {/* Indicateurs dots/pills interactifs : centrés sur mobile */}
+        <div className="flex items-center justify-center gap-1.5 py-0.5">
           {slides.map((_, idx) => {
             const isActive = idx === currentIndex;
             return (
@@ -385,7 +394,9 @@ export function PromoCarousel({
                 }}
                 aria-label={`Afficher la carte ${idx + 1}`}
                 className={`h-1.5 rounded-full transition-all duration-300 ${
-                  isActive ? "w-5 bg-[#00AFF2]" : "w-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600"
+                  isActive
+                    ? "w-5 bg-[#00AFF2]"
+                    : "w-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600"
                 }`}
               />
             );
