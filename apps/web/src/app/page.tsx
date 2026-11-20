@@ -241,7 +241,7 @@ export default function ClicBouffePlatform() {
 
       if (!scrollTickingRef.current) {
         window.requestAnimationFrame(() => {
-          const currentScrollY = window.scrollY;
+          const currentScrollY = Math.max(0, window.scrollY);
           const delta = currentScrollY - lastScrollYRef.current;
 
           if (currentScrollY <= topSafeZone) {
@@ -518,12 +518,10 @@ export default function ClicBouffePlatform() {
               isFabMenuOpen ? "filter blur-[2px] opacity-40 pointer-events-none select-none" : "filter-none opacity-100"
             }`}
           >
-            {/* Top Bar Responsive avec disparition/réapparition progressive et douce au scroll */}
+            {/* Top Bar Responsive : coulisse du bas vers le haut à la disparition, et du haut vers le bas à la réapparition */}
             <header
-              className={`p-4 border-b border-slate-100 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md sticky top-0 z-30 pt-safe nav-bar-top-transition ${
-                isNavVisible
-                  ? "translate-y-0 opacity-100"
-                  : "-translate-y-full opacity-0 pointer-events-none"
+              className={`p-4 border-b border-slate-100 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md sticky top-0 z-30 pt-safe shadow-xs dark:shadow-slate-950/40 nav-bar-top-stylish ${
+                isNavVisible ? "nav-bar-top-visible" : "nav-bar-top-hidden"
               }`}
             >
             <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
@@ -1265,15 +1263,11 @@ export default function ClicBouffePlatform() {
           )}
           </div>
 
-          {/* Barre Navigation Basse Pixel-Perfect avec disparition/réapparition progressive et douce au scroll */}
+          {/* Barre Navigation Basse Pixel-Perfect : coulisse du haut vers le bas à la disparition, et du bas vers le haut à la réapparition */}
           <nav
-            className={`fixed bottom-0 inset-x-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 h-16 flex items-center justify-around px-2 z-40 pb-safe nav-bar-bottom-transition ${
+            className={`fixed bottom-0 inset-x-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 h-16 flex items-center justify-around px-2 z-40 pb-safe shadow-lg dark:shadow-slate-950/60 nav-bar-bottom-stylish ${
               currentViewMode === "kds" ? "hidden" : ""
-            } ${
-              isNavVisible
-                ? "translate-y-0 opacity-100"
-                : "translate-y-[calc(100%+2.5rem)] opacity-0 pointer-events-none"
-            }`}
+            } ${isNavVisible ? "nav-bar-bottom-visible" : "nav-bar-bottom-hidden"}`}
           >
             {/* Zone de clic de fermeture sur la barre floutée */}
             {isFabMenuOpen && (

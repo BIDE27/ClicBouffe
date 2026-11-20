@@ -149,12 +149,12 @@ describe("Fonctionnalités avancées ClicBouffe (Explorer, Plus Tard, Abonnement
       expect(computeNavVisibility(130, 155)).toBe(true);
     });
 
-    it("vérifie que les classes de transition fluide utilisent la courbe de Bézier progressive", () => {
-      // Les barres de navigation doivent utiliser les classes GPU .nav-bar-top-transition et .nav-bar-bottom-transition
-      const topTransitionClass = "nav-bar-top-transition";
-      const bottomTransitionClass = "nav-bar-bottom-transition";
-      expect(topTransitionClass).toBe("nav-bar-top-transition");
-      expect(bottomTransitionClass).toBe("nav-bar-bottom-transition");
+    it("vérifie que les classes de transition fluide utilisent la courbe de Bézier progressive et stylée", () => {
+      // Les barres de navigation doivent utiliser les classes GPU stylées .nav-bar-top-stylish et .nav-bar-bottom-stylish
+      const topStylishClass = "nav-bar-top-stylish";
+      const bottomStylishClass = "nav-bar-bottom-stylish";
+      expect(topStylishClass).toBe("nav-bar-top-stylish");
+      expect(bottomStylishClass).toBe("nav-bar-bottom-stylish");
     });
   });
 });

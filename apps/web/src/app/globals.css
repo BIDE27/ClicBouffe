@@ -81,15 +81,48 @@ svg,
   transition: transform 0.1s ease-out;
 }
 
-/* Transitions ultra-douces et progressives des barres de navigation au scroll */
+/* 🌟 Coulissement ultra-doux et stylé des barres de navigation */
+.nav-bar-top-stylish {
+  transition: transform 0.48s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.nav-bar-top-visible {
+  transform: translate3d(0, 0, 0) !important;
+}
+
+.nav-bar-top-hidden {
+  transform: translate3d(0, -105%, 0) !important;
+  pointer-events: none !important;
+}
+
+.nav-bar-bottom-stylish {
+  transition: transform 0.48s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.nav-bar-bottom-visible {
+  transform: translate3d(0, 0, 0) !important;
+}
+
+.nav-bar-bottom-hidden {
+  transform: translate3d(0, calc(100% + 3.5rem), 0) !important;
+  pointer-events: none !important;
+}
+
+/* Compatibilité des transitions si référencées */
 .nav-bar-top-transition {
-  transition: transform 0.55s cubic-bezier(0.33, 1, 0.68, 1), opacity 0.5s ease-in-out !important;
-  will-change: transform, opacity;
+  transition: transform 0.48s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  will-change: transform;
 }
 
 .nav-bar-bottom-transition {
-  transition: transform 0.55s cubic-bezier(0.33, 1, 0.68, 1), opacity 0.5s ease-in-out !important;
-  will-change: transform, opacity;
+  transition: transform 0.48s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  will-change: transform;
 }
 
 /* Animation d'ouverture immersive de la page de recherche Google-style */
