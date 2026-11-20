@@ -141,9 +141,34 @@ export const authService = {
         if (authError) {
           const msg = authError.message.toLowerCase();
           if (msg.includes("already registered") || msg.includes("already in use")) {
-            return { profile: null, error: "Un compte existe déjà avec cette adresse email." };
+            return { profile: null, error: "Un compte existe déjà avec cette adresse email. Veuillez vous connecter." };
+          }
+          if (
+            msg.includes("rate limit") ||
+            msg.includes("over_email_send_rate_limit") ||
+            (authError as { status?: number })?.status === 429
+          ) {
+            return {
+              profile: null,
+              error:
+                "Limite temporaire d'envoi d'emails atteinte sur Supabase (3/heure). Pour activer les inscriptions instantanées illimitées, désactivez 'Confirm email' dans Authentication -> Providers -> Email sur votre console Supabase.",
+            };
+          }
+          if (msg.includes("invalid api key")) {
+            return {
+              profile: null,
+              error: "Clé d'API Supabase invalide ou non reconnue.",
+            };
           }
           return { profile: null, error: authError.message };
+        }
+
+        // Cas Supabase GoTrue : l'email existe déjà et a été rejeté silencieusement
+        if (authData.user && authData.user.identities && authData.user.identities.length === 0) {
+          return {
+            profile: null,
+            error: "Un compte existe déjà avec cette adresse email. Veuillez passer à l'onglet 'Se connecter'.",
+          };
         }
 
         if (authData.user) {
@@ -223,6 +248,19 @@ export const authService = {
           const msg = error.message.toLowerCase();
           if (msg.includes("invalid login credentials") || msg.includes("invalid_grant")) {
             return { profile: null, error: "Adresse email ou mot de passe incorrect." };
+          }
+          if (msg.includes("email not confirmed")) {
+            return {
+              profile: null,
+              error:
+                "Votre adresse email n'est pas encore confirmée. Veuillez cliquer sur le lien reçu par email ou désactiver 'Confirm email' dans les paramètres Supabase Auth.",
+            };
+          }
+          if (msg.includes("rate limit") || msg.includes("over_email_send_rate_limit")) {
+            return {
+              profile: null,
+              error: "Trop de tentatives récentes. Veuillez patienter quelques instants.",
+            };
           }
           return { profile: null, error: error.message };
         }

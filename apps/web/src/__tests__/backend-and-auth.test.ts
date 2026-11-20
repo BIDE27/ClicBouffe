@@ -24,6 +24,11 @@ if (typeof (globalThis as unknown as { window?: unknown }).window === "undefined
 
 import { authService } from "../lib/services/auth-service";
 import {
+  createClient as createBrowserClient,
+  DEFAULT_SUPABASE_URL,
+  DEFAULT_SUPABASE_ANON_KEY,
+} from "../lib/supabase/client";
+import {
   restaurantService,
   INITIAL_DEMO_DISHES,
   INITIAL_DEMO_ORDERS,
@@ -32,6 +37,21 @@ import {
 describe("Services Backend & Authentification ClicBouffe", () => {
   beforeEach(() => {
     localStorage.clear();
+  });
+
+  describe("Configuration robuste du client Supabase", () => {
+    it("définit des identifiants Supabase par défaut valides sans placeholder", () => {
+      expect(DEFAULT_SUPABASE_URL).toMatch(/^https:\/\/[a-z0-9]+\.supabase\.co$/);
+      expect(DEFAULT_SUPABASE_ANON_KEY).not.toBe("placeholder-anon-key");
+      expect(DEFAULT_SUPABASE_ANON_KEY.length).toBeGreaterThan(50);
+    });
+
+    it("initialise le client Supabase sans exception", () => {
+      const client = createBrowserClient();
+      expect(client).toBeDefined();
+      expect(client.auth).toBeDefined();
+      expect(client.from).toBeDefined();
+    });
   });
 
   describe("Service d'authentification (authService)", () => {
