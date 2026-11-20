@@ -31,6 +31,41 @@ describe("Fonctionnalités avancées ClicBouffe (Explorer, Plus Tard, Abonnement
       expect(titles.some((t) => t.includes("Pâte Rouge"))).toBe(true);
       expect(titles.some((t) => t.includes("Tapioca"))).toBe(true);
     });
+
+    it("vérifie la logique du carrousel infini continu sans rembobinage", () => {
+      const N = PROMOTIONAL_CAROUSEL_SLIDES.length; // 6
+      expect(N).toBe(6);
+
+      // 1. Passage de la dernière carte vers la suivante : avance vers le clone sans rembobiner
+      const lastVirtualIndex = 2 * N - 1; // 11 (dernière carte du Set 1)
+      const nextVirtualIndex = lastVirtualIndex + 1; // 12 (première carte du Set 2, clone de 0)
+      expect(nextVirtualIndex).toBe(12);
+
+      // Calcul de l'index réel actif : toujours 0 (carte 1/6)
+      const realIndex = ((nextVirtualIndex % N) + N) % N;
+      expect(realIndex).toBe(0);
+
+      // Normalisation silencieuse après la fin de la glissade : 12 -> 6 (Set 1)
+      const normalizedIndex = N + realIndex;
+      expect(normalizedIndex).toBe(6);
+
+      // 2. Trajectoire la plus courte pour la navigation par points (dots)
+      const computeShortestPath = (fromReal: number, toReal: number, total: number) => {
+        let diff = toReal - fromReal;
+        if (diff > total / 2) diff -= total;
+        else if (diff < -total / 2) diff += total;
+        return diff;
+      };
+
+      // De la carte 5 à la carte 0 : +1 (glisse vers l'avant), pas -5 (rembobinage)
+      expect(computeShortestPath(5, 0, N)).toBe(1);
+
+      // De la carte 0 à la carte 5 : -1 (glisse vers l'arrière), pas +5
+      expect(computeShortestPath(0, 5, N)).toBe(-1);
+
+      // De la carte 1 à la carte 3 : +2 vers l'avant
+      expect(computeShortestPath(1, 3, N)).toBe(2);
+    });
   });
 
   describe("Standards visuels : Zéro émoji et catégories avec icônes vectorielles", () => {

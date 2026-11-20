@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Plus, Sparkles } from "lucide-react";
 import { PromoSlide, PROMOTIONAL_CAROUSEL_SLIDES } from "@/lib/data/clicbouffe-data";
@@ -24,45 +24,167 @@ export function PromoCarousel({
   variant = "web",
 }: PromoCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0); // Index réel actif (0 à totalCards - 1)
   const [isPaused, setIsPaused] = useState(false);
   const isScrollingByCode = useRef(false);
+  const currentVirtualIndexRef = useRef(0);
+  const normalizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const manualScrollEndTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const totalCards = slides.length;
 
-  const scrollToCard = useCallback(
-    (index: number) => {
-      if (!scrollRef.current) return;
+  // Triplication du tampon de diapositives pour un défilement infini sans rembobinage
+  // Set 0 (clone-prev), Set 1 (main / central), Set 2 (clone-next)
+  const extendedSlides = useMemo(() => {
+    if (totalCards <= 1) {
+      return slides.map((s) => ({ ...s, _uniqueKey: s.id, _realIndex: 0 }));
+    }
+    return [
+      ...slides.map((s, i) => ({ ...s, _uniqueKey: `${s.id}-clone-prev`, _realIndex: i })),
+      ...slides.map((s, i) => ({ ...s, _uniqueKey: `${s.id}-main`, _realIndex: i })),
+      ...slides.map((s, i) => ({ ...s, _uniqueKey: `${s.id}-clone-next`, _realIndex: i })),
+    ];
+  }, [slides, totalCards]);
+
+  // Normalisation silencieuse (en 0 ms) vers le bloc central (Set 1) quand on pénètre le Set 0 ou le Set 2
+  const normalizeVirtualPosition = useCallback(() => {
+    if (!scrollRef.current || totalCards <= 1) return;
+    const container = scrollRef.current;
+    const cards = container.children;
+    const vIndex = currentVirtualIndexRef.current;
+
+    if (vIndex >= 2 * totalCards || vIndex < totalCards) {
+      const realIndex = ((vIndex % totalCards) + totalCards) % totalCards;
+      const normalizedIndex = totalCards + realIndex;
+      const normalizedCard = cards[normalizedIndex] as HTMLElement | undefined;
+
+      if (normalizedCard) {
+        isScrollingByCode.current = true;
+        currentVirtualIndexRef.current = normalizedIndex;
+        const targetLeft = normalizedCard.offsetLeft - container.offsetLeft;
+        container.scrollTo({
+          left: targetLeft,
+          behavior: "instant",
+        });
+        setTimeout(() => {
+          isScrollingByCode.current = false;
+        }, 50);
+      }
+    }
+  }, [totalCards]);
+
+  // Défilement doux vers un index virtuel donné
+  const scrollToVirtualCard = useCallback(
+    (targetVirtualIndex: number, smooth = true) => {
+      if (!scrollRef.current || totalCards <= 1) return;
       const container = scrollRef.current;
       const cards = container.children;
-      const targetIndex = (index + totalCards) % totalCards;
-      const targetCard = cards[targetIndex] as HTMLElement | undefined;
+      const targetCard = cards[targetVirtualIndex] as HTMLElement | undefined;
 
       if (targetCard) {
         isScrollingByCode.current = true;
         const targetLeft = targetCard.offsetLeft - container.offsetLeft;
+
         container.scrollTo({
           left: targetLeft,
-          behavior: "smooth",
+          behavior: smooth ? "smooth" : "instant",
         });
-        setCurrentIndex(targetIndex);
-        setTimeout(() => {
+
+        currentVirtualIndexRef.current = targetVirtualIndex;
+        const realIndex = ((targetVirtualIndex % totalCards) + totalCards) % totalCards;
+        setCurrentIndex(realIndex);
+
+        if (smooth) {
+          if (normalizeTimeoutRef.current) {
+            clearTimeout(normalizeTimeoutRef.current);
+          }
+          normalizeTimeoutRef.current = setTimeout(() => {
+            normalizeVirtualPosition();
+            isScrollingByCode.current = false;
+          }, 550);
+        } else {
           isScrollingByCode.current = false;
-        }, 600);
+        }
       }
     },
-    [totalCards]
+    [totalCards, normalizeVirtualPosition]
   );
 
+  // Positionnement initial au montage sur le premier élément du bloc central (Set 1)
+  useEffect(() => {
+    if (!scrollRef.current || totalCards <= 1) return;
+    const container = scrollRef.current;
+
+    const setupInitialPosition = () => {
+      const cards = container.children;
+      const initialCard = cards[totalCards] as HTMLElement | undefined;
+      if (initialCard) {
+        const initialLeft = initialCard.offsetLeft - container.offsetLeft;
+        container.scrollTo({
+          left: initialLeft,
+          behavior: "instant",
+        });
+        currentVirtualIndexRef.current = totalCards;
+        setCurrentIndex(0);
+      }
+    };
+
+    setupInitialPosition();
+    const rafId = requestAnimationFrame(setupInitialPosition);
+    return () => cancelAnimationFrame(rafId);
+  }, [totalCards]);
+
+  // Recalage lors du redimensionnement de la fenêtre pour éviter tout décalage géométrique
+  useEffect(() => {
+    const handleResize = () => {
+      if (!scrollRef.current || totalCards <= 1) return;
+      const container = scrollRef.current;
+      const cards = container.children;
+      const currentCard = cards[currentVirtualIndexRef.current] as HTMLElement | undefined;
+      if (currentCard) {
+        container.scrollTo({
+          left: currentCard.offsetLeft - container.offsetLeft,
+          behavior: "instant",
+        });
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [totalCards]);
+
+  // Navigation vers la carte suivante (toujours vers l'avant, sans jamais rembobiner)
   const nextCard = useCallback(() => {
-    scrollToCard(currentIndex + 1);
-  }, [currentIndex, scrollToCard]);
+    if (totalCards <= 1) return;
+    const nextVirtual = currentVirtualIndexRef.current + 1;
+    scrollToVirtualCard(nextVirtual, true);
+  }, [totalCards, scrollToVirtualCard]);
 
+  // Navigation vers la carte précédente
   const prevCard = useCallback(() => {
-    scrollToCard(currentIndex - 1);
-  }, [currentIndex, scrollToCard]);
+    if (totalCards <= 1) return;
+    const prevVirtual = currentVirtualIndexRef.current - 1;
+    scrollToVirtualCard(prevVirtual, true);
+  }, [totalCards, scrollToVirtualCard]);
 
-  // Défilement automatique périodique
+  // Navigation directe depuis un dot indicateur (chemin continu le plus court)
+  const goToRealSlide = useCallback(
+    (targetRealIndex: number) => {
+      if (totalCards <= 1) return;
+      const currentReal = ((currentVirtualIndexRef.current % totalCards) + totalCards) % totalCards;
+      let diff = targetRealIndex - currentReal;
+      if (diff > totalCards / 2) {
+        diff -= totalCards;
+      } else if (diff < -totalCards / 2) {
+        diff += totalCards;
+      }
+      const targetVirtual = currentVirtualIndexRef.current + diff;
+      scrollToVirtualCard(targetVirtual, true);
+    },
+    [totalCards, scrollToVirtualCard]
+  );
+
+  // Défilement automatique périodique continu
   useEffect(() => {
     if (isPaused || totalCards <= 1) return;
 
@@ -73,29 +195,46 @@ export function PromoCarousel({
     return () => clearInterval(timer);
   }, [isPaused, autoPlayInterval, nextCard, totalCards]);
 
-  // Synchronisation des indicateurs lors du défilement manuel (swipe ou tactile)
-  const handleScroll = () => {
-    if (isScrollingByCode.current || !scrollRef.current) return;
+  // Synchronisation des indicateurs et normalisation lors du défilement manuel (swipe tactile)
+  const handleScroll = useCallback(() => {
+    if (isScrollingByCode.current || !scrollRef.current || totalCards <= 1) return;
     const container = scrollRef.current;
     const scrollLeft = container.scrollLeft;
     const cards = Array.from(container.children) as HTMLElement[];
     if (cards.length === 0) return;
 
-    let closestIndex = 0;
+    let closestVirtual = currentVirtualIndexRef.current;
     let minDiff = Infinity;
     cards.forEach((card, idx) => {
       const cardLeft = card.offsetLeft - container.offsetLeft;
       const diff = Math.abs(cardLeft - scrollLeft);
       if (diff < minDiff) {
         minDiff = diff;
-        closestIndex = idx;
+        closestVirtual = idx;
       }
     });
 
-    if (closestIndex !== currentIndex) {
-      setCurrentIndex(closestIndex);
+    currentVirtualIndexRef.current = closestVirtual;
+    const realIndex = ((closestVirtual % totalCards) + totalCards) % totalCards;
+    if (realIndex !== currentIndex) {
+      setCurrentIndex(realIndex);
     }
-  };
+
+    if (manualScrollEndTimeoutRef.current) {
+      clearTimeout(manualScrollEndTimeoutRef.current);
+    }
+    manualScrollEndTimeoutRef.current = setTimeout(() => {
+      normalizeVirtualPosition();
+    }, 150);
+  }, [currentIndex, totalCards, normalizeVirtualPosition]);
+
+  // Nettoyage des timers au démontage
+  useEffect(() => {
+    return () => {
+      if (normalizeTimeoutRef.current) clearTimeout(normalizeTimeoutRef.current);
+      if (manualScrollEndTimeoutRef.current) clearTimeout(manualScrollEndTimeoutRef.current);
+    };
+  }, []);
 
   return (
     <div
@@ -103,7 +242,7 @@ export function PromoCarousel({
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* Rail de cartes distinctes défilant horizontalement */}
+      {/* Rail de cartes distinctes défilant horizontalement en boucle infinie */}
       <div
         ref={scrollRef}
         onScroll={handleScroll}
@@ -111,13 +250,13 @@ export function PromoCarousel({
         onTouchEnd={() => {
           setTimeout(() => setIsPaused(false), 2500);
         }}
-        className="flex gap-3 sm:gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory no-scrollbar py-1 px-0.5"
+        className="flex gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar py-1 px-0.5"
       >
-        {slides.map((slide, idx) => {
-          const isCurrent = idx === currentIndex;
+        {extendedSlides.map((slide, idx) => {
+          const isCurrent = slide._realIndex === currentIndex;
           return (
             <div
-              key={slide.id}
+              key={slide._uniqueKey}
               onClick={() => {
                 hapticFeedback("light");
                 if (onSelectSlide) {
@@ -137,7 +276,7 @@ export function PromoCarousel({
                 src={slide.img}
                 alt={slide.title}
                 fill
-                priority={idx === 0}
+                priority={totalCards > 1 ? idx === totalCards : idx === 0}
                 className="object-cover group-hover:scale-105 transition-transform duration-700"
               />
 
@@ -242,7 +381,7 @@ export function PromoCarousel({
                 key={idx}
                 onClick={() => {
                   hapticFeedback("light");
-                  scrollToCard(idx);
+                  goToRealSlide(idx);
                 }}
                 aria-label={`Afficher la carte ${idx + 1}`}
                 className={`h-1.5 rounded-full transition-all duration-300 ${
