@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import {
   ArrowLeft,
@@ -170,6 +170,11 @@ export default function ClicBouffePlatform() {
   const [scannedRestaurant, setScannedRestaurant] = useState<Restaurant | null>(null);
   const [showScannedRestaurantModal, setShowScannedRestaurantModal] = useState(false);
 
+  // État de Visibilité Dynamique des Barres de Navigation (Scroll Hide/Show)
+  const [isNavVisible, setIsNavVisible] = useState(true);
+  const lastScrollYRef = useRef(0);
+  const scrollTickingRef = useRef(false);
+
   // État Explorer
   const [selectedExplorerCategory, setSelectedExplorerCategory] = useState<"all" | "local" | "maquis" | "chawarma" | "burger">("all");
 
@@ -202,6 +207,7 @@ export default function ClicBouffePlatform() {
   const setScreen = useCallback((s: Screen) => {
     hapticFeedback("light");
     setCurrentScreen(s);
+    setIsNavVisible(true);
     if (s === "home" || s === "explorer" || s === "plus_tard" || s === "abonnements") {
       setActiveNavTab(s);
     }
@@ -209,6 +215,80 @@ export default function ClicBouffePlatform() {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, []);
+
+  // Gestion du masquage/réapparition fluide et progressif des barres de navigation au défilement
+  useEffect(() => {
+    const threshold = 12; // Seuil minimum de déplacement pour filtrer les micro-saccades
+    const topSafeZone = 35; // En haut de page, les barres restent toujours visibles
+
+    const handleScroll = () => {
+      // Ignorer si une vue ou modale plein écran est active
+      if (
+        showSideDrawer ||
+        showGoogleSearchPage ||
+        showAuthModal ||
+        showWalletModal ||
+        showDishPreviewModal ||
+        showScannedRestaurantModal ||
+        showQrScannerModal ||
+        showDeliveryRatesModal ||
+        showFreeFoodModal ||
+        showCreateRestaurantModal
+      ) {
+        return;
+      }
+
+      if (!scrollTickingRef.current) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          const delta = currentScrollY - lastScrollYRef.current;
+
+          if (currentScrollY <= topSafeZone) {
+            setIsNavVisible(true);
+          } else if (Math.abs(delta) > threshold) {
+            const isNearBottom =
+              window.innerHeight + currentScrollY >= document.documentElement.scrollHeight - 30;
+
+            if (delta > 0 && currentScrollY > 60 && !isNearBottom) {
+              // Scroll vers le bas : escamoter doucement les barres
+              setIsNavVisible(false);
+              setIsFabMenuOpen(false);
+            } else if (delta < 0) {
+              // Scroll vers le haut : réafficher doucement les barres
+              setIsNavVisible(true);
+            }
+            lastScrollYRef.current = currentScrollY;
+          }
+
+          scrollTickingRef.current = false;
+        });
+        scrollTickingRef.current = true;
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [
+    showSideDrawer,
+    showGoogleSearchPage,
+    showAuthModal,
+    showWalletModal,
+    showDishPreviewModal,
+    showScannedRestaurantModal,
+    showQrScannerModal,
+    showDeliveryRatesModal,
+    showFreeFoodModal,
+    showCreateRestaurantModal,
+  ]);
+
+  // Réinitialiser la visibilité des barres de navigation au changement d'écran ou d'onglet (Pattern React 19)
+  const [prevScreenAndTab, setPrevScreenAndTab] = useState({ screen: currentScreen, tab: activeNavTab });
+  if (prevScreenAndTab.screen !== currentScreen || prevScreenAndTab.tab !== activeNavTab) {
+    setPrevScreenAndTab({ screen: currentScreen, tab: activeNavTab });
+    setIsNavVisible(true);
+  }
 
   // Redirection automatique Splash vers Onboarding (2.5s)
   useEffect(() => {
@@ -435,8 +515,14 @@ export default function ClicBouffePlatform() {
               isFabMenuOpen ? "filter blur-[2px] opacity-40 pointer-events-none select-none" : "filter-none opacity-100"
             }`}
           >
-            {/* Top Bar Responsive */}
-          <header className="p-4 border-b border-slate-100 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md sticky top-0 z-30 pt-safe transition-colors">
+            {/* Top Bar Responsive avec disparition/réapparition progressive et douce au scroll */}
+            <header
+              className={`p-4 border-b border-slate-100 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md sticky top-0 z-30 pt-safe nav-bar-top-transition ${
+                isNavVisible
+                  ? "translate-y-0 opacity-100"
+                  : "-translate-y-full opacity-0 pointer-events-none"
+              }`}
+            >
             <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
               <div className="flex items-center gap-2.5">
                 <div
@@ -1176,10 +1262,14 @@ export default function ClicBouffePlatform() {
           )}
           </div>
 
-          {/* Barre Navigation Basse Pixel-Perfect avec FAB (+) morphing en (X) */}
+          {/* Barre Navigation Basse Pixel-Perfect avec disparition/réapparition progressive et douce au scroll */}
           <nav
-            className={`fixed bottom-0 inset-x-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 h-16 flex items-center justify-around px-2 z-40 pb-safe transition-all duration-300 ${
+            className={`fixed bottom-0 inset-x-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 h-16 flex items-center justify-around px-2 z-40 pb-safe nav-bar-bottom-transition ${
               currentViewMode === "kds" ? "hidden" : ""
+            } ${
+              isNavVisible
+                ? "translate-y-0 opacity-100"
+                : "translate-y-[calc(100%+2.5rem)] opacity-0 pointer-events-none"
             }`}
           >
             {/* Zone de clic de fermeture sur la barre floutée */}

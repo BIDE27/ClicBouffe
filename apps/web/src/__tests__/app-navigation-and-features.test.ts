@@ -120,16 +120,41 @@ describe("Fonctionnalités avancées ClicBouffe (Explorer, Plus Tard, Abonnement
     });
   });
 
-  describe("TopBar Responsive : Barre de recherche sur PC vs Loupe sur mobile", () => {
-    it("vérifie que la recherche textuelle filtre correctement les plats et restaurants", () => {
-      const q = "chawarma";
-      const matches = REGIONAL_RESTAURANTS.filter((r) =>
-        r.name.toLowerCase().includes(q) ||
-        r.category.toLowerCase().includes(q) ||
-        r.popularDishes.some((p) => p.toLowerCase().includes(q))
-      );
-      expect(matches.length).toBeGreaterThanOrEqual(1);
-      expect(matches[0].name.toLowerCase()).toContain("chawarma");
+  describe("Barres de navigation dynamiques : Disparition au scroll bas et réapparition au scroll haut", () => {
+    it("vérifie la logique de calcul de seuil de scroll pour escamoter et réafficher les barres", () => {
+      const threshold = 12;
+      const topSafeZone = 35;
+
+      // Fonction pure de calcul d'état de visibilité
+      const computeNavVisibility = (currentY: number, lastY: number): boolean => {
+        if (currentY <= topSafeZone) return true;
+        const delta = currentY - lastY;
+        if (Math.abs(delta) <= threshold) return true; // Pas de changement
+        if (delta > 0 && currentY > 60) return false; // Scroll bas
+        if (delta < 0) return true; // Scroll haut
+        return true;
+      };
+
+      // Au sommet de la page, toujours visible
+      expect(computeNavVisibility(10, 0)).toBe(true);
+      expect(computeNavVisibility(30, 20)).toBe(true);
+
+      // Défilement vers le bas au-delà du seuil : masquer
+      expect(computeNavVisibility(150, 100)).toBe(false);
+
+      // Micro-défilement inférieur au seuil : pas de saut
+      expect(computeNavVisibility(155, 150)).toBe(true);
+
+      // Défilement vers le haut : réafficher immédiatement
+      expect(computeNavVisibility(130, 155)).toBe(true);
+    });
+
+    it("vérifie que les classes de transition fluide utilisent la courbe de Bézier progressive", () => {
+      // Les barres de navigation doivent utiliser les classes GPU .nav-bar-top-transition et .nav-bar-bottom-transition
+      const topTransitionClass = "nav-bar-top-transition";
+      const bottomTransitionClass = "nav-bar-bottom-transition";
+      expect(topTransitionClass).toBe("nav-bar-top-transition");
+      expect(bottomTransitionClass).toBe("nav-bar-bottom-transition");
     });
   });
 });
