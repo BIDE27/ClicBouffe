@@ -1029,10 +1029,15 @@ export default function MobileApp({
         </div>
       )}
 
-      {/* Modale d'Authentification & Création de Compte Dynamique */}
+      {/* Page d'Authentification & Gestion de Session Plein Écran */}
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
+        currentUser={currentUser}
+        onSignOut={() => {
+          setCurrentUser(null);
+          setCurrentViewMode("marketplace");
+        }}
         onSuccess={(profile) => {
           setCurrentUser(profile);
           if (profile.role === "restaurant_owner") {

@@ -35,7 +35,7 @@ import {
   X,
 } from "lucide-react";
 import { PromoCarousel } from "@/components/home/promo-carousel";
-import { AuthModal } from "@/components/auth/auth-modal";
+import { AuthPageView } from "@/components/auth/auth-page-view";
 import { SideDrawer } from "@/components/navigation/side-drawer";
 import { WalletModal } from "@/components/wallet/wallet-modal";
 import { QrScannerModal } from "@/components/qr/qr-scanner-modal";
@@ -522,14 +522,31 @@ export default function ClicBouffePlatform() {
                   </button>
                 )}
 
-                {/* Si non connecté, bouton rapide Connexion */}
-                {!currentUser && (
+                {/* Utilisateur Connecté ou Bouton Connexion */}
+                {currentUser ? (
                   <button
                     onClick={() => {
                       hapticFeedback("light");
                       setShowAuthModal(true);
                     }}
-                    className="px-2.5 sm:px-3 py-1.5 bg-[#00AFF2] hover:bg-[#0098d4] text-white rounded-xl font-bold text-xs flex items-center gap-1 shadow-xs transition-all active:scale-95"
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-sky-50 dark:bg-slate-800 border border-sky-200/80 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all active:scale-95 cursor-pointer"
+                    title="Mon profil et session"
+                    aria-label="Mon profil et session"
+                  >
+                    <div className="w-5 h-5 rounded-full bg-[#00AFF2] text-white flex items-center justify-center font-bold text-[10px]">
+                      {currentUser.full_name ? currentUser.full_name.charAt(0).toUpperCase() : "U"}
+                    </div>
+                    <span className="hidden sm:inline max-w-[85px] truncate">
+                      {currentUser.full_name?.split(" ")[0]}
+                    </span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      hapticFeedback("light");
+                      setShowAuthModal(true);
+                    }}
+                    className="px-2.5 sm:px-3 py-1.5 bg-[#00AFF2] hover:bg-[#0098d4] text-white rounded-xl font-bold text-xs flex items-center gap-1 shadow-xs transition-all active:scale-95 cursor-pointer"
                   >
                     <User className="w-3.5 h-3.5" />
                     <span className="hidden sm:inline">Connexion</span>
@@ -2301,10 +2318,24 @@ export default function ClicBouffePlatform() {
         </div>
       )}
 
-      {/* Modale d'Authentification & Création de Compte Dynamique */}
-      <AuthModal
+      {/* Page d'Authentification & Gestion de Compte Plein Écran */}
+      <AuthPageView
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
+        currentUser={currentUser}
+        userRestaurants={userRestaurants}
+        walletBalance={walletBalance}
+        onOpenWallet={() => setShowWalletModal(true)}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
+        onSignOut={async () => {
+          await authService.signOut();
+          setCurrentUser(null);
+          setUserRestaurants([]);
+          setActiveRestaurant(null);
+          setCurrentViewMode("marketplace");
+          setWalletBalance(0);
+        }}
         onSuccess={async (profile) => {
           setCurrentUser(profile);
           const restos = await restaurantService.getRestaurantsByOwner(profile.id);
