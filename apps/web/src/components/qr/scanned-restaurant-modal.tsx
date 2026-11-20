@@ -188,7 +188,7 @@ export function ScannedRestaurantModal({
         </div>
 
         {/* Pied de page avec bouton Explorer */}
-        <div className="p-3 sm:p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 flex items-center justify-between gap-3">
+        <div className="p-3 sm:p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex items-center justify-between gap-3">
           <button
             type="button"
             onClick={onClose}

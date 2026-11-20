@@ -488,7 +488,7 @@ export default function ClicBouffePlatform() {
                     hapticFeedback("light");
                     setShowWalletModal(true);
                   }}
-                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-sky-50 hover:bg-sky-100 dark:bg-slate-800 dark:hover:bg-slate-750 border border-sky-200/80 dark:border-slate-700 text-slate-800 dark:text-slate-200 transition-all active:scale-95 group shadow-2xs"
+                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-sky-50 hover:bg-sky-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-sky-200/80 dark:border-slate-700 text-slate-800 dark:text-slate-200 transition-all active:scale-95 group shadow-2xs"
                   title="Mon Portefeuille ClicBouffe (cliquez pour recharger)"
                 >
                   <div className="w-5 h-5 rounded-full bg-[#00AFF2] text-white flex items-center justify-center shrink-0">
@@ -497,7 +497,7 @@ export default function ClicBouffePlatform() {
                   <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-[#00AFF2] transition-colors">
                     {formatFCFA(walletBalance)}
                   </span>
-                  <span className="hidden sm:inline-block text-[10px] font-bold text-[#00AFF2] bg-white dark:bg-slate-900 px-1.5 py-0.2 rounded-full border border-sky-100 dark:border-slate-750">
+                  <span className="hidden sm:inline-block text-[10px] font-bold text-[#00AFF2] bg-white dark:bg-slate-900 px-1.5 py-0.2 rounded-full border border-sky-100 dark:border-slate-700">
                     +
                   </span>
                 </button>
@@ -2095,7 +2095,7 @@ export default function ClicBouffePlatform() {
                   {selectedDishes.map((dish) => (
                     <div
                       key={dish.id}
-                      className="relative w-28 shrink-0 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs text-center p-1 bg-white dark:bg-slate-850"
+                      className="relative w-28 shrink-0 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs text-center p-1 bg-white dark:bg-slate-800"
                     >
                       <button
                         onClick={() => toggleSelectDish(dish)}
@@ -2162,7 +2162,7 @@ export default function ClicBouffePlatform() {
                       className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer ${
                         recipient === r
                           ? "border-[#00AFF2] bg-sky-50 dark:bg-sky-950/40 text-[#00AFF2] font-bold"
-                          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-850 text-slate-700 dark:text-slate-300"
+                          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200"
                       }`}
                     >
                       <div className="flex items-center gap-2">

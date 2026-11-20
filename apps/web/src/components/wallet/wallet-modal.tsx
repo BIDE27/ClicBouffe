@@ -179,7 +179,7 @@ export function WalletModal({
                         className={`py-2 px-2.5 rounded-xl border text-xs font-bold transition-all text-center ${
                           isSelected
                             ? "bg-[#00AFF2] text-white border-[#00AFF2] shadow-xs scale-102"
-                            : "bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750"
+                            : "bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
                         }`}
                       >
                         +{formatFCFA(amt)}
@@ -200,7 +200,7 @@ export function WalletModal({
                       setCustomAmount(e.target.value);
                       setSelectedAmount(0);
                     }}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:bg-white dark:focus:bg-slate-850 focus:border-[#00AFF2] outline-none text-slate-800 dark:text-slate-100 transition-colors"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:bg-white dark:focus:bg-slate-800 focus:border-[#00AFF2] outline-none text-slate-800 dark:text-slate-100 transition-colors"
                   />
                 </div>
               </div>
@@ -220,7 +220,7 @@ export function WalletModal({
                     className={`p-2.5 rounded-xl border text-left flex items-center gap-2 transition-all ${
                       operator === "mtn"
                         ? "bg-amber-50/70 dark:bg-amber-950/30 border-amber-400 dark:border-amber-500 text-amber-900 dark:text-amber-200 ring-2 ring-amber-400/30"
-                        : "bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750"
+                        : "bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
                     }`}
                   >
                     <div className="w-7 h-7 rounded-lg bg-amber-400 text-slate-900 font-black text-[10px] flex items-center justify-center shrink-0">
@@ -241,7 +241,7 @@ export function WalletModal({
                     className={`p-2.5 rounded-xl border text-left flex items-center gap-2 transition-all ${
                       operator === "moov"
                         ? "bg-blue-50/70 dark:bg-blue-950/30 border-blue-500 text-blue-900 dark:text-blue-200 ring-2 ring-blue-500/30"
-                        : "bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750"
+                        : "bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
                     }`}
                   >
                     <div className="w-7 h-7 rounded-lg bg-blue-600 text-white font-black text-[10px] flex items-center justify-center shrink-0">
@@ -262,7 +262,7 @@ export function WalletModal({
                     className={`p-2.5 rounded-xl border text-left flex items-center gap-2 transition-all ${
                       operator === "celtiis"
                         ? "bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-500 text-emerald-900 dark:text-emerald-200 ring-2 ring-emerald-500/30"
-                        : "bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750"
+                        : "bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
                     }`}
                   >
                     <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white font-black text-[9px] flex items-center justify-center shrink-0">
@@ -283,7 +283,7 @@ export function WalletModal({
                     className={`p-2.5 rounded-xl border text-left flex items-center gap-2 transition-all ${
                       operator === "card"
                         ? "bg-purple-50/70 dark:bg-purple-950/30 border-purple-500 text-purple-900 dark:text-purple-200 ring-2 ring-purple-500/30"
-                        : "bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-750"
+                        : "bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
                     }`}
                   >
                     <div className="w-7 h-7 rounded-lg bg-purple-600 text-white font-black text-[10px] flex items-center justify-center shrink-0">
@@ -310,7 +310,7 @@ export function WalletModal({
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                       placeholder="97 00 00 00"
-                      className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:bg-white dark:focus:bg-slate-850 focus:border-[#00AFF2] outline-none text-slate-800 dark:text-slate-100 font-mono transition-colors"
+                      className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:bg-white dark:focus:bg-slate-800 focus:border-[#00AFF2] outline-none text-slate-800 dark:text-slate-100 font-mono transition-colors"
                     />
                   </div>
                 </div>

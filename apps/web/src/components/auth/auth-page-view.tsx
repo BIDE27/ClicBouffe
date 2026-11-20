@@ -467,7 +467,7 @@ export function AuthPageView({
                         placeholder="Ex: Koffi Mensah"
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-850 focus:border-[#00AFF2] focus:ring-2 focus:ring-[#00AFF2]/20 outline-none transition-all"
+                        className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-[#00AFF2] focus:ring-2 focus:ring-[#00AFF2]/20 outline-none transition-all"
                       />
                     </div>
                   </div>
@@ -484,7 +484,7 @@ export function AuthPageView({
                         placeholder="+229 97 00 11 22"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-850 focus:border-[#00AFF2] focus:ring-2 focus:ring-[#00AFF2]/20 outline-none transition-all"
+                        className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-[#00AFF2] focus:ring-2 focus:ring-[#00AFF2]/20 outline-none transition-all"
                       />
                     </div>
                   </div>
@@ -504,7 +504,7 @@ export function AuthPageView({
                     placeholder="nom@exemple.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-850 focus:border-[#00AFF2] focus:ring-2 focus:ring-[#00AFF2]/20 outline-none transition-all"
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-[#00AFF2] focus:ring-2 focus:ring-[#00AFF2]/20 outline-none transition-all"
                   />
                 </div>
               </div>
@@ -522,7 +522,7 @@ export function AuthPageView({
                     placeholder={tab === "signup" ? "Au moins 6 caractères" : "Votre mot de passe"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-11 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-850 focus:border-[#00AFF2] focus:ring-2 focus:ring-[#00AFF2]/20 outline-none transition-all"
+                    className="w-full pl-10 pr-11 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-[#00AFF2] focus:ring-2 focus:ring-[#00AFF2]/20 outline-none transition-all"
                   />
                   <button
                     type="button"
@@ -556,7 +556,7 @@ export function AuthPageView({
                       placeholder="Répétez votre mot de passe"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full pl-10 pr-11 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-850 focus:border-[#00AFF2] focus:ring-2 focus:ring-[#00AFF2]/20 outline-none transition-all"
+                      className="w-full pl-10 pr-11 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-[#00AFF2] focus:ring-2 focus:ring-[#00AFF2]/20 outline-none transition-all"
                     />
                     <button
                       type="button"

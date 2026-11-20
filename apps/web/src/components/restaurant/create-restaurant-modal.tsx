@@ -139,7 +139,7 @@ export function CreateRestaurantModal({
                 placeholder="Ex: Le Maquis du Port, Chez Maman Cécile..."
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-850 focus:border-[#00AFF2] outline-none transition-colors"
+                className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-[#00AFF2] outline-none transition-colors"
               />
             </div>
           </div>
@@ -175,7 +175,7 @@ export function CreateRestaurantModal({
                 placeholder="Ex: Akpakpa, Terrain Zico (ou Cadjehoun, Haie Vive...)"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-850 focus:border-[#00AFF2] outline-none transition-colors"
+                className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-[#00AFF2] outline-none transition-colors"
               />
             </div>
           </div>
@@ -193,7 +193,7 @@ export function CreateRestaurantModal({
                 placeholder="+229 97 00 11 22"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-850 focus:border-[#00AFF2] outline-none transition-colors"
+                className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-[#00AFF2] outline-none transition-colors"
               />
             </div>
           </div>
@@ -243,7 +243,7 @@ export function CreateRestaurantModal({
                 placeholder="Présentez vos plats phares, votre méthode de cuisson, vos accompagnements..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-850 focus:border-[#00AFF2] outline-none transition-colors resize-none"
+                className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:border-[#00AFF2] outline-none transition-colors resize-none"
               />
             </div>
           </div>

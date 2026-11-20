@@ -385,7 +385,7 @@ export function GoogleSearchView({
                   <button
                     key={tag}
                     onClick={() => handleShortcutClick(tag)}
-                    className="px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-850 dark:hover:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-750 transition-all active:scale-95"
+                    className="px-3.5 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-100 border border-slate-200/80 dark:border-slate-700 hover:border-[#00AFF2]/60 dark:hover:border-[#00AFF2]/60 transition-all active:scale-95 cursor-pointer shadow-2xs"
                   >
                     {tag}
                   </button>
