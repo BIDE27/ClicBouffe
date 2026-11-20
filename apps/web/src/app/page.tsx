@@ -44,6 +44,7 @@ import { RestaurantDashboard } from "@/components/restaurant-dashboard/restauran
 import { LogoMarmite } from "@/components/ui/logo-marmite";
 import { GoogleSearchView } from "@/components/search/google-search-view";
 import { CreateRestaurantModal } from "@/components/restaurant/create-restaurant-modal";
+import { NotificationsPageView } from "@/components/notifications/notifications-page-view";
 import { authService } from "@/lib/services/auth-service";
 import { restaurantService } from "@/lib/services/restaurant-service";
 import { UserProfile, RestaurantEntity } from "@/lib/types/database";
@@ -148,6 +149,7 @@ export default function ClicBouffePlatform() {
   };
 
   // Modales
+  const [showNotificationsPage, setShowNotificationsPage] = useState(false);
   const [showFreeFoodModal, setShowFreeFoodModal] = useState(false);
   const [showDeliveryRatesModal, setShowDeliveryRatesModal] = useState(false);
   const [showDishPreviewModal, setShowDishPreviewModal] = useState(false);
@@ -225,6 +227,7 @@ export default function ClicBouffePlatform() {
     const handleScroll = () => {
       // Ignorer si une vue ou modale plein écran est active
       if (
+        showNotificationsPage ||
         showSideDrawer ||
         showGoogleSearchPage ||
         showAuthModal ||
@@ -274,6 +277,7 @@ export default function ClicBouffePlatform() {
       window.removeEventListener("scroll", handleScroll);
     };
   }, [
+    showNotificationsPage,
     showSideDrawer,
     showGoogleSearchPage,
     showAuthModal,
@@ -567,82 +571,96 @@ export default function ClicBouffePlatform() {
                 />
               </div>
 
-              {/* Actions Droite : Portefeuille, Recherche, Notifications & Menu Latéral */}
+              {/* Actions Droite : Portefeuille / Connexion, Recherche, Notifications & Menu Latéral */}
               <div className="flex items-center gap-1.5 sm:gap-2.5 text-slate-800 dark:text-slate-200">
-                {/* Pilule Portefeuille Utilisateur (0 FCFA au départ ou solde réel) */}
-                <button
-                  onClick={() => {
-                    hapticFeedback("light");
-                    setShowWalletModal(true);
-                  }}
-                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-sky-50 hover:bg-sky-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-sky-200/80 dark:border-slate-700 text-slate-800 dark:text-slate-200 transition-all active:scale-95 group shadow-2xs"
-                  title="Mon Portefeuille ClicBouffe (cliquez pour recharger)"
-                >
-                  <div className="w-5 h-5 rounded-full bg-[#00AFF2] text-white flex items-center justify-center shrink-0">
-                    <Wallet className="w-3 h-3 stroke-[2.5]" />
-                  </div>
-                  <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-[#00AFF2] transition-colors">
-                    {formatFCFA(walletBalance)}
-                  </span>
-                  <span className="hidden sm:inline-block text-[10px] font-bold text-[#00AFF2] bg-white dark:bg-slate-900 px-1.5 py-0.2 rounded-full border border-sky-100 dark:border-slate-700">
-                    +
-                  </span>
-                </button>
-
-                {/* Si propriétaire de restaurant(s), bouton rapide d'accès KDS */}
-                {userRestaurants.length > 0 && (
-                  <button
-                    onClick={() => {
-                      hapticFeedback("light");
-                      setCurrentViewMode(currentViewMode === "kds" ? "marketplace" : "kds");
-                    }}
-                    className={`px-2 sm:px-2.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs ${
-                      currentViewMode === "kds"
-                        ? "bg-[#00AFF2] text-white"
-                        : "bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white"
-                    }`}
-                  >
-                    <ChefHat className="w-3.5 h-3.5 text-amber-300" />
-                    <span className="hidden sm:inline">
-                      {currentViewMode === "kds" ? "Boutique" : "KDS"}
-                    </span>
-                  </button>
-                )}
-
-                {/* Utilisateur Connecté ou Bouton Connexion */}
+                {/* Utilisateur non connecté : PAS de portefeuille, mais le bouton "Se connecter" à la place.
+                    Utilisateur connecté : Portefeuille + Avatar profil */}
                 {currentUser ? (
-                  <button
-                    onClick={() => {
-                      hapticFeedback("light");
-                      setShowAuthModal(true);
-                    }}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-sky-50 dark:bg-slate-800 border border-sky-200/80 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all active:scale-95 cursor-pointer"
-                    title="Mon profil et session"
-                    aria-label="Mon profil et session"
-                  >
-                    <div className="w-5 h-5 rounded-full bg-[#00AFF2] text-white flex items-center justify-center font-bold text-[10px]">
-                      {currentUser.full_name ? currentUser.full_name.charAt(0).toUpperCase() : "U"}
-                    </div>
-                    <span className="hidden sm:inline max-w-[85px] truncate">
-                      {currentUser.full_name?.split(" ")[0]}
-                    </span>
-                  </button>
+                  <>
+                    {/* Pilule Portefeuille Utilisateur (affiché uniquement si connecté) */}
+                    <button
+                      onClick={() => {
+                        hapticFeedback("light");
+                        setShowWalletModal(true);
+                      }}
+                      className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-sky-50 hover:bg-sky-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-sky-200/80 dark:border-slate-700 text-slate-800 dark:text-slate-200 transition-all active:scale-95 group shadow-2xs"
+                      title="Mon Portefeuille ClicBouffe (cliquez pour recharger)"
+                    >
+                      <div className="w-5 h-5 rounded-full bg-[#00AFF2] text-white flex items-center justify-center shrink-0">
+                        <Wallet className="w-3 h-3 stroke-[2.5]" />
+                      </div>
+                      <span className="text-xs font-black text-slate-900 dark:text-white group-hover:text-[#00AFF2] transition-colors">
+                        {formatFCFA(walletBalance)}
+                      </span>
+                      <span className="hidden sm:inline-block text-[10px] font-bold text-[#00AFF2] bg-white dark:bg-slate-900 px-1.5 py-0.2 rounded-full border border-sky-100 dark:border-slate-700">
+                        +
+                      </span>
+                    </button>
+
+                    {/* Si propriétaire de restaurant(s), bouton rapide d'accès KDS */}
+                    {userRestaurants.length > 0 && (
+                      <button
+                        onClick={() => {
+                          hapticFeedback("light");
+                          setCurrentViewMode(currentViewMode === "kds" ? "marketplace" : "kds");
+                        }}
+                        className={`px-2 sm:px-2.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs ${
+                          currentViewMode === "kds"
+                            ? "bg-[#00AFF2] text-white"
+                            : "bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white"
+                        }`}
+                      >
+                        <ChefHat className="w-3.5 h-3.5 text-amber-300" />
+                        <span className="hidden sm:inline">
+                          {currentViewMode === "kds" ? "Boutique" : "KDS"}
+                        </span>
+                      </button>
+                    )}
+
+                    {/* Profil Utilisateur Connecté */}
+                    <button
+                      onClick={() => {
+                        hapticFeedback("light");
+                        setShowAuthModal(true);
+                      }}
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-sky-50 dark:bg-slate-800 border border-sky-200/80 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all active:scale-95 cursor-pointer"
+                      title="Mon profil et session"
+                      aria-label="Mon profil et session"
+                    >
+                      <div className="w-5 h-5 rounded-full bg-[#00AFF2] text-white flex items-center justify-center font-bold text-[10px]">
+                        {currentUser.full_name ? currentUser.full_name.charAt(0).toUpperCase() : "U"}
+                      </div>
+                      <span className="hidden sm:inline max-w-[85px] truncate">
+                        {currentUser.full_name?.split(" ")[0]}
+                      </span>
+                    </button>
+                  </>
                 ) : (
+                  /* Tant que non connecté : pas de portefeuille, mais le bouton "Se connecter" qui prend sa place avec l'icône de connexion actuelle */
                   <button
                     onClick={() => {
                       hapticFeedback("light");
                       setShowAuthModal(true);
                     }}
-                    className="px-2.5 sm:px-3 py-1.5 bg-[#00AFF2] hover:bg-[#0098d4] text-white rounded-xl font-bold text-xs flex items-center gap-1 shadow-xs transition-all active:scale-95 cursor-pointer"
+                    className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-sky-50 hover:bg-sky-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-sky-200/80 dark:border-slate-700 text-slate-800 dark:text-slate-200 transition-all active:scale-95 group shadow-2xs cursor-pointer"
+                    title="Se connecter"
+                    aria-label="Se connecter"
                   >
-                    <User className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Connexion</span>
+                    <div className="w-5 h-5 rounded-full bg-[#00AFF2] text-white flex items-center justify-center shrink-0">
+                      <User className="w-3.5 h-3.5 stroke-[2.5]" />
+                    </div>
+                    <span className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-[#00AFF2] transition-colors whitespace-nowrap">
+                      Se connecter
+                    </span>
                   </button>
                 )}
 
                 {/* Notifications */}
                 <button
-                  onClick={() => setShowFreeFoodModal(true)}
+                  onClick={() => {
+                    hapticFeedback("light");
+                    setShowNotificationsPage(true);
+                  }}
                   className="p-1.5 hover:text-[#00AFF2] transition-colors relative"
                   aria-label="Notifications"
                 >
@@ -2432,6 +2450,14 @@ export default function ClicBouffePlatform() {
           }
           setWalletBalance(authService.getWalletBalance(profile.id));
         }}
+      />
+
+      {/* Page Plein Écran des Notifications */}
+      <NotificationsPageView
+        isOpen={showNotificationsPage}
+        onClose={() => setShowNotificationsPage(false)}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
       />
 
       {/* Menu Latéral Coulissant (Side Drawer) */}
