@@ -122,16 +122,16 @@ describe("Fonctionnalités avancées ClicBouffe (Explorer, Plus Tard, Abonnement
 
   describe("Barres de navigation dynamiques : Disparition au scroll bas et réapparition au scroll haut", () => {
     it("vérifie la logique de calcul de seuil de scroll pour escamoter et réafficher les barres", () => {
-      const threshold = 12;
-      const topSafeZone = 35;
+      const thresholdDown = 18;
+      const thresholdUp = 12;
+      const topSafeZone = 40;
 
       // Fonction pure de calcul d'état de visibilité
       const computeNavVisibility = (currentY: number, lastY: number): boolean => {
         if (currentY <= topSafeZone) return true;
         const delta = currentY - lastY;
-        if (Math.abs(delta) <= threshold) return true; // Pas de changement
-        if (delta > 0 && currentY > 60) return false; // Scroll bas
-        if (delta < 0) return true; // Scroll haut
+        if (delta > thresholdDown && currentY > 70) return false; // Scroll bas
+        if (delta < -thresholdUp) return true; // Scroll haut
         return true;
       };
 
@@ -142,8 +142,8 @@ describe("Fonctionnalités avancées ClicBouffe (Explorer, Plus Tard, Abonnement
       // Défilement vers le bas au-delà du seuil : masquer
       expect(computeNavVisibility(150, 100)).toBe(false);
 
-      // Micro-défilement inférieur au seuil : pas de saut
-      expect(computeNavVisibility(155, 150)).toBe(true);
+      // Micro-défilement inférieur au seuil : pas de saut intempestif
+      expect(computeNavVisibility(110, 100)).toBe(true);
 
       // Défilement vers le haut : réafficher immédiatement
       expect(computeNavVisibility(130, 155)).toBe(true);

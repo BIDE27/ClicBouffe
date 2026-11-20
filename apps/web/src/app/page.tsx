@@ -216,10 +216,11 @@ export default function ClicBouffePlatform() {
     }
   }, []);
 
-  // Gestion du masquage/réapparition fluide et progressif des barres de navigation au défilement
+  // Gestion du masquage/réapparition ultra-fluide et progressive des barres de navigation au défilement
   useEffect(() => {
-    const threshold = 12; // Seuil minimum de déplacement pour filtrer les micro-saccades
-    const topSafeZone = 35; // En haut de page, les barres restent toujours visibles
+    const thresholdDown = 18; // Seuil confortable vers le bas (évite tout déclenchement intempestif)
+    const thresholdUp = 12;   // Seuil doux vers le haut (réactivité fluide)
+    const topSafeZone = 40;   // En haut de page, les barres restent toujours visibles
 
     const handleScroll = () => {
       // Ignorer si une vue ou modale plein écran est active
@@ -245,19 +246,21 @@ export default function ClicBouffePlatform() {
 
           if (currentScrollY <= topSafeZone) {
             setIsNavVisible(true);
-          } else if (Math.abs(delta) > threshold) {
+            lastScrollYRef.current = currentScrollY;
+          } else {
             const isNearBottom =
               window.innerHeight + currentScrollY >= document.documentElement.scrollHeight - 30;
 
-            if (delta > 0 && currentScrollY > 60 && !isNearBottom) {
-              // Scroll vers le bas : escamoter doucement les barres
+            if (delta > thresholdDown && currentScrollY > 70 && !isNearBottom) {
+              // Scroll affirmé vers le bas : escamoter doucement les barres
               setIsNavVisible(false);
               setIsFabMenuOpen(false);
-            } else if (delta < 0) {
-              // Scroll vers le haut : réafficher doucement les barres
+              lastScrollYRef.current = currentScrollY;
+            } else if (delta < -thresholdUp) {
+              // Scroll affirmé vers le haut : réafficher doucement les barres
               setIsNavVisible(true);
+              lastScrollYRef.current = currentScrollY;
             }
-            lastScrollYRef.current = currentScrollY;
           }
 
           scrollTickingRef.current = false;
