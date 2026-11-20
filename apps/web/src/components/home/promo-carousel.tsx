@@ -265,61 +265,70 @@ export function PromoCarousel({
                   onOrderDish(slide.dishRefName);
                 }
               }}
-              className={`snap-start shrink-0 relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-md border border-slate-200/90 dark:border-slate-800 group cursor-pointer transition-all duration-300 hover:shadow-xl hover:border-[#00AFF2]/60 ${
+              className={`snap-start shrink-0 flex flex-col rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 group cursor-pointer transition-all duration-300 hover:shadow-xl hover:border-[#00AFF2]/60 ${
                 variant === "mobile"
-                  ? "w-[86%] sm:w-[340px] h-44 sm:h-50"
-                  : "w-[86%] sm:w-[420px] md:w-[460px] h-48 sm:h-56"
-              } ${isCurrent ? "ring-2 ring-[#00AFF2]/40" : "opacity-95"}`}
+                  ? "w-[86%] sm:w-[340px] h-[280px] sm:h-[310px]"
+                  : "w-[86%] sm:w-[400px] md:w-[440px] h-[295px] sm:h-[330px]"
+              } ${isCurrent ? "ring-2 ring-[#00AFF2]/40 border-[#00AFF2]/60 shadow-md" : "opacity-95"}`}
             >
-              {/* Photo du plat / restaurant distinct */}
-              <Image
-                src={slide.img}
-                alt={slide.title}
-                fill
-                priority={totalCards > 1 ? idx === totalCards : idx === 0}
-                className="object-cover group-hover:scale-105 transition-transform duration-700"
-              />
+              {/* Photo du plat / restaurant (Pure photo sans aucun texte superposé) */}
+              <div className="relative w-full h-34 sm:h-40 shrink-0 overflow-hidden bg-slate-100 dark:bg-slate-800 border-b border-slate-100 dark:border-slate-800/80">
+                <Image
+                  src={slide.img}
+                  alt={slide.title}
+                  fill
+                  priority={totalCards > 1 ? idx === totalCards : idx === 0}
+                  className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                />
+              </div>
 
-              {/* Dégradé pour lisibilité haute définition */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/25 flex flex-col justify-between p-3.5 sm:p-4 text-white">
-                {/* Ligne Supérieure : Tag catégorie & Badge Annonce Sponsorisée */}
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 flex-wrap">
+              {/* Bloc d'informations stylé situé en bas de l'image */}
+              <div className="p-3 sm:p-3.5 flex flex-col justify-between flex-1 min-h-0 bg-white dark:bg-slate-900">
+                {/* Ligne Supérieure : Tag de catégorie & Badge Annonce Partenaire */}
+                <div className="flex items-center justify-between gap-1.5 shrink-0">
+                  <div className="flex items-center gap-1.5 min-w-0 flex-1">
                     <span
-                      className={`px-2.5 py-0.5 rounded-full text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-wider shadow-xs ${
+                      className={`px-2 py-0.5 rounded-full text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-wider shrink-0 shadow-2xs ${
                         slide.tagBg || "bg-[#00AFF2]"
                       }`}
                     >
                       {slide.tag}
                     </span>
-                    <span className="text-[10px] sm:text-xs text-white/85 font-medium truncate max-w-[150px] sm:max-w-none">
+                    <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium truncate">
                       {slide.partnerLocation}
                     </span>
                   </div>
 
                   {slide.isSponsored && (
-                    <div className="px-2 py-0.5 rounded-full bg-black/45 backdrop-blur-md text-white/90 text-[9px] sm:text-[10px] font-semibold tracking-wide flex items-center gap-1 border border-white/20 shrink-0">
-                      <Sparkles className="w-2.5 h-2.5 text-amber-300" />
+                    <div className="px-2 py-0.5 rounded-full bg-amber-500/10 dark:bg-amber-400/10 text-amber-700 dark:text-amber-300 text-[9px] sm:text-[10px] font-semibold tracking-wide flex items-center gap-1 border border-amber-500/25 dark:border-amber-400/20 shrink-0">
+                      <Sparkles className="w-2.5 h-2.5 text-amber-500 dark:text-amber-400" />
                       <span>Annonce Partenaire</span>
                     </div>
                   )}
                 </div>
 
-                {/* Ligne Inférieure : Titre, Détails & Bouton Action */}
-                <div className="flex items-end justify-between gap-2 mt-auto">
-                  <div className="space-y-0.5 min-w-0 pr-1">
-                    <p className="text-[10px] sm:text-xs text-slate-300 font-semibold truncate">
-                      {slide.partnerName}
-                    </p>
-                    <h2 className="text-sm sm:text-base font-black text-white tracking-tight leading-snug line-clamp-1 drop-shadow-sm">
-                      {slide.title}
-                    </h2>
-                    <p className="text-xs sm:text-sm text-white/95 font-bold flex items-center gap-1 flex-wrap drop-shadow-xs">
-                      <span className="text-amber-300 font-extrabold">{slide.price}</span>
-                      <span className="font-normal text-white/80 text-[10px] sm:text-xs line-clamp-1">
-                        • {slide.priceDetails}
-                      </span>
-                    </p>
+                {/* Corps : Nom du restaurant partenaire, Titre du plat & Détails */}
+                <div className="space-y-0.5 min-w-0 my-auto">
+                  <p className="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 font-semibold truncate">
+                    {slide.partnerName}
+                  </p>
+                  <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight leading-snug line-clamp-1 group-hover:text-[#00AFF2] transition-colors">
+                    {slide.title}
+                  </h3>
+                  <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
+                    {slide.priceDetails}
+                  </p>
+                </div>
+
+                {/* Pied : Prix et Bouton Commander */}
+                <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 shrink-0 mt-auto">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] text-slate-400 dark:text-slate-500 font-medium leading-none mb-0.5">
+                      Prix
+                    </span>
+                    <span className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight leading-none">
+                      {slide.price}
+                    </span>
                   </div>
 
                   <button
@@ -332,7 +341,7 @@ export function PromoCarousel({
                         onSelectSlide(slide);
                       }
                     }}
-                    className="px-3 sm:px-3.5 py-1.5 sm:py-2 bg-white text-slate-900 rounded-xl font-bold text-xs sm:text-sm hover:bg-[#00AFF2] hover:text-white transition-all shadow-md active:scale-95 flex items-center gap-1 shrink-0"
+                    className="px-3 sm:px-3.5 py-1.5 bg-[#00AFF2] hover:bg-[#009bd6] active:scale-95 text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
                   >
                     <span>{slide.ctaText || "Commander"}</span>
                     <Plus className="w-3.5 h-3.5 stroke-[2.5]" />

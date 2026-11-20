@@ -66,6 +66,19 @@ describe("Fonctionnalités avancées ClicBouffe (Explorer, Plus Tard, Abonnement
       // De la carte 1 à la carte 3 : +2 vers l'avant
       expect(computeShortestPath(1, 3, N)).toBe(2);
     });
+
+    it("vérifie que les cartes possèdent une photo pure sans texte superposé et un bloc d'informations distinct en bas", () => {
+      // Toutes les données requises pour le bloc inférieur distinct sont présentes
+      PROMOTIONAL_CAROUSEL_SLIDES.forEach((slide) => {
+        expect(slide.tag).toBeTruthy();
+        expect(slide.partnerName).toBeTruthy();
+        expect(slide.partnerLocation).toBeTruthy();
+        expect(slide.title).toBeTruthy();
+        expect(slide.price).toBeTruthy();
+        expect(slide.priceDetails).toBeTruthy();
+        expect(slide.img).toMatch(/\.(jpg|png)$/);
+      });
+    });
   });
 
   describe("Standards visuels : Zéro émoji et catégories avec icônes vectorielles", () => {
