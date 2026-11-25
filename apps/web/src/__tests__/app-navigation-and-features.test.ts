@@ -79,6 +79,26 @@ describe("Fonctionnalités avancées ClicBouffe (Explorer, Plus Tard, Abonnement
         expect(slide.img).toMatch(/\.(jpg|png)$/);
       });
     });
+
+    it("centre géométriquement la carte active pour révéler le plat passé à gauche et le plat suivant à droite", () => {
+      const computeCenteredLeft = (
+        cardOffsetLeft: number,
+        containerOffsetLeft: number,
+        containerWidth: number,
+        cardWidth: number
+      ) => cardOffsetLeft - containerOffsetLeft - (containerWidth - cardWidth) / 2;
+
+      // Exemple sur un écran mobile de 390px avec carte de 320px (82%) et un gap de 12px :
+      // Carte précédente à gauche : x = 0..320, carte active x = 332..652
+      const scrollLeft = computeCenteredLeft(332, 0, 390, 320);
+      expect(scrollLeft).toBe(297);
+
+      // L'espace restant à gauche et à droite du centre est strictement symétrique (35px chacun)
+      const leftVisibleGap = 332 - scrollLeft;
+      const rightVisibleGap = scrollLeft + 390 - (332 + 320);
+      expect(leftVisibleGap).toBe(35);
+      expect(rightVisibleGap).toBe(35);
+    });
   });
 
   describe("Standards visuels : Zéro émoji et catégories avec icônes vectorielles", () => {

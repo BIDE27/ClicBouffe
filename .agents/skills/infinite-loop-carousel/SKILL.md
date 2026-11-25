@@ -99,6 +99,11 @@ interface PromoCarouselProps {
   variant?: "mobile" | "web";
 }
 
+export function getCenteredScrollLeft(container: HTMLElement, card: HTMLElement): number {
+  const cardLeftRelative = card.offsetLeft - container.offsetLeft;
+  return cardLeftRelative - (container.clientWidth - card.offsetWidth) / 2;
+}
+
 export function PromoCarousel({
   slides,
   onSelectSlide,
@@ -144,7 +149,7 @@ export function PromoCarousel({
       if (normalizedCard) {
         isScrollingByCode.current = true;
         currentVirtualIndexRef.current = normalizedIndex;
-        const targetLeft = normalizedCard.offsetLeft - container.offsetLeft;
+        const targetLeft = getCenteredScrollLeft(container, normalizedCard);
         container.scrollTo({
           left: targetLeft,
           behavior: "instant",
@@ -166,7 +171,7 @@ export function PromoCarousel({
 
       if (targetCard) {
         isScrollingByCode.current = true;
-        const targetLeft = targetCard.offsetLeft - container.offsetLeft;
+        const targetLeft = getCenteredScrollLeft(container, targetCard);
 
         container.scrollTo({
           left: targetLeft,
@@ -202,7 +207,7 @@ export function PromoCarousel({
       const cards = container.children;
       const initialCard = cards[totalCards] as HTMLElement | undefined;
       if (initialCard) {
-        const initialLeft = initialCard.offsetLeft - container.offsetLeft;
+        const initialLeft = getCenteredScrollLeft(container, initialCard);
         container.scrollTo({
           left: initialLeft,
           behavior: "instant",
@@ -226,7 +231,7 @@ export function PromoCarousel({
       const currentCard = cards[currentVirtualIndexRef.current] as HTMLElement | undefined;
       if (currentCard) {
         container.scrollTo({
-          left: currentCard.offsetLeft - container.offsetLeft,
+          left: getCenteredScrollLeft(container, currentCard),
           behavior: "instant",
         });
       }
@@ -289,8 +294,8 @@ export function PromoCarousel({
     let closestVirtual = currentVirtualIndexRef.current;
     let minDiff = Infinity;
     cards.forEach((card, idx) => {
-      const cardLeft = card.offsetLeft - container.offsetLeft;
-      const diff = Math.abs(cardLeft - scrollLeft);
+      const centeredLeft = getCenteredScrollLeft(container, card);
+      const diff = Math.abs(centeredLeft - scrollLeft);
       if (diff < minDiff) {
         minDiff = diff;
         closestVirtual = idx;
@@ -333,7 +338,7 @@ export function PromoCarousel({
         onTouchEnd={() => {
           setTimeout(() => setIsPaused(false), 2500);
         }}
-        className="flex gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar py-1 px-0.5"
+        className="flex gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar py-1 -mx-3 px-3 sm:mx-0 sm:px-0"
       >
         {extendedSlides.map((slide, idx) => {
           const isCurrent = slide._realIndex === currentIndex;
@@ -348,10 +353,10 @@ export function PromoCarousel({
                   onOrderDish(slide.dishRefName);
                 }
               }}
-              className={`snap-start shrink-0 flex flex-col group cursor-pointer transition-all duration-300 ${
+              className={`snap-center shrink-0 flex flex-col group cursor-pointer transition-all duration-300 ${
                 variant === "mobile"
-                  ? "w-[88%] sm:w-[350px]"
-                  : "w-[88%] sm:w-[400px] md:w-[440px]"
+                  ? "w-[82%] sm:w-[340px]"
+                  : "w-[82%] sm:w-[400px] md:w-[440px]"
               }`}
             >
               {/* Photo du plat / restaurant (Hero visuel allongé avec angles arrondis, sans texte superposé) */}
