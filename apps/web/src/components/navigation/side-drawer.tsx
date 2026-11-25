@@ -214,13 +214,14 @@ export function SideDrawer({
             {/* Section Profil Utilisateur ou Bouton Connexion */}
             <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 bg-linear-to-b from-sky-50/50 dark:from-sky-950/20 to-transparent">
           {currentUser ? (
-            <div className="space-y-3">
+            <div className="flex flex-col gap-3.5">
+              {/* Carte Profil Utilisateur */}
               <div
                 onClick={() => handleClose(() => onOpenAuth())}
-                className="flex items-center gap-3 p-1.5 -m-1.5 rounded-2xl hover:bg-sky-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer group"
+                className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 hover:border-[#00AFF2]/60 dark:hover:border-[#00AFF2]/60 shadow-2xs hover:shadow-xs transition-all cursor-pointer group"
                 title="Gérer mon compte & Déconnexion"
               >
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#00AFF2] to-sky-400 text-white flex items-center justify-center font-black text-lg shadow-md shrink-0 group-hover:scale-105 transition-transform">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#00AFF2] to-sky-400 text-white flex items-center justify-center font-black text-base shadow-sm shrink-0 group-hover:scale-105 transition-transform">
                   {currentUser.full_name ? currentUser.full_name.charAt(0).toUpperCase() : "U"}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -230,18 +231,19 @@ export function SideDrawer({
                     </h3>
                     <ShieldCheck className="w-4 h-4 text-[#00AFF2] shrink-0" />
                   </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{currentUser.email}</p>
-                  <span className="inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-950/60 text-[#00AFF2] border border-sky-200 dark:border-sky-800">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{currentUser.email}</p>
+                  <span className="inline-block mt-1.5 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-sky-50 dark:bg-sky-950/60 text-[#00AFF2] border border-sky-200/80 dark:border-sky-800">
                     {userRestaurants.length > 0
                       ? `Vendeur Partenaire (${userRestaurants.length} restaurant${userRestaurants.length > 1 ? "s" : ""})`
                       : "Membre ClicBouffe"}
                   </span>
                 </div>
+                <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-[#00AFF2] transition-colors shrink-0" />
               </div>
 
               {/* Section Mes Restaurants (Modèle Facebook Page) */}
               {userRestaurants.length > 0 ? (
-                <div className="space-y-2 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                <div className="space-y-2 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
                       <Store className="w-3.5 h-3.5 text-[#00AFF2]" />
@@ -283,7 +285,7 @@ export function SideDrawer({
                   </div>
                 </div>
               ) : (
-                <div className="p-3 rounded-2xl bg-gradient-to-r from-sky-500/10 to-transparent border border-sky-200/60 dark:border-sky-900/40 space-y-2">
+                <div className="p-3.5 rounded-2xl bg-linear-to-br from-sky-500/10 via-sky-500/5 to-transparent dark:from-sky-500/15 dark:via-slate-800/60 dark:to-slate-900 border border-sky-200/80 dark:border-sky-800/60 shadow-2xs space-y-2.5">
                   <div className="flex items-center gap-2">
                     <Store className="w-4 h-4 text-[#00AFF2]" />
                     <span className="text-xs font-bold text-slate-900 dark:text-white">Ouvrir un restaurant</span>
@@ -294,7 +296,7 @@ export function SideDrawer({
                   {onOpenCreateRestaurant && (
                     <button
                       onClick={() => handleClose(() => onOpenCreateRestaurant())}
-                      className="w-full py-1.5 px-3 bg-[#00AFF2] hover:bg-[#0098d4] text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                      className="w-full py-2 px-3 bg-[#00AFF2] hover:bg-[#0098d4] active:scale-[0.98] text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>Créer mon restaurant</span>
@@ -328,7 +330,7 @@ export function SideDrawer({
                     onOpenWallet();
                   });
                 }}
-                className="p-3 rounded-2xl bg-white dark:bg-slate-800/80 border border-sky-200/80 dark:border-slate-700 shadow-xs hover:border-[#00AFF2] transition-all cursor-pointer group"
+                className="p-3.5 rounded-2xl bg-white dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs hover:border-[#00AFF2] transition-all cursor-pointer group"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">

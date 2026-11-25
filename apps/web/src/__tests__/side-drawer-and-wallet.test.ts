@@ -139,5 +139,35 @@ describe("Gestion du Portefeuille et Menu Latéral", () => {
       expect(markup).toContain("overflow-y-auto");
       expect(markup).toContain("overscroll-contain");
     });
+
+    it("sépare nettement la carte profil de la carte restaurant et portefeuille sans marge négative lorsque connecté", () => {
+      const markup = renderToStaticMarkup(
+        React.createElement(SideDrawer, {
+          isOpen: true,
+          onClose: () => {},
+          currentUser: {
+            id: "user-1",
+            full_name: "BIDE",
+            email: "berengerbide@gmail.com",
+            role: "customer",
+            created_at: new Date().toISOString(),
+          },
+          walletBalance: 0,
+          onOpenAuth: () => {},
+          onSignOut: () => {},
+          onOpenWallet: () => {},
+          onOpenDeliveryRates: () => {},
+          onNavigateToScreen: () => {},
+          onOpenCreateRestaurant: () => {},
+          theme: "light",
+          onToggleTheme: () => {},
+        })
+      );
+
+      expect(markup).toContain("Membre ClicBouffe");
+      expect(markup).toContain("Ouvrir un restaurant");
+      expect(markup).toContain("gap-3.5");
+      expect(markup).not.toContain("-m-1.5");
+    });
   });
 });
