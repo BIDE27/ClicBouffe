@@ -166,6 +166,8 @@ describe("Gestion du Portefeuille et Menu Latéral", () => {
 
       expect(markup).toContain("Membre ClicBouffe");
       expect(markup).toContain("Ouvrir un restaurant");
+      expect(markup).toContain("Créez votre page restaurant");
+      expect(markup).not.toContain("Facebook");
       expect(markup).toContain("gap-3.5");
       expect(markup).not.toContain("-m-1.5");
     });

@@ -291,7 +291,7 @@ export function SideDrawer({
                     <span className="text-xs font-bold text-slate-900 dark:text-white">Ouvrir un restaurant</span>
                   </div>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
-                    Comme sur Facebook, créez votre page restaurant et commencez à vendre vos plats sur ClicBouffe.
+                    Créez votre page restaurant et commencez à vendre vos plats sur ClicBouffe.
                   </p>
                   {onOpenCreateRestaurant && (
                     <button
