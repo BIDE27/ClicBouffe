@@ -75,6 +75,16 @@ svg,
   padding-right: env(safe-area-inset-right, 0px);
 }
 
+/* Masquage natif propre des barres de défilement sur les rails horizontaux (carrousels, filtres) */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Animations et transitions fluides */
 .active-press:active {
   transform: scale(0.97);

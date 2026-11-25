@@ -361,10 +361,10 @@ export function PromoCarousel({
             >
               {/* Photo du plat / restaurant (Hero visuel allongé avec angles arrondis, sans texte superposé) */}
               <div
-                className={`relative w-full h-40 sm:h-46 md:h-50 shrink-0 rounded-2xl sm:rounded-3xl overflow-hidden shadow-md border transition-all duration-300 bg-slate-100 dark:bg-slate-800 ${
+                className={`relative w-full h-38 sm:h-46 md:h-50 shrink-0 rounded-2xl sm:rounded-3xl overflow-hidden shadow-md border transition-all duration-300 bg-slate-100 dark:bg-slate-800 ${
                   isCurrent
                     ? "border-[#00AFF2] ring-2 ring-[#00AFF2]/40 shadow-lg"
-                    : "border-slate-200/80 dark:border-slate-800 opacity-95 group-hover:opacity-100 group-hover:border-[#00AFF2]/60"
+                    : "border-slate-200/80 dark:border-slate-800 opacity-90 group-hover:opacity-100 group-hover:border-[#00AFF2]/60"
                 }`}
               >
                 <Image
@@ -376,11 +376,15 @@ export function PromoCarousel({
                 />
               </div>
 
-              {/* Bloc d'informations situé juste en bas de l'image (non encadré, responsive et compact) */}
-              <div className="pt-2 sm:pt-2.5 px-0.5 space-y-1.5">
-                <div className="flex items-center justify-between gap-1.5">
+              {/* Bloc d'informations stylé, aéré et optimisé mobile-first (juste en bas de l'image) */}
+              <div
+                className={`pt-2.5 px-1 space-y-1 transition-opacity duration-300 ${
+                  isCurrent ? "opacity-100" : "opacity-60"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
                   <span
-                    className={`px-2 py-0.5 rounded-full text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-wider shrink-0 shadow-2xs ${
+                    className={`px-2 py-0.5 rounded-full text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-wider truncate max-w-[65%] shadow-2xs ${
                       slide.tagBg || "bg-[#00AFF2]"
                     }`}
                   >
@@ -389,27 +393,27 @@ export function PromoCarousel({
 
                   {slide.isSponsored && (
                     <div className="px-2 py-0.5 rounded-full bg-amber-500/10 dark:bg-amber-400/10 text-amber-700 dark:text-amber-300 text-[9px] sm:text-[10px] font-semibold flex items-center gap-1 border border-amber-500/25 dark:border-amber-400/20 shrink-0">
-                      <Sparkles className="w-2.5 h-2.5 text-amber-500 dark:text-amber-400" />
-                      <span>Annonce Partenaire</span>
+                      <Sparkles className="w-2.5 h-2.5 text-amber-500 dark:text-amber-400 shrink-0" />
+                      <span className="sm:hidden">Sponsorisé</span>
+                      <span className="hidden sm:inline">Annonce Partenaire</span>
                     </div>
                   )}
                 </div>
 
-                <div className="flex items-baseline justify-between gap-2">
-                  <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight leading-snug truncate group-hover:text-[#00AFF2] transition-colors">
-                    {slide.title}
-                  </h3>
-                  <span className="text-sm sm:text-base font-black text-[#00AFF2] shrink-0 tracking-tight">
+                <h3 className="text-[15px] sm:text-base font-black text-slate-900 dark:text-white tracking-tight leading-snug truncate pt-0.5 group-hover:text-[#00AFF2] transition-colors">
+                  {slide.title}
+                </h3>
+
+                <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate leading-snug">
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">{slide.partnerName}</span>
+                  <span className="mx-1.5 text-slate-300 dark:text-slate-600">•</span>
+                  <span>{slide.priceDetails}</span>
+                </p>
+
+                <div className="flex items-center justify-between gap-2 pt-1">
+                  <span className="text-sm sm:text-base font-black text-[#00AFF2] tracking-tight">
                     {slide.price}
                   </span>
-                </div>
-
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate flex-1 min-w-0">
-                    <span className="font-semibold text-slate-700 dark:text-slate-300">{slide.partnerName}</span>
-                    <span className="mx-1 text-slate-300 dark:text-slate-600">•</span>
-                    <span>{slide.priceDetails}</span>
-                  </p>
 
                   <button
                     onClick={(e) => {
@@ -417,7 +421,7 @@ export function PromoCarousel({
                       hapticFeedback("medium");
                       if (onOrderDish) onOrderDish(slide.dishRefName);
                     }}
-                    className="px-3 py-1 sm:px-3.5 sm:py-1.5 bg-[#00AFF2] hover:bg-[#009bd6] active:scale-95 text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs transition-all flex items-center gap-1 shrink-0 cursor-pointer"
+                    className="px-3.5 py-1.5 bg-[#00AFF2] hover:bg-[#009bd6] active:scale-95 text-white font-bold text-xs sm:text-sm rounded-full shadow-xs hover:shadow-md transition-all flex items-center gap-1 shrink-0 cursor-pointer"
                   >
                     <span>{slide.ctaText || "Commander"}</span>
                     <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
