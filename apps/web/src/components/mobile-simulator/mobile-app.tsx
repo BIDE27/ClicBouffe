@@ -317,15 +317,6 @@ export default function MobileApp({
                       <span>{currentViewMode === "kds" ? "Store" : "KDS"}</span>
                     </button>
                   )}
-                  <button
-                    onClick={() => {
-                      hapticFeedback("light");
-                      setShowAuthModal(true);
-                    }}
-                    className="w-6 h-6 rounded-full bg-sky-100 text-[#00AFF2] font-black text-[10px] flex items-center justify-center border border-sky-300"
-                  >
-                    {currentUser.full_name.charAt(0)}
-                  </button>
                 </div>
               ) : (
                 <button
@@ -344,9 +335,25 @@ export default function MobileApp({
                 <Bell className="w-4 h-4 stroke-[1.8]" />
                 <span className="w-1.5 h-1.5 rounded-full bg-[#00AFF2] absolute top-1 right-1" />
               </button>
-              <button onClick={() => setShowDeliveryRatesModal(true)} className="p-1">
-                <MenuIcon className="w-4 h-4 stroke-[2]" />
-              </button>
+              {currentUser ? (
+                <button
+                  onClick={() => {
+                    hapticFeedback("light");
+                    setShowDeliveryRatesModal(true);
+                  }}
+                  className="flex items-center gap-1 pl-2 pr-0.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-700 active:scale-95 transition-all"
+                  aria-label="Menu et profil"
+                >
+                  <MenuIcon className="w-3.5 h-3.5 stroke-[2.2]" />
+                  <span className="w-5 h-5 rounded-full bg-[#00AFF2] text-white font-black text-[10px] flex items-center justify-center">
+                    {currentUser.full_name.charAt(0).toUpperCase()}
+                  </span>
+                </button>
+              ) : (
+                <button onClick={() => setShowDeliveryRatesModal(true)} className="p-1">
+                  <MenuIcon className="w-4 h-4 stroke-[2]" />
+                </button>
+              )}
             </div>
           </div>
 

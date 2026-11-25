@@ -69,37 +69,41 @@ describe("NotificationsPageView (Page Plein Écran des Notifications)", () => {
     expect(markup).toContain("dark:bg-slate-950");
   });
 
-  it("respecte la logique de remplacement du portefeuille par le bouton Se connecter selon la connexion", () => {
+  it("respecte la logique épurée de la TopBar (sans portefeuille, bouton Se connecter si déconnecté, pilule unifiée Menu+Initiale si connecté)", () => {
     // Simulation de la logique d'affichage du Header
-    const getHeaderRightElements = (user: { id: string; full_name: string } | null, balance: number) => {
+    const getHeaderRightElements = (user: { id: string; full_name: string } | null) => {
       if (user) {
         return {
-          showWallet: true,
-          walletText: `${balance} FCFA`,
-          showUserAvatar: true,
+          showWalletInTopBar: false,
+          showUnifiedProfileMenuButton: true,
+          profileInitial: user.full_name.trim().charAt(0).toUpperCase(),
+          unifiedButtonOpensMenu: true,
           showLoginButton: false,
         };
       }
       return {
-        showWallet: false,
-        walletText: null,
-        showUserAvatar: false,
+        showWalletInTopBar: false,
+        showUnifiedProfileMenuButton: false,
+        profileInitial: null,
+        unifiedButtonOpensMenu: false,
         showLoginButton: true,
         loginText: "Se connecter",
       };
     };
 
     // Utilisateur non connecté : PAS de portefeuille, bouton "Se connecter" actif
-    const guestState = getHeaderRightElements(null, 0);
-    expect(guestState.showWallet).toBe(false);
+    const guestState = getHeaderRightElements(null);
+    expect(guestState.showWalletInTopBar).toBe(false);
     expect(guestState.showLoginButton).toBe(true);
+    expect(guestState.showUnifiedProfileMenuButton).toBe(false);
     expect(guestState.loginText).toBe("Se connecter");
 
-    // Utilisateur connecté : Portefeuille affiché avec solde, avatar utilisateur
-    const userState = getHeaderRightElements({ id: "user-1", full_name: "Koffi Mensah" }, 2000);
-    expect(userState.showWallet).toBe(true);
-    expect(userState.walletText).toBe("2000 FCFA");
-    expect(userState.showUserAvatar).toBe(true);
+    // Utilisateur connecté : PAS de portefeuille dans la TopBar, pilule unifiée [Menu + Initiale] active
+    const userState = getHeaderRightElements({ id: "user-1", full_name: "BIDE" });
+    expect(userState.showWalletInTopBar).toBe(false);
+    expect(userState.showUnifiedProfileMenuButton).toBe(true);
+    expect(userState.profileInitial).toBe("B");
+    expect(userState.unifiedButtonOpensMenu).toBe(true);
     expect(userState.showLoginButton).toBe(false);
   });
 });
