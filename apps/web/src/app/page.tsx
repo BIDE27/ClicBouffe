@@ -24,7 +24,6 @@ import {
   Search,
   Send,
   Soup,
-  Sparkles,
   Star,
   Trash2,
   User,
@@ -2443,7 +2442,7 @@ export default function ClicBouffePlatform() {
             <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fadeIn">
               <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-xs sm:max-w-sm p-6 text-center shadow-2xl animate-scaleUp border border-slate-100 dark:border-slate-800 text-slate-900 dark:text-white transition-colors">
                 <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-3">
-                  <Sparkles className="w-8 h-8" />
+                  <Check className="w-8 h-8 stroke-[2.5]" />
                 </div>
                 <h3 className="text-lg font-black text-slate-900 dark:text-white">
                   Commande Confirmée !

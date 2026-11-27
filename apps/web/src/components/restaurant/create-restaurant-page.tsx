@@ -19,7 +19,6 @@ import {
   Plus,
   QrCode,
   ShieldCheck,
-  Sparkles,
   Store,
   Sun,
   Truck,
@@ -358,7 +357,7 @@ export function CreateRestaurantPageView({
                       title: "Complet (Salle QR + App)",
                       badge: "Recommandé",
                       desc: "Livraison sur l'app + Menu QR à table, commande autonome, composition et appel serveur.",
-                      icon: Sparkles,
+                      icon: Store,
                     },
                     {
                       id: "online_only" as RestaurantSalesMode,
@@ -746,7 +745,7 @@ export function CreateRestaurantPageView({
                 <div className="space-y-2.5">
                   <label className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 flex items-center justify-between gap-3 cursor-pointer">
                     <div className="flex items-start gap-2.5">
-                      <Sparkles className="w-4 h-4 text-[#00AFF2] shrink-0 mt-0.5" />
+                      <UtensilsCrossed className="w-4 h-4 text-[#00AFF2] shrink-0 mt-0.5" />
                       <div>
                         <p className="text-xs font-bold text-slate-900 dark:text-white">
                           Composition libre de plat sur place & en ligne

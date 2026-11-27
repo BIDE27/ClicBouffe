@@ -10,7 +10,6 @@ import {
   UtensilsCrossed,
   Store,
   CheckCircle2,
-  Sparkles,
   Search,
 } from "lucide-react";
 import { DishItem, Restaurant, INITIAL_GRID_DISHES, REGIONAL_RESTAURANTS } from "../../lib/data/clicbouffe-data";
@@ -356,7 +355,7 @@ export function QrScannerModal({
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#00AFF2]" />
+                <QrCode className="w-3.5 h-3.5 text-[#00AFF2]" />
                 <span>Tester un QR Code Partenaire</span>
               </span>
               <span className="text-[10px] text-slate-500 dark:text-slate-400">1 clic</span>

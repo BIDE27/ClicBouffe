@@ -6,7 +6,6 @@ import {
   Search,
   X,
   ArrowLeft,
-  Sparkles,
   Clock,
   Flame,
   Soup,
@@ -67,7 +66,7 @@ const GOOGLE_SHORTCUTS = [
     title: "Tapioca & Gari",
     desc: "Douceurs sucrées",
     query: "Tapioca",
-    icon: Sparkles,
+    icon: Soup,
     color: "bg-sky-500/10 text-[#00AFF2] border-sky-500/20",
   },
   {
@@ -419,7 +418,7 @@ export function GoogleSearchView({
             {/* Suggestions tendances (Chips cliquables) */}
             <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800/80">
               <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 mb-3">
-                <Sparkles className="w-3.5 h-3.5 text-[#00AFF2]" />
+                <Flame className="w-3.5 h-3.5 text-[#00AFF2]" />
                 <span>Recherches les plus populaires aujourd&apos;hui :</span>
               </div>
               <div className="flex flex-wrap gap-2">

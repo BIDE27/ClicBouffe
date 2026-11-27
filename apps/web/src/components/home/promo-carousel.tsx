@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Plus, Sparkles } from "lucide-react";
+import { Award, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { PromoSlide, PROMOTIONAL_CAROUSEL_SLIDES } from "@/lib/data/clicbouffe-data";
 import { hapticFeedback } from "@/lib/native/haptics";
 
@@ -315,7 +315,7 @@ export function PromoCarousel({
 
                   {slide.isSponsored && (
                     <div className="px-2 py-0.5 rounded-full bg-amber-500/10 dark:bg-amber-400/10 text-amber-700 dark:text-amber-300 text-[9px] sm:text-[10px] font-semibold tracking-wide flex items-center gap-1 border border-amber-500/25 dark:border-amber-400/20 shrink-0">
-                      <Sparkles className="w-2.5 h-2.5 text-amber-500 dark:text-amber-400 shrink-0" />
+                      <Award className="w-2.5 h-2.5 text-amber-500 dark:text-amber-400 shrink-0" />
                       <span className="sm:hidden">Sponsorisé</span>
                       <span className="hidden sm:inline">Annonce Partenaire</span>
                     </div>

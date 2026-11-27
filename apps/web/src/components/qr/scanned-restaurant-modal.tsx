@@ -17,7 +17,6 @@ import {
   Receipt,
   Send,
   ShieldCheck,
-  Sparkles,
   Star,
   Store,
   Truck,
@@ -624,7 +623,7 @@ export function ScannedRestaurantModal({
               {[
                 { id: "menu" as const, label: `Menu (${menuDishes.length})`, icon: Store },
                 ...(info.allowsDineInComposition
-                  ? [{ id: "compose" as const, label: "Composer mon plat", icon: Sparkles }]
+                  ? [{ id: "compose" as const, label: "Composer mon plat", icon: ChefHat }]
                   : []),
                 ...(info.allowsWaiterCall && canSwitchToDineIn && serviceMode === "dine_in"
                   ? [{ id: "waiter" as const, label: "Serveur / Demande silencieuse", icon: VolumeX }]
@@ -785,7 +784,7 @@ export function ScannedRestaurantModal({
                   }}
                   className="text-xs font-bold text-[#00AFF2] hover:underline flex items-center gap-1 cursor-pointer"
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
+                  <ChefHat className="w-3.5 h-3.5" />
                   <span>Composer mon propre plat</span>
                 </button>
               )}
