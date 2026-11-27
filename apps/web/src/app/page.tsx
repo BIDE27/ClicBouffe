@@ -42,7 +42,7 @@ import { ScannedRestaurantModal } from "@/components/qr/scanned-restaurant-modal
 import { RestaurantDashboard } from "@/components/restaurant-dashboard/restaurant-dashboard";
 import { LogoMarmite } from "@/components/ui/logo-marmite";
 import { GoogleSearchView } from "@/components/search/google-search-view";
-import { CreateRestaurantModal } from "@/components/restaurant/create-restaurant-modal";
+import { CreateRestaurantPageView } from "@/components/restaurant/create-restaurant-page";
 import { NotificationsPageView } from "@/components/notifications/notifications-page-view";
 import { authService } from "@/lib/services/auth-service";
 import { restaurantService } from "@/lib/services/restaurant-service";
@@ -108,25 +108,6 @@ export default function ClicBouffePlatform() {
   });
 
   useEffect(() => {
-    authService.getCurrentProfile().then(async (profile) => {
-      if (profile) {
-        setCurrentUser(profile);
-        const restos = await restaurantService.getRestaurantsByOwner(profile.id);
-        setUserRestaurants(restos);
-        if (restos.length > 0) {
-          setActiveRestaurant(restos[0]);
-        }
-        setWalletBalance(authService.getWalletBalance(profile.id));
-      } else {
-        setCurrentUser(null);
-        setUserRestaurants([]);
-        setActiveRestaurant(null);
-        setWalletBalance(0);
-      }
-    });
-  }, []);
-
-  useEffect(() => {
     if (typeof document !== "undefined") {
       if (theme === "dark") {
         document.documentElement.classList.add("dark");
@@ -165,11 +146,58 @@ export default function ClicBouffePlatform() {
   // Onglet actif de navigation basse
   const [activeNavTab, setActiveNavTab] = useState<"home" | "explorer" | "plus_tard" | "abonnements">("home");
 
-  // État Menu Flottant (Speed Dial FAB) & Scanner QR
+  // État Menu Flottant (Speed Dial FAB) & Scanner QR / Lien Direct Salle
   const [isFabMenuOpen, setIsFabMenuOpen] = useState(false);
   const [showQrScannerModal, setShowQrScannerModal] = useState(false);
-  const [scannedRestaurant, setScannedRestaurant] = useState<Restaurant | null>(null);
+  const [scannedRestaurant, setScannedRestaurant] = useState<Restaurant | RestaurantEntity | null>(null);
+  const [scannedTable, setScannedTable] = useState<string | undefined>(undefined);
+  const [restaurantInitialMode, setRestaurantInitialMode] = useState<"dine_in" | "delivery">("dine_in");
   const [showScannedRestaurantModal, setShowScannedRestaurantModal] = useState(false);
+  const [dynamicRestaurants, setDynamicRestaurants] = useState<RestaurantEntity[]>([]);
+
+  useEffect(() => {
+    authService.getCurrentProfile().then(async (profile) => {
+      if (profile) {
+        setCurrentUser(profile);
+        const restos = await restaurantService.getRestaurantsByOwner(profile.id);
+        setUserRestaurants(restos);
+        if (restos.length > 0) {
+          setActiveRestaurant(restos[0]);
+        }
+        setWalletBalance(authService.getWalletBalance(profile.id));
+      } else {
+        setCurrentUser(null);
+        setUserRestaurants([]);
+        setActiveRestaurant(null);
+        setWalletBalance(0);
+      }
+    });
+
+    // Chargement des restaurants dynamiques + détection lien direct (?resto=...&table=...)
+    restaurantService.getAllActiveRestaurants().then((allRestos) => {
+      setDynamicRestaurants(allRestos);
+    });
+
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const restoParam = params.get("resto");
+      const tableParam = params.get("table");
+      if (restoParam) {
+        restaurantService.findRestaurantByQuery(restoParam).then((found) => {
+          if (found) {
+            const safeTable = tableParam
+              ? tableParam.trim().slice(0, 60).replace(/[^\p{L}\p{N}\s\-_]/gu, "").replace(/-/g, " ")
+              : undefined;
+            setScannedRestaurant(found);
+            setScannedTable(safeTable);
+            setRestaurantInitialMode(found.sales_mode === "online_only" ? "delivery" : "dine_in");
+            setCurrentScreen("home");
+            setShowScannedRestaurantModal(true);
+          }
+        });
+      }
+    }
+  }, []);
 
   // État de Visibilité Dynamique des Barres de Navigation (Scroll Hide/Show)
   const [isNavVisible, setIsNavVisible] = useState(true);
@@ -367,7 +395,45 @@ export default function ClicBouffePlatform() {
     d.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredRestaurants = REGIONAL_RESTAURANTS.filter((r) => {
+  const mergedRestaurants: (Restaurant & Partial<RestaurantEntity>)[] = React.useMemo(() => {
+    const map = new Map<string, Restaurant & Partial<RestaurantEntity>>();
+    REGIONAL_RESTAURANTS.forEach((r) => map.set(r.name.toLowerCase(), r));
+    dynamicRestaurants.forEach((r) => {
+      const key = r.name.toLowerCase();
+      const existing = map.get(key);
+      map.set(key, {
+        ...(existing || {}),
+        id: r.id,
+        owner_id: r.owner_id,
+        name: r.name,
+        slug: r.slug,
+        category: r.category || existing?.category || "Cuisine Locale & Grillades",
+        categoryId: existing?.categoryId || "local",
+        img: r.banner_url || r.logo_url || existing?.img || "/images/restau_maquis.jpg",
+        banner_url: r.banner_url,
+        logo_url: r.logo_url,
+        rating: r.rating || existing?.rating || 4.9,
+        reviewsCount: r.reviews_count || existing?.reviewsCount || 1,
+        deliveryTime: r.delivery_time || existing?.deliveryTime || `${r.avg_prep_time_min || 20} min`,
+        deliveryFee: r.delivery_fee_base || existing?.deliveryFee || "80\u00A0FCFA",
+        distance: existing?.distance || "À proximité",
+        address: r.address,
+        popularDishes: existing?.popularDishes || ["Menu du jour", "Composition sur mesure"],
+        badges: r.sales_mode !== "online_only" ? ["QR Salle", "Ouvert"] : ["Ouvert"],
+        isOpen: r.is_open,
+        sales_mode: r.sales_mode,
+        tables_count: r.tables_count,
+        table_zones: r.table_zones,
+        avg_prep_time_min: r.avg_prep_time_min,
+        allows_dine_in_composition: r.allows_dine_in_composition,
+        allows_waiter_call: r.allows_waiter_call,
+        accepts_cash_on_site: r.accepts_cash_on_site,
+      });
+    });
+    return Array.from(map.values());
+  }, [dynamicRestaurants]);
+
+  const filteredRestaurants = mergedRestaurants.filter((r) => {
     if (selectedExplorerCategory !== "all" && r.categoryId !== selectedExplorerCategory) {
       return false;
     }
@@ -676,10 +742,10 @@ export default function ClicBouffePlatform() {
           {/* ============================================================== */}
           {/* VUE KDS RESTAURATEUR OU MARKETPLACE CLIENT */}
           {/* ============================================================== */}
-          {currentViewMode === "kds" ? (
+          {currentViewMode === "kds" && currentUser ? (
             <div className="flex-1 w-full">
               <RestaurantDashboard
-                ownerId={currentUser?.id}
+                ownerId={currentUser.id}
                 initialRestaurant={activeRestaurant}
                 onSwitchToClientMode={() => setCurrentViewMode("marketplace")}
                 onSignOut={() => {
@@ -706,7 +772,9 @@ export default function ClicBouffePlatform() {
                 onOrderDish={(dishRefName) => {
                   const targetDish =
                     INITIAL_GRID_DISHES.find((d) => d.name === dishRefName) || INITIAL_GRID_DISHES[0];
-                  setSelectedDishes((prev) => [...prev, targetDish]);
+                  setSelectedDishes((prev) =>
+                    prev.some((d) => d.id === targetDish.id) ? prev : [...prev, targetDish]
+                  );
                 }}
               />
 
@@ -853,7 +921,10 @@ export default function ClicBouffePlatform() {
                     className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden shadow-xs hover:shadow-md hover:border-[#00AFF2] dark:hover:border-[#00AFF2] transition-all flex flex-col group cursor-pointer"
                     onClick={() => {
                       hapticFeedback("light");
-                      setScreen("free_food");
+                      setScannedRestaurant(restau);
+                      setScannedTable(undefined);
+                      setRestaurantInitialMode("delivery");
+                      setShowScannedRestaurantModal(true);
                     }}
                   >
                     {/* Photo du restaurant */}
@@ -915,11 +986,14 @@ export default function ClicBouffePlatform() {
                           onClick={(e) => {
                             e.stopPropagation();
                             hapticFeedback("medium");
-                            setScreen("compose_dish");
+                            setScannedRestaurant(restau);
+                            setScannedTable(undefined);
+                            setRestaurantInitialMode("dine_in");
+                            setShowScannedRestaurantModal(true);
                           }}
-                          className="px-3 py-1 bg-[#00AFF2] text-white rounded-lg font-bold hover:bg-[#0098d4] transition-colors shadow-2xs"
+                          className="px-3 py-1 bg-[#00AFF2] text-white rounded-lg font-bold hover:bg-[#0098d4] transition-colors shadow-2xs cursor-pointer"
                         >
-                          Commander
+                          Menu / Commander
                         </button>
                       </div>
                     </div>
@@ -1694,16 +1768,16 @@ export default function ClicBouffePlatform() {
 
             <div className="divide-y divide-slate-100 dark:divide-slate-800 text-xs sm:text-sm">
               <div className="py-2.5 flex justify-between">
-                <span className="text-slate-600 dark:text-slate-400">Entre 1F et 200F</span>
-                <span className="font-bold text-slate-900 dark:text-white">80 F CFA</span>
+                <span className="text-slate-600 dark:text-slate-400">Entre 01 et 02 plats</span>
+                <span className="font-bold text-slate-900 dark:text-white">80&nbsp;FCFA</span>
               </div>
               <div className="py-2.5 flex justify-between">
                 <span className="text-slate-600 dark:text-slate-400">Entre 03 et 05 plats</span>
-                <span className="font-bold text-slate-900 dark:text-white">130 F CFA</span>
+                <span className="font-bold text-slate-900 dark:text-white">130&nbsp;FCFA</span>
               </div>
               <div className="py-2.5 flex justify-between">
                 <span className="text-slate-600 dark:text-slate-400">Entre 06 et 10 plats</span>
-                <span className="font-bold text-slate-900 dark:text-white">170 F CFA</span>
+                <span className="font-bold text-slate-900 dark:text-white">170&nbsp;FCFA</span>
               </div>
               <div className="py-2.5 flex justify-between">
                 <span className="text-slate-600 dark:text-slate-400">Plus de 10 plats</span>
@@ -2435,7 +2509,14 @@ export default function ClicBouffePlatform() {
         isOpen={showNotificationsPage}
         onClose={() => setShowNotificationsPage(false)}
         currentUser={currentUser}
+        userRestaurants={userRestaurants}
         onOpenAuth={() => setShowAuthModal(true)}
+        onOpenKds={() => {
+          if (userRestaurants.length > 0) {
+            setActiveRestaurant(userRestaurants[0]);
+            setCurrentViewMode("kds");
+          }
+        }}
         theme={theme}
         onToggleTheme={handleToggleTheme}
       />
@@ -2478,14 +2559,17 @@ export default function ClicBouffePlatform() {
         }}
       />
 
-      {/* Modale Créer un Restaurant (Modèle Facebook Page) */}
+      {/* Page Complète de Création d'un Restaurant (Plein Écran) */}
       {showCreateRestaurantModal && currentUser && (
-        <CreateRestaurantModal
+        <CreateRestaurantPageView
           isOpen={showCreateRestaurantModal}
           onClose={() => setShowCreateRestaurantModal(false)}
           currentUserId={currentUser.id}
+          theme={theme}
+          onToggleTheme={handleToggleTheme}
           onSuccess={(newResto) => {
             setUserRestaurants((prev) => [newResto, ...prev]);
+            setDynamicRestaurants((prev) => [newResto, ...prev]);
             setActiveRestaurant(newResto);
             setCurrentViewMode("kds");
           }}
@@ -2508,16 +2592,21 @@ export default function ClicBouffePlatform() {
           setPreviewDish(dish);
           setShowDishPreviewModal(true);
         }}
-        onScanRestaurant={(restaurant) => {
+        onScanRestaurant={(restaurant, detectedTable) => {
           setScannedRestaurant(restaurant);
+          setScannedTable(detectedTable);
+          setRestaurantInitialMode("dine_in");
           setShowScannedRestaurantModal(true);
         }}
       />
 
-      {/* Modale Menu Restaurant Scanné par QR Code */}
+      {/* Vue Complète Restaurant Client (Menu, Composition sur mesure & Appel Serveur) */}
       <ScannedRestaurantModal
         isOpen={showScannedRestaurantModal}
         restaurant={scannedRestaurant}
+        detectedTable={scannedTable}
+        initialMode={restaurantInitialMode}
+        currentUser={currentUser}
         onClose={() => setShowScannedRestaurantModal(false)}
         selectedDishes={selectedDishes}
         onToggleDish={toggleSelectDish}
@@ -2541,12 +2630,14 @@ export default function ClicBouffePlatform() {
           setShowWalletModal(true);
         }}
         deliveryAddress={deliveryAddress}
+        extraRestaurants={dynamicRestaurants}
         onSelectDish={toggleSelectDish}
         onSelectRestaurant={(restaurant) => {
           setShowGoogleSearchPage(false);
-          setSelectedExplorerCategory(restaurant.categoryId);
-          setActiveNavTab("explorer");
-          setScreen("explorer");
+          setScannedRestaurant(restaurant);
+          setScannedTable(undefined);
+          setRestaurantInitialMode("dine_in");
+          setShowScannedRestaurantModal(true);
         }}
       />
     </div>

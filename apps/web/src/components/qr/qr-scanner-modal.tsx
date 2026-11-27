@@ -13,14 +13,16 @@ import {
   Sparkles,
   Search,
 } from "lucide-react";
-import { DishItem, Restaurant, INITIAL_GRID_DISHES, REGIONAL_RESTAURANTS } from "@/lib/data/clicbouffe-data";
-import { hapticFeedback } from "@/lib/native/haptics";
+import { DishItem, Restaurant, INITIAL_GRID_DISHES, REGIONAL_RESTAURANTS } from "../../lib/data/clicbouffe-data";
+import { RestaurantEntity } from "../../lib/types/database";
+import { restaurantService } from "../../lib/services/restaurant-service";
+import { hapticFeedback } from "../../lib/native/haptics";
 
 interface QrScannerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onScanDish: (dish: DishItem) => void;
-  onScanRestaurant: (restaurant: Restaurant) => void;
+  onScanRestaurant: (restaurant: Restaurant | RestaurantEntity, detectedTable?: string) => void;
 }
 
 export function QrScannerModal({
@@ -118,12 +120,49 @@ export function QrScannerModal({
     setFacingMode((prev) => (prev === "environment" ? "user" : "environment"));
   };
 
-  // Traitement du résultat scanné
-  const handleRecognizedPayload = (payload: string) => {
+  // Traitement du résultat scanné (URL ?resto=...&table=..., nom de restaurant, ou plat)
+  const handleRecognizedPayload = async (payload: string) => {
     hapticFeedback("success");
-    const cleanPayload = payload.trim().toLowerCase();
+    const rawPayload = payload.trim();
+    const cleanPayload = rawPayload.toLowerCase();
 
-    // Recherche d'un restaurant correspondant
+    // Extraction éventuelle d'un slug et d'un numéro de table depuis une URL ou un QR structuré
+    let extractedRestoQuery = cleanPayload;
+    let detectedTable: string | undefined;
+
+    try {
+      if (rawPayload.includes("resto=")) {
+        const fakeUrl = rawPayload.startsWith("http")
+          ? new URL(rawPayload)
+          : new URL(`https://clicbouffe.app/${rawPayload.replace(/^\//, "")}`);
+        const isAllowedProtocol = fakeUrl.protocol === "https:" || fakeUrl.protocol === "http:";
+        if (isAllowedProtocol) {
+          const restoParam = fakeUrl.searchParams.get("resto");
+          const tableParam = fakeUrl.searchParams.get("table");
+          if (restoParam) extractedRestoQuery = restoParam.trim().slice(0, 120).toLowerCase();
+          if (tableParam) {
+            detectedTable = tableParam.trim().slice(0, 60).replace(/[^\p{L}\p{N}\s\-_]/gu, "").replace(/-/g, " ");
+          }
+        }
+      }
+    } catch {
+      // Non bloquant
+    }
+
+    // 1. Recherche dynamique dans les restaurants enregistrés (Supabase + local + catalogue)
+    const dynamicMatch = await restaurantService.findRestaurantByQuery(extractedRestoQuery);
+    if (dynamicMatch) {
+      setScanSuccessMessage(
+        detectedTable ? `${dynamicMatch.name} • ${detectedTable}` : `Menu détecté : ${dynamicMatch.name}`
+      );
+      setTimeout(() => {
+        onScanRestaurant(dynamicMatch, detectedTable);
+        onClose();
+      }, 400);
+      return;
+    }
+
+    // 2. Recherche d'un restaurant dans le catalogue statique
     const matchedRestaurant = REGIONAL_RESTAURANTS.find((r) => {
       const nameMatch = cleanPayload.includes(r.name.toLowerCase());
       const idMatch = cleanPayload.includes(r.id.toLowerCase());
@@ -132,15 +171,19 @@ export function QrScannerModal({
     });
 
     if (matchedRestaurant) {
-      setScanSuccessMessage(`Menu détecté : ${matchedRestaurant.name}`);
+      setScanSuccessMessage(
+        detectedTable
+          ? `${matchedRestaurant.name} • ${detectedTable}`
+          : `Menu détecté : ${matchedRestaurant.name}`
+      );
       setTimeout(() => {
-        onScanRestaurant(matchedRestaurant);
+        onScanRestaurant(matchedRestaurant, detectedTable);
         onClose();
       }, 400);
       return;
     }
 
-    // Recherche d'un plat correspondant
+    // 3. Recherche d'un plat correspondant
     const matchedDish = INITIAL_GRID_DISHES.find((d) => {
       const nameMatch = cleanPayload.includes(d.name.toLowerCase());
       const idMatch = cleanPayload === d.id || cleanPayload === `dish:${d.id}`;
@@ -156,11 +199,11 @@ export function QrScannerModal({
       return;
     }
 
-    // Si code générique ou inconnu, par défaut afficher le restaurant phare
+    // 4. Fallback sur le restaurant phare en salle
     const defaultRestaurant = REGIONAL_RESTAURANTS[0];
     setScanSuccessMessage(`Menu de table : ${defaultRestaurant.name}`);
     setTimeout(() => {
-      onScanRestaurant(defaultRestaurant);
+      onScanRestaurant(defaultRestaurant, detectedTable);
       onClose();
     }, 400);
   };
@@ -182,7 +225,7 @@ export function QrScannerModal({
       aria-labelledby="qr-scanner-title"
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200"
     >
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] transition-colors">
+      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92dvh] transition-colors">
         {/* En-tête de la modale */}
         <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -204,8 +247,9 @@ export function QrScannerModal({
 
           <button
             type="button"
+            data-modal-close
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition-colors"
+            className="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer"
             aria-label="Fermer le scanner"
           >
             <X className="w-4 h-4 stroke-[2.5]" />

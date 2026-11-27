@@ -391,6 +391,10 @@ export const authService = {
     }
     if (typeof window !== "undefined") {
       localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
+      localStorage.removeItem("clicbouffe_orders");
+      localStorage.removeItem("clicbouffe_waiter_calls");
+      localStorage.removeItem("clicbouffe_notifications");
+      localStorage.removeItem("clicbouffe_restaurants");
     }
   },
 };

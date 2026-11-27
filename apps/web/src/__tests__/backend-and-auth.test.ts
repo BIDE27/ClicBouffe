@@ -132,10 +132,11 @@ describe("Services Backend & Authentification ClicBouffe", () => {
     });
     it("récupère le restaurant du propriétaire et ses plats", async () => {
       const resto = await restaurantService.getRestaurantByOwner("user-resto-001");
-      expect(resto.name).toBe("Le Maquis du Port");
-      expect(resto.is_open).toBe(true);
+      expect(resto).not.toBeNull();
+      expect(resto!.name).toBe("Le Maquis du Port");
+      expect(resto!.is_open).toBe(true);
 
-      const dishes = await restaurantService.getDishes(resto.id);
+      const dishes = await restaurantService.getDishes(resto!.id);
       expect(dishes.length).toBeGreaterThanOrEqual(3);
       dishes.forEach((dish) => {
         expect(dish.price).toBeGreaterThan(0);

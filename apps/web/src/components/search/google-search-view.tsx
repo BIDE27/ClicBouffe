@@ -27,6 +27,7 @@ import {
   DishItem,
   Restaurant,
 } from "../../lib/data/clicbouffe-data";
+import { RestaurantEntity } from "../../lib/types/database";
 import { hapticFeedback } from "../../lib/native/haptics";
 
 interface GoogleSearchViewProps {
@@ -41,6 +42,7 @@ interface GoogleSearchViewProps {
   deliveryAddress?: string;
   onSelectDish?: (dish: DishItem) => void;
   onSelectRestaurant?: (restaurant: Restaurant) => void;
+  extraRestaurants?: RestaurantEntity[];
 }
 
 const GOOGLE_SHORTCUTS = [
@@ -121,6 +123,7 @@ export function GoogleSearchView({
   deliveryAddress = "Terrain Zico, Akpakpa",
   onSelectDish,
   onSelectRestaurant,
+  extraRestaurants = [],
 }: GoogleSearchViewProps) {
   const [query, setQuery] = useState(initialQuery);
   const [prevInitialQuery, setPrevInitialQuery] = useState(initialQuery);
@@ -189,11 +192,50 @@ export function GoogleSearchView({
     return INITIAL_GRID_DISHES.filter((d) => d.name.toLowerCase().includes(q));
   }, [query]);
 
+  // Fusion catalogue statique + restaurants créés en base de données (préserve les attributs salle/propriétaire)
+  const allRestaurants = useMemo(() => {
+    const map = new Map<string, Restaurant & Partial<RestaurantEntity>>();
+    REGIONAL_RESTAURANTS.forEach((r) => map.set(r.name.toLowerCase(), r));
+    extraRestaurants.forEach((r) => {
+      const key = r.name.toLowerCase();
+      const existing = map.get(key);
+      map.set(key, {
+        ...(existing || {}),
+        id: existing ? r.id : r.id,
+        owner_id: r.owner_id,
+        name: r.name,
+        slug: r.slug,
+        category: r.category || existing?.category || "Cuisine Locale & Grillades",
+        categoryId: existing?.categoryId || "local",
+        img: r.banner_url || r.logo_url || existing?.img || "/images/restau_maquis.jpg",
+        banner_url: r.banner_url,
+        logo_url: r.logo_url,
+        rating: r.rating || existing?.rating || 4.9,
+        reviewsCount: r.reviews_count || existing?.reviewsCount || 1,
+        deliveryTime: r.delivery_time || existing?.deliveryTime || `${r.avg_prep_time_min || 20} min`,
+        deliveryFee: r.delivery_fee_base || existing?.deliveryFee || "80\u00A0FCFA",
+        distance: existing?.distance || "À proximité",
+        address: r.address,
+        popularDishes: existing?.popularDishes || ["Menu du jour", "Composition sur mesure"],
+        badges: r.sales_mode !== "online_only" ? ["QR Salle", "Ouvert"] : ["Ouvert"],
+        isOpen: r.is_open,
+        sales_mode: r.sales_mode,
+        tables_count: r.tables_count,
+        table_zones: r.table_zones,
+        avg_prep_time_min: r.avg_prep_time_min,
+        allows_dine_in_composition: r.allows_dine_in_composition,
+        allows_waiter_call: r.allows_waiter_call,
+        accepts_cash_on_site: r.accepts_cash_on_site,
+      });
+    });
+    return Array.from(map.values());
+  }, [extraRestaurants]);
+
   // Filtrage dynamique des restaurants
   const matchingRestaurants = useMemo(() => {
-    if (!query.trim()) return REGIONAL_RESTAURANTS;
+    if (!query.trim()) return allRestaurants;
     const q = query.toLowerCase().trim();
-    return REGIONAL_RESTAURANTS.filter((r) => {
+    return allRestaurants.filter((r) => {
       return (
         r.name.toLowerCase().includes(q) ||
         r.category.toLowerCase().includes(q) ||
@@ -201,7 +243,7 @@ export function GoogleSearchView({
         r.popularDishes.some((p) => p.toLowerCase().includes(q))
       );
     });
-  }, [query]);
+  }, [query, allRestaurants]);
 
   const totalResultsCount = matchingDishes.length + matchingRestaurants.length;
   const hasActiveQuery = query.trim().length > 0;
