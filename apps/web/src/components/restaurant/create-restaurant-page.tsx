@@ -25,7 +25,6 @@ import {
   Truck,
   UtensilsCrossed,
   VolumeX,
-  X,
 } from "lucide-react";
 import { RestaurantEntity, RestaurantSalesMode } from "../../lib/types/database";
 import { restaurantService } from "../../lib/services/restaurant-service";
@@ -236,6 +235,7 @@ export function CreateRestaurantPageView({
         <div className="max-w-3xl mx-auto flex items-center justify-between gap-2">
           <button
             type="button"
+            data-modal-close={step === 1 ? "" : undefined}
             onClick={() => {
               hapticFeedback("light");
               if (step > 1) {
@@ -245,13 +245,13 @@ export function CreateRestaurantPageView({
                 onClose();
               }
             }}
-            className="min-h-[44px] flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all active:scale-95 cursor-pointer"
+            aria-label={step > 1 ? "Étape précédente" : "Retour"}
+            className="w-11 h-11 shrink-0 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
           >
-            <ArrowLeft className="w-3.5 h-3.5 stroke-[2.2]" />
-            <span>{step > 1 ? "Précédent" : "Retour"}</span>
+            <ArrowLeft className="w-5 h-5 stroke-[2.2]" />
           </button>
 
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center justify-center gap-2 min-w-0">
             <LogoMarmite
               size={28}
               withBackground={false}
@@ -261,13 +261,13 @@ export function CreateRestaurantPageView({
             />
             <span
               id="create-restaurant-page-title"
-              className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight truncate"
+              className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight whitespace-nowrap"
             >
               Créer mon Restaurant
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="w-11 h-11 shrink-0 flex items-center justify-end">
             {onToggleTheme && (
               <button
                 type="button"
@@ -285,18 +285,6 @@ export function CreateRestaurantPageView({
                 )}
               </button>
             )}
-            <button
-              type="button"
-              data-modal-close
-              onClick={() => {
-                hapticFeedback("light");
-                onClose();
-              }}
-              aria-label="Fermer"
-              className="w-11 h-11 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-colors cursor-pointer"
-            >
-              <X className="w-4 h-4 stroke-[2.2]" />
-            </button>
           </div>
         </div>
 
