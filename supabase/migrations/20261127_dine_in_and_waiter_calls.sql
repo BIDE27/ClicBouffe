@@ -77,7 +77,8 @@ CREATE TRIGGER tr_promote_owner_role
     AFTER INSERT ON public.restaurants
     FOR EACH ROW EXECUTE FUNCTION public.promote_owner_role();
 
--- Durcissement orders (empêcher auto-validation paiement ou statut coté client)
+-- Durcissement orders (empêcher auto-validation paiement ou statut coté client et supprimer doublon politique INSERT)
+DROP POLICY IF EXISTS "Un client authentifié peut créer une commande pour lui-même" ON public.orders;
 DROP POLICY IF EXISTS "Les clients peuvent créer leurs propres commandes" ON public.orders;
 CREATE POLICY "Les clients peuvent créer leurs propres commandes"
     ON public.orders FOR INSERT
@@ -124,6 +125,7 @@ CREATE INDEX IF NOT EXISTS idx_waiter_calls_restaurant_id ON public.waiter_calls
 CREATE INDEX IF NOT EXISTS idx_waiter_calls_customer_id ON public.waiter_calls(customer_id);
 CREATE INDEX IF NOT EXISTS idx_waiter_calls_restaurant_status ON public.waiter_calls(restaurant_id, status, created_at DESC);
 
+DROP TRIGGER IF EXISTS tr_waiter_calls_updated_at ON public.waiter_calls;
 CREATE TRIGGER tr_waiter_calls_updated_at
     BEFORE UPDATE ON public.waiter_calls
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -131,6 +133,7 @@ CREATE TRIGGER tr_waiter_calls_updated_at
 -- Politiques RLS strictes pour waiter_calls
 -- INSERT : client connecté ou invité sur place vers un restaurant actif proposant ce service,
 -- sans possibilité d'usurper un autre customer_id.
+DROP POLICY IF EXISTS "Un client en salle peut envoyer un appel serveur" ON public.waiter_calls;
 CREATE POLICY "Un client en salle peut envoyer un appel serveur"
     ON public.waiter_calls FOR INSERT
     TO anon, authenticated
@@ -146,6 +149,7 @@ CREATE POLICY "Un client en salle peut envoyer un appel serveur"
     );
 
 -- SELECT : uniquement le restaurateur propriétaire ou le client authentifié émetteur
+DROP POLICY IF EXISTS "Le restaurateur et l'émetteur authentifié voient les appels serveur" ON public.waiter_calls;
 CREATE POLICY "Le restaurateur et l'émetteur authentifié voient les appels serveur"
     ON public.waiter_calls FOR SELECT
     TO authenticated
@@ -158,6 +162,7 @@ CREATE POLICY "Le restaurateur et l'émetteur authentifié voient les appels ser
     );
 
 -- UPDATE : uniquement le restaurateur propriétaire
+DROP POLICY IF EXISTS "Le restaurateur met à jour le statut des appels serveur" ON public.waiter_calls;
 CREATE POLICY "Le restaurateur met à jour le statut des appels serveur"
     ON public.waiter_calls FOR UPDATE
     TO authenticated
@@ -202,11 +207,13 @@ CREATE INDEX IF NOT EXISTS idx_app_notifications_recipient ON public.app_notific
 CREATE INDEX IF NOT EXISTS idx_app_notifications_restaurant ON public.app_notifications(restaurant_id);
 CREATE INDEX IF NOT EXISTS idx_app_notifications_order_id ON public.app_notifications(order_id);
 
+DROP POLICY IF EXISTS "Un utilisateur lit uniquement ses propres notifications" ON public.app_notifications;
 CREATE POLICY "Un utilisateur lit uniquement ses propres notifications"
     ON public.app_notifications FOR SELECT
     TO authenticated
     USING ((select auth.uid()) = recipient_user_id);
 
+DROP POLICY IF EXISTS "Un utilisateur marque ses notifications comme lues" ON public.app_notifications;
 CREATE POLICY "Un utilisateur marque ses notifications comme lues"
     ON public.app_notifications FOR UPDATE
     TO authenticated
@@ -491,7 +498,7 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.create_order_atomic(UUID, TEXT, TEXT, INTEGER, TEXT, TEXT, TEXT, TEXT, TEXT, JSONB) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.create_order_atomic(UUID, TEXT, TEXT, INTEGER, TEXT, TEXT, TEXT, TEXT, TEXT, JSONB) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.create_order_atomic(UUID, TEXT, TEXT, INTEGER, TEXT, TEXT, TEXT, TEXT, TEXT, JSONB) TO authenticated;
 
 CREATE OR REPLACE FUNCTION public.submit_waiter_call(
@@ -551,7 +558,31 @@ $$;
 REVOKE ALL ON FUNCTION public.submit_waiter_call(UUID, TEXT, TEXT, TEXT, TEXT, BOOLEAN) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.submit_waiter_call(UUID, TEXT, TEXT, TEXT, TEXT, BOOLEAN) TO anon, authenticated;
 
--- 7. Activation du Temps Réel sur les nouvelles tables
-ALTER PUBLICATION supabase_realtime ADD TABLE public.waiter_calls;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.app_notifications;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.app_notifications;
+-- 7. Activation idempotente du Temps Réel sur les nouvelles tables
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables
+        WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'waiter_calls'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.waiter_calls;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables
+        WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'app_notifications'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.app_notifications;
+    END IF;
+END
+$$;
+
+-- 8. Durcissement final des fonctions triggers & search_path (Zero-Trust Advisors)
+ALTER FUNCTION public.update_updated_at_column() SET search_path = '';
+ALTER FUNCTION public.handle_new_user() SET search_path = '';
+
+REVOKE ALL ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.promote_owner_role() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.notify_on_new_order() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.notify_on_waiter_call() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.notify_on_order_status_change() FROM PUBLIC, anon, authenticated;
