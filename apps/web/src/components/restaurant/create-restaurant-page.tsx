@@ -3,11 +3,14 @@
 import React, { useState, useMemo } from "react";
 import Image from "next/image";
 import {
+  AlertCircle,
   ArrowLeft,
   ArrowRight,
   BellRing,
   Check,
   ChefHat,
+  ChevronDown,
+  ChevronUp,
   Clock,
   FileText,
   Flame,
@@ -88,6 +91,7 @@ export function CreateRestaurantPageView({
 }: CreateRestaurantPageProps) {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [salesMode, setSalesMode] = useState<RestaurantSalesMode>("hybrid");
+  const [showModeDetails, setShowModeDetails] = useState<RestaurantSalesMode | null>(null);
   const [name, setName] = useState("");
   const [category, setCategory] = useState(CATEGORY_OPTIONS[0]);
   const [bannerUrl, setBannerUrl] = useState(BANNER_PRESETS[0].img);
@@ -358,6 +362,15 @@ export function CreateRestaurantPageView({
                       badge: "Recommandé",
                       desc: "Livraison sur l'app + Menu QR à table, commande autonome, composition et appel serveur.",
                       icon: Store,
+                      advantages: [
+                        "Visibilité maximale : Marketplace livraison + Recherche + Salle QR",
+                        "Menu interactif par table, composition sur mesure et appel serveur silencieux",
+                        "Gestion unifiée en temps réel dans un seul tableau de bord KDS",
+                      ],
+                      limits: [
+                        "Nécessite d'imprimer les affichettes QR pour vos tables en salle",
+                        "Demande un suivi simultané des commandes sur place et en livraison",
+                      ],
                     },
                     {
                       id: "online_only" as RestaurantSalesMode,
@@ -365,6 +378,15 @@ export function CreateRestaurantPageView({
                       badge: "Marketplace",
                       desc: "Publiez vos plats sur l'app pour la livraison express et les commandes à emporter.",
                       icon: Truck,
+                      advantages: [
+                        "Mise en ligne immédiate sans aucune installation en salle",
+                        "Commandes de livraison et à emporter avec tarif officiel FCFA",
+                        "Idéal pour dark kitchens, traiteurs ou vendeurs à domicile",
+                      ],
+                      limits: [
+                        "Pas de QR codes de tables ni de prise de commande assise sur place",
+                        "Pas de bouton d'appel serveur ou de demandes silencieuses en salle",
+                      ],
                     },
                     {
                       id: "dine_in_only" as RestaurantSalesMode,
@@ -372,17 +394,42 @@ export function CreateRestaurantPageView({
                       badge: "Restau connecté",
                       desc: "Vos clients scannent le QR à leur table, composent leur plat et appellent le serveur.",
                       icon: QrCode,
+                      advantages: [
+                        "Zéro frais de livraison : vos clients commandent directement depuis leur table",
+                        "Réduit la charge des serveurs grâce à la commande autonome et aux demandes en sourdine",
+                        "QR codes et liens directs générés automatiquement pour chaque table",
+                      ],
+                      limits: [
+                        "Aucune commande en livraison à domicile depuis la marketplace",
+                        "Accessible uniquement aux clients présents sur place ou via votre lien direct",
+                      ],
                     },
                   ].map((mode) => {
                     const Icon = mode.icon;
                     const active = salesMode === mode.id;
+                    const isDetailsOpen = active && showModeDetails === mode.id;
                     return (
-                      <button
+                      <div
                         key={mode.id}
-                        type="button"
+                        role="button"
+                        tabIndex={0}
+                        aria-pressed={active}
                         onClick={() => {
                           hapticFeedback("light");
+                          if (salesMode !== mode.id) {
+                            setShowModeDetails(null);
+                          }
                           setSalesMode(mode.id);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            hapticFeedback("light");
+                            if (salesMode !== mode.id) {
+                              setShowModeDetails(null);
+                            }
+                            setSalesMode(mode.id);
+                          }
                         }}
                         className={`text-left p-3.5 rounded-2xl border-2 transition-all flex flex-col justify-between gap-2 cursor-pointer ${
                           active
@@ -417,8 +464,71 @@ export function CreateRestaurantPageView({
                           <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug mt-1">
                             {mode.desc}
                           </p>
+
+                          {active && (
+                            <div className="mt-2.5">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  hapticFeedback("light");
+                                  setShowModeDetails((prev) => (prev === mode.id ? null : mode.id));
+                                }}
+                                aria-expanded={isDetailsOpen}
+                                className="inline-flex items-center gap-1 text-[11px] font-bold text-[#00AFF2] hover:underline py-1 cursor-pointer"
+                              >
+                                <span>{isDetailsOpen ? "Masquer les avantages" : "Voir les avantages"}</span>
+                                {isDetailsOpen ? (
+                                  <ChevronUp className="w-3.5 h-3.5" />
+                                ) : (
+                                  <ChevronDown className="w-3.5 h-3.5" />
+                                )}
+                              </button>
+
+                              {isDetailsOpen && (
+                                <div
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="mt-2 p-3 rounded-xl bg-white/95 dark:bg-slate-900/95 border border-sky-200/80 dark:border-slate-700 space-y-2.5 animate-in fade-in duration-150"
+                                >
+                                  <div>
+                                    <p className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-1">
+                                      Avantages
+                                    </p>
+                                    <ul className="space-y-1">
+                                      {mode.advantages.map((adv) => (
+                                        <li
+                                          key={adv}
+                                          className="flex items-start gap-1.5 text-[11px] text-slate-700 dark:text-slate-200 leading-snug"
+                                        >
+                                          <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                                          <span>{adv}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+
+                                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                                    <p className="text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-1">
+                                      Limites à connaître
+                                    </p>
+                                    <ul className="space-y-1">
+                                      {mode.limits.map((lim) => (
+                                        <li
+                                          key={lim}
+                                          className="flex items-start gap-1.5 text-[11px] text-slate-600 dark:text-slate-400 leading-snug"
+                                        >
+                                          <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                                          <span>{lim}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
-                      </button>
+                      </div>
                     );
                   })}
                 </div>

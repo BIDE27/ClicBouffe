@@ -217,6 +217,7 @@ describe("Digitalisation Salle, Création Pleine Page, Commandes QR & Appels Ser
       expect(emojiRegex.test(markup)).toBe(false);
       expect(markup).toContain("Créer mon Restaurant");
       expect(markup).toContain("Complet (Salle QR + App)");
+      expect(markup).toContain("Voir les avantages");
       expect(markup).toContain("dark:bg-slate-950");
       expect(markup).toContain("1. Modèle &amp; Identité");
       expect(markup).toContain("3. Salle &amp; QR Code");
