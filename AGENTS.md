@@ -170,7 +170,7 @@ Pour garantir un niveau de qualité logiciel d'excellence, chaque lot de travail
 
 ## 6c. 📋 LISTES DÉROULANTES & SÉLECTEURS (`AppSelect` OBLIGATOIRE)
 - **Interdiction des `<select>` natifs** : Aucune balise `<select>` HTML standard du navigateur/OS ne doit être utilisée dans l'interface ClicBouffe.
-- **Composant Unique Obligatoire** : Utiliser systématiquement le composant maison [`AppSelect`](apps/web/src/components/ui/app-select.tsx) (bottom-sheet tactile sur mobile, popover flottant stylé sur desktop, support Dark Mode complet, icône `Check` et retours haptiques).
+- **Composant Unique Obligatoire** : Utiliser systématiquement le composant maison [`AppSelect`](apps/web/src/components/ui/app-select.tsx) (liste déroulante ancrée sous le champ — jamais en modale — stylée ClicBouffe, support Dark Mode complet, icône `Check` et retours haptiques).
 
 ---
 
