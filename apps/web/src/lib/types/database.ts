@@ -62,6 +62,17 @@ export interface RestaurantEntity {
   created_at: string;
 }
 
+export interface CreateRestaurantDishDraft {
+  name: string;
+  description?: string;
+  price: number;
+  categoryLabel: string;
+  prepTimeMin?: number;
+  imageUrl?: string;
+  isFreeEligible?: boolean;
+  allowsCustomization?: boolean;
+}
+
 export interface CreateRestaurantParams {
   ownerId: string;
   name: string;
@@ -80,12 +91,14 @@ export interface CreateRestaurantParams {
   allowsDineInComposition?: boolean;
   allowsWaiterCall?: boolean;
   acceptsCashOnSite?: boolean;
+  initialDishes?: CreateRestaurantDishDraft[];
 }
 
 export interface DishEntity {
   id: string;
   restaurant_id: string;
   category_id?: string;
+  category_label?: string;
   name: string;
   description: string;
   price: number; // en FCFA
@@ -95,6 +108,7 @@ export interface DishEntity {
   is_free_eligible: boolean;
   allows_customization: boolean;
   prep_time_min: number;
+  display_order?: number;
   created_at: string;
 }
 

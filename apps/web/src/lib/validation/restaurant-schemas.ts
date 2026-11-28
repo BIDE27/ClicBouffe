@@ -1,5 +1,27 @@
 import { z } from "zod";
 
+const SAFE_MEDIA_URL_REGEX = /^(\/images\/[a-zA-Z0-9_.\-/]+|https:\/\/[^\s"'<>]+|data:image\/(jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=]+)$/;
+
+export const mediaUrlSchema = z
+  .string()
+  .trim()
+  .max(450000, "Image trop volumineuse (max 350 Ko après compression).")
+  .refine(
+    (val) => !val || SAFE_MEDIA_URL_REGEX.test(val),
+    "Format ou URL d'image non autorisé (JPEG, PNG, WebP ou HTTPS requis)."
+  );
+
+export const initialDishDraftSchema = z.object({
+  name: z.string().trim().min(2, "Nom du plat requis (2 caractères min).").max(100),
+  description: z.string().trim().max(300).default(""),
+  price: z.number().int().min(0, "Le prix ne peut pas être négatif.").max(500000, "Prix maximum dépassé."),
+  categoryLabel: z.string().trim().min(2).max(80).default("Plats Principaux"),
+  prepTimeMin: z.number().int().min(3).max(180).default(15),
+  imageUrl: mediaUrlSchema.optional(),
+  isFreeEligible: z.boolean().default(false),
+  allowsCustomization: z.boolean().default(true),
+});
+
 export const createRestaurantSchema = z.object({
   ownerId: z.string().trim().min(1, "Identifiant propriétaire requis."),
   name: z
@@ -21,15 +43,8 @@ export const createRestaurantSchema = z.object({
   description: z.string().trim().max(500, "Description trop longue (500 caractères max).").optional(),
   openTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Format d'heure invalide (HH:MM).").optional(),
   closeTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Format d'heure invalide (HH:MM).").optional(),
-  bannerUrl: z
-    .string()
-    .trim()
-    .max(300, "URL de bannière trop longue.")
-    .refine(
-      (val) => !val || val.startsWith("/images/") || val.startsWith("https://"),
-      "URL de bannière non autorisée."
-    )
-    .optional(),
+  logoUrl: mediaUrlSchema.optional(),
+  bannerUrl: mediaUrlSchema.optional(),
   salesMode: z.enum(["online_only", "dine_in_only", "hybrid"]).default("hybrid"),
   tablesCount: z.number().int().min(0).max(500).default(10),
   tableZones: z.array(z.string().trim().min(1).max(40)).min(1).max(12).default(["Salle Principale"]),
@@ -37,6 +52,7 @@ export const createRestaurantSchema = z.object({
   allowsDineInComposition: z.boolean().default(true),
   allowsWaiterCall: z.boolean().default(true),
   acceptsCashOnSite: z.boolean().default(true),
+  initialDishes: z.array(initialDishDraftSchema).max(50).default([]),
 });
 
 export const dineInOrderItemSchema = z.object({
@@ -86,9 +102,9 @@ export const createDishSchema = z.object({
   name: z.string().trim().min(2, "Nom du plat requis (2 caractères min).").max(100),
   description: z.string().trim().max(300).default(""),
   price: z.number().int().min(0, "Le prix ne peut pas être négatif.").max(500000, "Prix maximum dépassé."),
-  category: z.string().trim().min(2).max(60).default("Plat Principal"),
+  category: z.string().trim().min(2).max(80).default("Plats Principaux"),
   prepTimeMin: z.number().int().min(3).max(180).default(15),
-  imageUrl: z.string().trim().max(300).optional(),
+  imageUrl: mediaUrlSchema.optional(),
 });
 
 export const waiterCallSchema = z.object({

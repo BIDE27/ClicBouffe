@@ -107,6 +107,7 @@ function getFieldValue(
   deliveryTime: string;
   deliveryFee: string;
   img: string;
+  logoUrl: string;
   avgPrepTimeMin: number;
   tablesCount: number;
   tableZones: string[];
@@ -128,6 +129,7 @@ function getFieldValue(
     deliveryTime: anyResto.deliveryTime || anyResto.delivery_time || "15-25 min",
     deliveryFee: anyResto.deliveryFee || anyResto.delivery_fee_base || "80\u00A0FCFA",
     img: anyResto.img || anyResto.banner_url || anyResto.logo_url || "/images/restau_maquis.jpg",
+    logoUrl: anyResto.logo_url || "/images/logos/logo-marmite-bleu.svg",
     avgPrepTimeMin: anyResto.avg_prep_time_min || 18,
     tablesCount: anyResto.tables_count ?? 12,
     tableZones:
@@ -491,7 +493,13 @@ export function ScannedRestaurantModal({
     >
       {/* En-tête Sticky avec Bannière Immersive */}
       <div className="relative h-48 sm:h-56 w-full shrink-0 bg-slate-900">
-        <Image src={info.img} alt={info.name} fill className="object-cover" />
+        <Image
+          src={info.img}
+          alt={info.name}
+          fill
+          unoptimized={info.img.startsWith("data:") || info.img.startsWith("http")}
+          className="object-cover"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/30" />
 
         {/* Barre supérieure de navigation */}
@@ -535,33 +543,45 @@ export function ScannedRestaurantModal({
           </div>
         </div>
 
-        {/* Infos du restaurant en bas de bannière */}
-        <div className="absolute bottom-3 left-4 right-4 text-white max-w-4xl mx-auto">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2 py-0.5 rounded-full bg-emerald-500/90 text-white text-[10px] font-bold flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3" />
-              <span>{serviceMode === "dine_in" ? `Sur place • ${tableNumber}` : "Livraison / À emporter"}</span>
-            </span>
-            <span className="px-2 py-0.5 rounded-full bg-black/50 backdrop-blur-xs text-amber-300 text-[10px] font-bold flex items-center gap-1">
-              <Star className="w-3 h-3 fill-amber-300 text-amber-300" />
-              {restaurant.rating ?? info.rating} ({info.reviewsCount})
-            </span>
+        {/* Infos du restaurant en bas de bannière + Logo */}
+        <div className="absolute bottom-3 left-4 right-4 text-white max-w-4xl mx-auto flex items-end gap-3">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white dark:bg-slate-800 p-0.5 shadow-lg border-2 border-white/90 dark:border-slate-700 shrink-0 overflow-hidden flex items-center justify-center">
+            <Image
+              src={info.logoUrl}
+              alt={`Logo ${restaurant.name}`}
+              width={56}
+              height={56}
+              unoptimized={info.logoUrl.startsWith("data:") || info.logoUrl.startsWith("http")}
+              className="w-full h-full object-cover rounded-xl"
+            />
           </div>
-          <h2 id="scanned-restaurant-title" className="text-lg sm:text-2xl font-black tracking-tight drop-shadow-xs">
-            {restaurant.name}
-          </h2>
-          <p className="text-xs text-slate-200 flex items-center gap-2 mt-0.5 truncate">
-            <span>{info.category}</span>
-            <span>•</span>
-            <span className="flex items-center gap-1">
-              <MapPin className="w-3 h-3 text-[#00AFF2]" />
-              {info.address}
-            </span>
-            <span className="hidden sm:inline">•</span>
-            <span className="hidden sm:inline font-semibold text-sky-200">
-              {"deliveryFee" in restaurant ? restaurant.deliveryFee : info.deliveryFee}
-            </span>
-          </p>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="px-2 py-0.5 rounded-full bg-emerald-500/90 text-white text-[10px] font-bold flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3" />
+                <span>{serviceMode === "dine_in" ? `Sur place • ${tableNumber}` : "Livraison / À emporter"}</span>
+              </span>
+              <span className="px-2 py-0.5 rounded-full bg-black/50 backdrop-blur-xs text-amber-300 text-[10px] font-bold flex items-center gap-1">
+                <Star className="w-3 h-3 fill-amber-300 text-amber-300" />
+                {restaurant.rating ?? info.rating} ({info.reviewsCount})
+              </span>
+            </div>
+            <h2 id="scanned-restaurant-title" className="text-lg sm:text-2xl font-black tracking-tight drop-shadow-xs truncate">
+              {restaurant.name}
+            </h2>
+            <p className="text-xs text-slate-200 flex items-center gap-2 mt-0.5 truncate">
+              <span className="truncate">{info.category}</span>
+              <span>•</span>
+              <span className="flex items-center gap-1 truncate">
+                <MapPin className="w-3 h-3 text-[#00AFF2] shrink-0" />
+                <span className="truncate">{info.address}</span>
+              </span>
+              <span className="hidden sm:inline">•</span>
+              <span className="hidden sm:inline font-semibold text-sky-200 shrink-0">
+                {"deliveryFee" in restaurant ? restaurant.deliveryFee : info.deliveryFee}
+              </span>
+            </p>
+          </div>
         </div>
       </div>
 
@@ -800,7 +820,13 @@ export function ScannedRestaurantModal({
                   >
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0">
-                        <Image src={dish.img} alt={dish.name} fill className="object-cover" />
+                        <Image
+                          src={dish.img}
+                          alt={dish.name}
+                          fill
+                          unoptimized={dish.img.startsWith("data:") || dish.img.startsWith("http")}
+                          className="object-cover"
+                        />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5">

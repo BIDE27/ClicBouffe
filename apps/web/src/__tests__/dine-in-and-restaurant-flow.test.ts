@@ -40,6 +40,8 @@ import {
   waiterCallSchema,
 } from "../lib/validation/restaurant-schemas";
 import { CreateRestaurantPageView } from "../components/restaurant/create-restaurant-page";
+import { RestaurantLivePreview } from "../components/restaurant/restaurant-live-preview";
+import { BENIN_CULINARY_SPECIALTIES, STANDARD_CLICBOUFFE_LOGOS } from "../components/restaurant/restaurant-presets";
 import { ScannedRestaurantModal } from "../components/qr/scanned-restaurant-modal";
 import { QrCodeDisplay } from "../components/ui/qr-code-display";
 import { REGIONAL_RESTAURANTS } from "../lib/data/clicbouffe-data";
@@ -139,6 +141,54 @@ describe("Digitalisation Salle, Création Pleine Page, Commandes QR & Appels Ser
       expect(found?.name).toBe("Chez Tante Victoire");
     });
 
+    it("dissocie bien les spécialités béninoises et enregistre le logo + menu initial en base", async () => {
+      expect(BENIN_CULINARY_SPECIALTIES.length).toBeGreaterThanOrEqual(12);
+      const gariCategory = BENIN_CULINARY_SPECIALTIES.find((c) => c.includes("Gari"));
+      const boissonCategory = BENIN_CULINARY_SPECIALTIES.find((c) => c.includes("Boissons"));
+      expect(gariCategory).toBeTruthy();
+      expect(boissonCategory).toBeTruthy();
+      expect(gariCategory).not.toBe(boissonCategory);
+      expect(STANDARD_CLICBOUFFE_LOGOS.length).toBeGreaterThanOrEqual(6);
+
+      const { restaurant, error } = await restaurantService.createRestaurant({
+        ownerId: "owner-menu-test",
+        name: "Saveurs du Lac Ahémé",
+        category: gariCategory!,
+        address: "Fidjrossè, Cotonou",
+        phoneNumber: "+229 97 11 22 33",
+        logoUrl: STANDARD_CLICBOUFFE_LOGOS[1].url,
+        bannerUrl: "/images/restau_saveurs.jpg",
+        initialDishes: [
+          {
+            name: "Dakouin Spécial",
+            description: "Gari mariné sauce tomate & poisson frit",
+            price: 1500,
+            categoryLabel: "Gari, Tapioca & Manioc",
+            prepTimeMin: 12,
+            imageUrl: "/images/dish_gari.jpg",
+            allowsCustomization: true,
+            isFreeEligible: false,
+          },
+          {
+            name: "Jus de Bissap Menthe",
+            description: "Frais du jour",
+            price: 500,
+            categoryLabel: "Boissons Locales & Jus Frais",
+            prepTimeMin: 5,
+            imageUrl: "/images/dish_tapioca.jpg",
+            allowsCustomization: false,
+            isFreeEligible: false,
+          },
+        ],
+      });
+
+      expect(error).toBeNull();
+      expect(restaurant?.logo_url).toBe(STANDARD_CLICBOUFFE_LOGOS[1].url);
+      const dishes = await restaurantService.getDishes(restaurant!.id);
+      expect(dishes.some((d) => d.name === "Dakouin Spécial" && d.category_label === "Gari, Tapioca & Manioc")).toBe(true);
+      expect(dishes.some((d) => d.name === "Jus de Bissap Menthe")).toBe(true);
+    });
+
     it("passe une commande sur place (0 FCFA frais de livraison) avec délai promis et notifie le restaurateur", async () => {
       const { order, error } = await restaurantService.createOrder({
         restaurantId: "resto-maquis-001",
@@ -219,8 +269,40 @@ describe("Digitalisation Salle, Création Pleine Page, Commandes QR & Appels Ser
       expect(markup).toContain("Complet (Salle QR + App)");
       expect(markup).toContain("Voir les avantages");
       expect(markup).toContain("dark:bg-slate-950");
-      expect(markup).toContain("1. Modèle &amp; Identité");
-      expect(markup).toContain("3. Salle &amp; QR Code");
+      expect(markup).toContain("1. Modèle");
+      expect(markup).toContain("Aperçu client en direct");
+      expect(markup).not.toContain("Sparkles");
+
+      const livePreviewMarkup = renderToStaticMarkup(
+        React.createElement(RestaurantLivePreview, {
+          name: "Chez Maman Bénin",
+          category: BENIN_CULINARY_SPECIALTIES[0],
+          description: "Pâte rouge & télibo chaud",
+          address: "Akpakpa",
+          openTime: "09:00",
+          closeTime: "23:00",
+          bannerUrl: "/images/restau_maquis.jpg",
+          logoUrl: STANDARD_CLICBOUFFE_LOGOS[0].url,
+          salesMode: "hybrid",
+          avgPrepTimeMin: 18,
+          tablesCount: 10,
+          allowsDineInComposition: true,
+          allowsWaiterCall: true,
+          dishes: [
+            {
+              name: "Amiwo Poulet",
+              description: "Sauce piment vert",
+              price: 2000,
+              categoryLabel: "Pâtes & Plats Traditionnels",
+              prepTimeMin: 18,
+              imageUrl: "/images/dish_pate_rouge.jpg",
+            },
+          ],
+        })
+      );
+      expect(livePreviewMarkup).toContain("Chez Maman Bénin");
+      expect(livePreviewMarkup).toContain("La Carte du Restaurant");
+      expect(livePreviewMarkup).toContain("Amiwo Poulet");
     });
 
     it("rend la vue complète restaurant client avec Sur place, Composition et Appel serveur", () => {

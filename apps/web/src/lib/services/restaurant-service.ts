@@ -550,7 +550,7 @@ export const restaurantService = {
       description:
         v.description ||
         "Cuisine authentique et fraîche préparée avec passion, disponible en salle et en livraison.",
-      logo_url: params.logoUrl || v.bannerUrl || "/images/restau_maquis.jpg",
+      logo_url: v.logoUrl || "/images/logos/logo-marmite-bleu.svg",
       banner_url: v.bannerUrl || "/images/restau_maquis.jpg",
       phone_number: v.phoneNumber,
       address: v.address,
@@ -649,6 +649,80 @@ export const restaurantService = {
       }
     }
 
+    // Insertion synchronisée des plats du menu initial dans public.dishes + cache local
+    if (v.initialDishes && v.initialDishes.length > 0) {
+      const nowIso = new Date().toISOString();
+      let createdDishes: DishEntity[] = v.initialDishes.map((d, idx) => ({
+        id: generateUniqueId(`dish-${idx}`),
+        restaurant_id: newResto.id,
+        category_label: d.categoryLabel,
+        name: d.name,
+        description: d.description || "",
+        price: d.price,
+        image_url: d.imageUrl || "/images/dish_pate_rouge.jpg",
+        is_available: true,
+        is_free_eligible: d.isFreeEligible,
+        allows_customization: d.allowsCustomization,
+        prep_time_min: d.prepTimeMin,
+        display_order: idx,
+        created_at: nowIso,
+      }));
+
+      if (process.env.NODE_ENV !== "test") {
+        try {
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(newResto.id);
+          if (isUuid) {
+            const supabase = createClient();
+            const payload = createdDishes.map((d, idx) => ({
+              restaurant_id: newResto.id,
+              name: d.name,
+              description: d.description,
+              price: d.price,
+              image_url: d.image_url,
+              category_label: d.category_label,
+              prep_time_min: d.prep_time_min,
+              display_order: idx,
+              is_available: true,
+              is_free_eligible: d.is_free_eligible,
+              allows_customization: d.allows_customization,
+            }));
+            const dishesRes = await supabase.from("dishes").insert(payload).select();
+            if (dishesRes.error && /column|schema cache/i.test(dishesRes.error.message)) {
+              const fallbackPayload = createdDishes.map((d) => ({
+                restaurant_id: newResto.id,
+                name: d.name,
+                description: d.description,
+                price: d.price,
+                image_url: d.image_url,
+                is_available: true,
+                is_free_eligible: d.is_free_eligible,
+                allows_customization: d.allows_customization,
+              }));
+              const fallbackRes = await supabase.from("dishes").insert(fallbackPayload).select();
+              if (fallbackRes.data && fallbackRes.data.length > 0) {
+                createdDishes = fallbackRes.data.map((row, idx) => ({
+                  ...createdDishes[idx],
+                  id: String((row as { id: string }).id),
+                }));
+              }
+            } else if (dishesRes.data && dishesRes.data.length > 0) {
+              createdDishes = dishesRes.data.map((row, idx) => ({
+                ...createdDishes[idx],
+                id: String((row as { id: string }).id),
+              }));
+            }
+          }
+        } catch {
+          // Repli local garanti
+        }
+      }
+
+      if (typeof window !== "undefined") {
+        const cachedDishes = readJsonCache<DishEntity[]>(LOCAL_STORAGE_DISHES_KEY, INITIAL_DEMO_DISHES);
+        localStorage.setItem(LOCAL_STORAGE_DISHES_KEY, JSON.stringify([...createdDishes, ...cachedDishes]));
+      }
+    }
+
     if (typeof window !== "undefined") {
       const list = readJsonCache<RestaurantEntity[]>(LOCAL_STORAGE_RESTO_KEY, INITIAL_DEMO_RESTAURANTS);
       localStorage.setItem(LOCAL_STORAGE_RESTO_KEY, JSON.stringify([newResto, ...list.filter((r) => r.id !== newResto.id)]));
@@ -718,6 +792,7 @@ export const restaurantService = {
         if (data && data.length > 0) {
           return data.map((d) => ({
             ...(d as DishEntity),
+            category_label: (d as DishEntity).category_label || "Plats Principaux",
             prep_time_min: (d as DishEntity).prep_time_min || 15,
           }));
         }
@@ -795,7 +870,7 @@ export const restaurantService = {
       name: dish.name,
       description: dish.description,
       price: Math.max(0, Math.round(dish.price)),
-      category: dish.category_id || "Plat Principal",
+      category: dish.category_label || dish.category_id || "Plats Principaux",
       prepTimeMin: dish.prep_time_min || 15,
       imageUrl: dish.image_url,
     });
@@ -803,6 +878,7 @@ export const restaurantService = {
 
     const newDish: DishEntity = {
       ...dish,
+      category_label: safeDish?.category || dish.category_label || "Plats Principaux",
       name: safeDish?.name || dish.name.trim(),
       description: safeDish?.description || dish.description.trim(),
       price: safeDish?.price ?? Math.max(0, Math.round(dish.price)),
@@ -814,7 +890,7 @@ export const restaurantService = {
     if (process.env.NODE_ENV !== "test") {
       try {
         const supabase = createClient();
-        const { data } = await supabase
+        let insertDishRes = await supabase
           .from("dishes")
           .insert({
             restaurant_id: newDish.restaurant_id,
@@ -822,6 +898,8 @@ export const restaurantService = {
             description: newDish.description,
             price: newDish.price,
             image_url: newDish.image_url,
+            category_label: newDish.category_label,
+            prep_time_min: newDish.prep_time_min,
             is_available: newDish.is_available,
             is_free_eligible: newDish.is_free_eligible,
             allows_customization: newDish.allows_customization,
@@ -829,8 +907,25 @@ export const restaurantService = {
           .select()
           .single();
 
-        if (data?.id) {
-          newDish.id = data.id;
+        if (insertDishRes.error && /column|schema cache/i.test(insertDishRes.error.message)) {
+          insertDishRes = await supabase
+            .from("dishes")
+            .insert({
+              restaurant_id: newDish.restaurant_id,
+              name: newDish.name,
+              description: newDish.description,
+              price: newDish.price,
+              image_url: newDish.image_url,
+              is_available: newDish.is_available,
+              is_free_eligible: newDish.is_free_eligible,
+              allows_customization: newDish.allows_customization,
+            })
+            .select()
+            .single();
+        }
+
+        if (insertDishRes.data?.id) {
+          newDish.id = insertDishRes.data.id;
         }
       } catch {
         // Fallback

@@ -15,6 +15,14 @@ const nextConfig: NextConfig = {
         // En mode Web (Vercel), SSR/PPR activés pour un SEO maximal
         cacheComponents: true,
         partialPrefetching: true,
+        images: {
+          remotePatterns: [
+            {
+              protocol: "https",
+              hostname: "*.supabase.co",
+            },
+          ],
+        },
       }),
   turbopack: {
     rules: {
