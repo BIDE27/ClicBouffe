@@ -145,15 +145,33 @@ describe("Digitalisation Salle, Création Pleine Page, Commandes QR & Appels Ser
       expect(BENIN_CULINARY_SPECIALTIES.length).toBeGreaterThanOrEqual(12);
       const gariCategory = BENIN_CULINARY_SPECIALTIES.find((c) => c.includes("Gari"));
       const boissonCategory = BENIN_CULINARY_SPECIALTIES.find((c) => c.includes("Boissons"));
+      const pateCategory = BENIN_CULINARY_SPECIALTIES[0];
       expect(gariCategory).toBeTruthy();
       expect(boissonCategory).toBeTruthy();
       expect(gariCategory).not.toBe(boissonCategory);
       expect(STANDARD_CLICBOUFFE_LOGOS.length).toBeGreaterThanOrEqual(6);
 
+      // Rejette plus de 3 spécialités simultanées
+      const tooMany = createRestaurantSchema.safeParse({
+        ownerId: "owner-menu-test",
+        name: "Test Max 3",
+        category: gariCategory!,
+        categories: [
+          pateCategory,
+          gariCategory!,
+          boissonCategory!,
+          BENIN_CULINARY_SPECIALTIES[2],
+        ],
+        address: "Fidjrossè, Cotonou",
+        phoneNumber: "+229 97 11 22 33",
+      });
+      expect(tooMany.success).toBe(false);
+
       const { restaurant, error } = await restaurantService.createRestaurant({
         ownerId: "owner-menu-test",
         name: "Saveurs du Lac Ahémé",
         category: gariCategory!,
+        categories: [gariCategory!, pateCategory, boissonCategory!],
         address: "Fidjrossè, Cotonou",
         phoneNumber: "+229 97 11 22 33",
         logoUrl: STANDARD_CLICBOUFFE_LOGOS[1].url,
@@ -184,6 +202,9 @@ describe("Digitalisation Salle, Création Pleine Page, Commandes QR & Appels Ser
 
       expect(error).toBeNull();
       expect(restaurant?.logo_url).toBe(STANDARD_CLICBOUFFE_LOGOS[1].url);
+      expect(restaurant?.categories?.length).toBe(3);
+      expect(restaurant?.categories).toContain(gariCategory);
+      expect(restaurant?.categories).toContain(boissonCategory);
       const dishes = await restaurantService.getDishes(restaurant!.id);
       expect(dishes.some((d) => d.name === "Dakouin Spécial" && d.category_label === "Gari, Tapioca & Manioc")).toBe(true);
       expect(dishes.some((d) => d.name === "Jus de Bissap Menthe")).toBe(true);

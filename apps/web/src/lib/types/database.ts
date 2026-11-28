@@ -44,6 +44,7 @@ export interface RestaurantEntity {
   phone_number: string;
   address: string;
   category: string;
+  categories?: string[];
   rating: number;
   reviews_count: number;
   delivery_time: string;
@@ -77,6 +78,7 @@ export interface CreateRestaurantParams {
   ownerId: string;
   name: string;
   category: string;
+  categories?: string[];
   address: string;
   phoneNumber: string;
   description?: string;

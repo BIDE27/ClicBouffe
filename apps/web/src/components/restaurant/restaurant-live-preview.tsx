@@ -19,6 +19,7 @@ import { CreateRestaurantDishDraft, RestaurantSalesMode } from "../../lib/types/
 interface RestaurantLivePreviewProps {
   name: string;
   category: string;
+  categories?: string[];
   description: string;
   address: string;
   openTime: string;
@@ -39,6 +40,7 @@ interface RestaurantLivePreviewProps {
 export function RestaurantLivePreview({
   name,
   category,
+  categories,
   description,
   address,
   openTime,
@@ -128,7 +130,9 @@ export function RestaurantLivePreview({
             <h3 className="text-base font-black tracking-tight truncate drop-shadow-xs">
               {displayName}
             </h3>
-            <p className="text-[11px] text-sky-200 font-semibold truncate">{category}</p>
+            <p className="text-[11px] text-sky-200 font-semibold truncate">
+              {categories && categories.length > 0 ? categories.join(" • ") : category}
+            </p>
           </div>
         </div>
       </div>

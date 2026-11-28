@@ -81,7 +81,7 @@ export function CreateRestaurantPageView({
   const [salesMode, setSalesMode] = useState<RestaurantSalesMode>("hybrid");
   const [showModeDetails, setShowModeDetails] = useState<RestaurantSalesMode | null>(null);
   const [name, setName] = useState("");
-  const [category, setCategory] = useState(BENIN_CULINARY_SPECIALTIES[0]);
+  const [categories, setCategories] = useState<string[]>([BENIN_CULINARY_SPECIALTIES[0]]);
 
   // Étape 2 : Marque, Logo, Couverture & Présentation
   const [logoUrl, setLogoUrl] = useState(STANDARD_CLICBOUFFE_LOGOS[0].url);
@@ -286,7 +286,8 @@ export function CreateRestaurantPageView({
       const { restaurant, error } = await restaurantService.createRestaurant({
         ownerId: currentUserId,
         name: name.trim(),
-        category,
+        category: categories.join(" • ") || BENIN_CULINARY_SPECIALTIES[0],
+        categories,
         address: address.trim(),
         phoneNumber: phoneNumber.trim(),
         openTime,
@@ -756,13 +757,15 @@ export function CreateRestaurantPageView({
 
                   <div>
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
-                      Spécialité culinaire principale (Mets africains & béninois)
+                      Spécialités culinaires (Mets africains & béninois — max 3)
                     </label>
                     <AppSelect
-                      value={category}
-                      onChange={setCategory}
+                      multiple
+                      maxSelections={3}
+                      values={categories}
+                      onChangeMultiple={(next) => setCategories(next.slice(0, 3))}
                       options={BENIN_CULINARY_SPECIALTIES}
-                      label="Spécialité culinaire principale"
+                      label="Spécialités culinaires (jusqu'à 3)"
                     />
                   </div>
                 </section>
@@ -1572,7 +1575,8 @@ export function CreateRestaurantPageView({
           >
             <RestaurantLivePreview
               name={name}
-              category={category}
+              category={categories[0] || BENIN_CULINARY_SPECIALTIES[0]}
+              categories={categories}
               description={description}
               address={address}
               openTime={openTime}

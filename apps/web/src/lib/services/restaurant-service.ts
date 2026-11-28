@@ -343,6 +343,12 @@ export const INITIAL_DEMO_ORDERS: OrderEntity[] = [
 export const INITIAL_DEMO_WAITER_CALLS: WaiterCallEntity[] = [];
 
 function normalizeRestaurantRow(row: Record<string, unknown>): RestaurantEntity {
+  const fallbackCat = String(row.category || "Cuisine Locale & Grillades");
+  const categoriesList =
+    Array.isArray(row.categories) && row.categories.length > 0
+      ? (row.categories as string[]).slice(0, 3)
+      : [fallbackCat];
+
   return {
     id: String(row.id || ""),
     owner_id: String(row.owner_id || ""),
@@ -353,7 +359,8 @@ function normalizeRestaurantRow(row: Record<string, unknown>): RestaurantEntity 
     banner_url: String(row.banner_url || row.logo_url || "/images/restau_maquis.jpg"),
     phone_number: String(row.phone_number || ""),
     address: String(row.address || "Cotonou, Bénin"),
-    category: String(row.category || "Cuisine Locale & Grillades"),
+    category: row.category ? String(row.category) : categoriesList.join(" • "),
+    categories: categoriesList,
     rating: Number(row.rating || 4.9),
     reviews_count: Number(row.reviews_count || 12),
     delivery_time: String(row.delivery_time || `${Number(row.avg_prep_time_min || 20)} min`),
@@ -532,6 +539,9 @@ export const restaurantService = {
     }
 
     const v = parsed.data;
+    const selectedCategories =
+      v.categories && v.categories.length > 0 ? v.categories.slice(0, 3) : [v.category];
+    const primaryOrJoinedCategory = selectedCategories.join(" • ");
     const slug =
       v.name
         .toLowerCase()
@@ -554,7 +564,8 @@ export const restaurantService = {
       banner_url: v.bannerUrl || "/images/restau_maquis.jpg",
       phone_number: v.phoneNumber,
       address: v.address,
-      category: v.category,
+      category: primaryOrJoinedCategory,
+      categories: selectedCategories,
       rating: 5.0,
       reviews_count: 0,
       delivery_time: `${Math.max(10, v.avgPrepTimeMin - 5)}-${v.avgPrepTimeMin + 10} min`,
@@ -595,6 +606,7 @@ export const restaurantService = {
             phone_number: newResto.phone_number,
             address: newResto.address,
             category: newResto.category,
+            categories: newResto.categories,
             open_time: newResto.open_time,
             close_time: newResto.close_time,
             sales_mode: newResto.sales_mode,

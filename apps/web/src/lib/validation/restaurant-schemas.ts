@@ -30,6 +30,11 @@ export const createRestaurantSchema = z.object({
     .min(2, "Le nom du restaurant doit contenir au moins 2 caractères.")
     .max(80, "Le nom du restaurant ne peut pas dépasser 80 caractères."),
   category: z.string().trim().min(2, "Veuillez sélectionner une spécialité culinaire."),
+  categories: z
+    .array(z.string().trim().min(2).max(120))
+    .min(1, "Veuillez choisir au moins 1 spécialité culinaire.")
+    .max(3, "Vous pouvez choisir jusqu'à 3 spécialités maximum.")
+    .optional(),
   address: z
     .string()
     .trim()
