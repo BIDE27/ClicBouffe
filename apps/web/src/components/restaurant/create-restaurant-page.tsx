@@ -367,10 +367,7 @@ export function CreateRestaurantPageView({
                         "Menu interactif par table, composition sur mesure et appel serveur silencieux",
                         "Gestion unifiée en temps réel dans un seul tableau de bord KDS",
                       ],
-                      limits: [
-                        "Nécessite d'imprimer les affichettes QR pour vos tables en salle",
-                        "Demande un suivi simultané des commandes sur place et en livraison",
-                      ],
+                      limits: [] as string[],
                     },
                     {
                       id: "online_only" as RestaurantSalesMode,
@@ -507,22 +504,24 @@ export function CreateRestaurantPageView({
                                     </ul>
                                   </div>
 
-                                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                                    <p className="text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-1">
-                                      Limites à connaître
-                                    </p>
-                                    <ul className="space-y-1">
-                                      {mode.limits.map((lim) => (
-                                        <li
-                                          key={lim}
-                                          className="flex items-start gap-1.5 text-[11px] text-slate-600 dark:text-slate-400 leading-snug"
-                                        >
-                                          <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
-                                          <span>{lim}</span>
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
+                                  {mode.limits.length > 0 && (
+                                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                                      <p className="text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-1">
+                                        Limites à connaître
+                                      </p>
+                                      <ul className="space-y-1">
+                                        {mode.limits.map((lim) => (
+                                          <li
+                                            key={lim}
+                                            className="flex items-start gap-1.5 text-[11px] text-slate-600 dark:text-slate-400 leading-snug"
+                                          >
+                                            <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                                            <span>{lim}</span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>
