@@ -40,6 +40,7 @@ import {
 } from "../../lib/types/database";
 import { restaurantService } from "../../lib/services/restaurant-service";
 import { hapticFeedback } from "../../lib/native/haptics";
+import { AppSelect } from "../ui/app-select";
 
 export interface ScannedRestaurantModalProps {
   restaurant: (Restaurant & Partial<RestaurantEntity>) | RestaurantEntity | null;
@@ -655,28 +656,24 @@ export function ScannedRestaurantModal({
             {serviceMode === "dine_in" && (
               <div className="flex items-center gap-1.5">
                 <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Table :</span>
-                <select
+                <AppSelect
                   value={tableNumber}
-                  onChange={(e) => setTableNumber(e.target.value)}
-                  className="min-h-[40px] px-2.5 py-1.5 rounded-xl bg-sky-50 dark:bg-slate-800 border border-sky-200 dark:border-slate-700 text-xs font-black text-[#00AFF2] outline-none"
-                  aria-label="Sélectionner votre numéro de table"
-                >
-                  {detectedTable &&
+                  onChange={setTableNumber}
+                  compact
+                  label="Choisir votre table"
+                  ariaLabel="Sélectionner votre numéro de table"
+                  className="min-w-[125px]"
+                  triggerClassName="bg-sky-50 dark:bg-slate-800 border-sky-200 dark:border-slate-700 text-[#00AFF2]"
+                  options={[
+                    ...(detectedTable &&
                     !tableOptions.includes(detectedTable) &&
-                    !customZones.includes(detectedTable) && (
-                      <option value={detectedTable}>{detectedTable}</option>
-                    )}
-                  {tableOptions.map((t) => (
-                    <option key={t} value={t} className="text-slate-900 dark:text-white dark:bg-slate-800">
-                      {t}
-                    </option>
-                  ))}
-                  {customZones.map((z) => (
-                    <option key={z} value={z} className="text-slate-900 dark:text-white dark:bg-slate-800">
-                      {z}
-                    </option>
-                  ))}
-                </select>
+                    !customZones.includes(detectedTable)
+                      ? [detectedTable]
+                      : []),
+                    ...tableOptions,
+                    ...customZones,
+                  ]}
+                />
               </div>
             )}
           </div>

@@ -33,6 +33,7 @@ import { restaurantService } from "../../lib/services/restaurant-service";
 import { hapticFeedback } from "../../lib/native/haptics";
 import { LogoMarmite } from "../ui/logo-marmite";
 import { QrCodeDisplay } from "../ui/qr-code-display";
+import { AppSelect } from "../ui/app-select";
 
 export interface CreateRestaurantPageProps {
   isOpen: boolean;
@@ -561,17 +562,12 @@ export function CreateRestaurantPageView({
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
                     Spécialité culinaire principale
                   </label>
-                  <select
+                  <AppSelect
                     value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:border-[#00AFF2] outline-none transition-colors"
-                  >
-                    {CATEGORY_OPTIONS.map((cat) => (
-                      <option key={cat} value={cat} className="dark:bg-slate-800">
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setCategory}
+                    options={CATEGORY_OPTIONS}
+                    label="Spécialité culinaire principale"
+                  />
                 </div>
 
                 {/* Choix de la bannière de couverture */}

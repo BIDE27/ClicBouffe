@@ -168,6 +168,10 @@ Pour garantir un niveau de qualité logiciel d'excellence, chaque lot de travail
 - **Interdiction Hors IA** : L'icône `Sparkles` (étincelles/étoiles associées au vibe coding et aux outils d'IA) est **strictement proscrite** pour toute fonctionnalité non-IA (création de restaurant, composition de plat, badges sponsorisés, succès commande, recherche).
 - **Usage Exclusif** : N'utiliser `Sparkles` que lorsqu'une fonctionnalité repose réellement sur l'Intelligence Artificielle. Dans tous les autres cas, utiliser des icônes métier explicites (`Store`, `ChefHat`, `UtensilsCrossed`, `Award`, `QrCode`, `Check`, `Flame`).
 
+## 6c. 📋 LISTES DÉROULANTES & SÉLECTEURS (`AppSelect` OBLIGATOIRE)
+- **Interdiction des `<select>` natifs** : Aucune balise `<select>` HTML standard du navigateur/OS ne doit être utilisée dans l'interface ClicBouffe.
+- **Composant Unique Obligatoire** : Utiliser systématiquement le composant maison [`AppSelect`](apps/web/src/components/ui/app-select.tsx) (bottom-sheet tactile sur mobile, popover flottant stylé sur desktop, support Dark Mode complet, icône `Check` et retours haptiques).
+
 ---
 
 *Ce document est la référence maîtresse pour tout développement sur ClicBouffe. Il prévaut sur toute convenance temporaire.*

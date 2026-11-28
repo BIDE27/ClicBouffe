@@ -38,6 +38,7 @@ import {
 import { restaurantService } from "@/lib/services/restaurant-service";
 import { hapticFeedback } from "@/lib/native/haptics";
 import { QrCodeDisplay } from "@/components/ui/qr-code-display";
+import { AppSelect } from "@/components/ui/app-select";
 
 interface RestaurantDashboardProps {
   ownerId?: string;
@@ -894,28 +895,22 @@ export function RestaurantDashboard({
                   </p>
                 </div>
 
-                <select
+                <AppSelect
                   value={selectedQrTable}
-                  onChange={(e) => setSelectedQrTable(e.target.value)}
-                  className="min-h-[44px] px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-white outline-none"
-                >
-                  {Array.from(
-                    { length: Math.max(1, Math.min(200, restaurant.tables_count ?? 10)) },
-                    (_, i) => `Table ${i + 1}`
-                  ).map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                  {(restaurant.table_zones && restaurant.table_zones.length > 0
-                    ? restaurant.table_zones
-                    : ["Comptoir", "Terrasse"]
-                  ).map((z) => (
-                    <option key={z} value={z}>
-                      {z}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setSelectedQrTable}
+                  darkSurfaceOnly
+                  label="Choisir une table ou zone"
+                  className="min-w-[160px]"
+                  options={[
+                    ...Array.from(
+                      { length: Math.max(1, Math.min(200, restaurant.tables_count ?? 10)) },
+                      (_, i) => `Table ${i + 1}`
+                    ),
+                    ...(restaurant.table_zones && restaurant.table_zones.length > 0
+                      ? restaurant.table_zones
+                      : ["Comptoir", "Terrasse"]),
+                  ]}
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-center">
@@ -1089,20 +1084,22 @@ export function RestaurantDashboard({
 
               <div>
                 <label className="text-xs font-bold text-slate-300 block mb-1">Photo du plat</label>
-                <select
+                <AppSelect
                   value={newDishImage}
-                  onChange={(e) => setNewDishImage(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white outline-none"
-                >
-                  <option value="/images/dish_pate_rouge.jpg">Pâte rouge Amiwo</option>
-                  <option value="/images/dish_pate_noire.jpg">Pâte noire Télibo</option>
-                  <option value="/images/restau_maquis.jpg">Daurade braisée</option>
-                  <option value="/images/dish_chawarma.jpg">Chawarma grillé</option>
-                  <option value="/images/dish_riz_gras.jpg">Riz au gras sénégalais</option>
-                  <option value="/images/amberger_banner.jpg">Amberger Gourmet</option>
-                  <option value="/images/dish_tapioca.jpg">Tapioca chaud</option>
-                  <option value="/images/dish_gari.jpg">Gari au lait</option>
-                </select>
+                  onChange={setNewDishImage}
+                  darkSurfaceOnly
+                  label="Photo du plat"
+                  options={[
+                    { value: "/images/dish_pate_rouge.jpg", label: "Pâte rouge Amiwo" },
+                    { value: "/images/dish_pate_noire.jpg", label: "Pâte noire Télibo" },
+                    { value: "/images/restau_maquis.jpg", label: "Daurade braisée" },
+                    { value: "/images/dish_chawarma.jpg", label: "Chawarma grillé" },
+                    { value: "/images/dish_riz_gras.jpg", label: "Riz au gras sénégalais" },
+                    { value: "/images/amberger_banner.jpg", label: "Amberger Gourmet" },
+                    { value: "/images/dish_tapioca.jpg", label: "Tapioca chaud" },
+                    { value: "/images/dish_gari.jpg", label: "Gari au lait" },
+                  ]}
+                />
               </div>
 
               <div className="flex items-center gap-2 pt-1">
